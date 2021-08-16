@@ -11,8 +11,8 @@ pub struct Cpu {
 impl Cpu {
     pub fn new() -> Self {
         Cpu {
-            regs: [GPReg { hi: 0, lo: 0 }; 3],
-            af: GPReg { hi: 0, lo: 0 },
+            regs: [0.into(); 3],
+            af: 0.into(),
             sp: 0x0000,
             pc: 0x0000,
             memory: Memory::new(),
@@ -42,4 +42,11 @@ impl Cpu {
 struct GPReg {
     hi: u8,
     lo: u8,
+}
+
+impl From<u16> for GPReg {
+    fn from(x: u16) -> Self {
+        let y = x.to_ne_bytes();
+        Self { hi: y[0], lo: y[1] }
+    }
 }
