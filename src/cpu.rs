@@ -3,8 +3,10 @@ use std::ops::{Deref, DerefMut};
 use crate::memory::Memory;
 
 pub struct Cpu {
-    regs: [GPReg; 3],
     af: GPReg,
+    bc: GPReg,
+    de: GPReg,
+    hl: GPReg,
     sp: u16,
     pc: u16,
     memory: Memory,
@@ -28,8 +30,10 @@ pub enum Register {
 impl Cpu {
     pub fn new() -> Self {
         Cpu {
-            regs: [0.into(); 3],
             af: 0.into(),
+            bc: 0.into(),
+            de: 0.into(),
+            hl: 0.into(),
             sp: 0x0000,
             pc: 0x0000,
             memory: Memory::new(),
@@ -52,12 +56,12 @@ impl Cpu {
         match reg {
             A => self.af[0],
             F => self.af[1],
-            B => self.regs[0][0],
-            C => self.regs[0][1],
-            D => self.regs[1][0],
-            E => self.regs[1][1],
-            H => self.regs[2][0],
-            L => self.regs[2][1],
+            B => self.bc[0],
+            C => self.bc[1],
+            D => self.de[0],
+            E => self.de[1],
+            H => self.hl[0],
+            L => self.hl[1],
             _ => unreachable!("Attempted to get u16 from get_regu8"),
         }
     }
@@ -66,12 +70,12 @@ impl Cpu {
         let ref mut reg = match reg {
             A => self.af[0],
             F => self.af[1],
-            B => self.regs[0][0],
-            C => self.regs[0][1],
-            D => self.regs[1][0],
-            E => self.regs[1][1],
-            H => self.regs[2][0],
-            L => self.regs[2][1],
+            B => self.bc[0],
+            C => self.bc[1],
+            D => self.de[0],
+            E => self.de[1],
+            H => self.hl[0],
+            L => self.hl[1],
             _ => unreachable!("Attempted to get u16 from get_regu8"),
         };
         *reg = val;
@@ -80,9 +84,9 @@ impl Cpu {
         use Register::*;
         match reg {
             AF => self.af.into(),
-            BC => self.regs[0].into(),
-            DE => self.regs[1].into(),
-            HL => self.regs[2].into(),
+            BC => self.bc.into(),
+            DE => self.de.into(),
+            HL => self.hl.into(),
             _ => unreachable!("Attempted to get u16 from get_regu8"),
         }
     }
@@ -90,9 +94,9 @@ impl Cpu {
         use Register::*;
         let ref mut reg = match reg {
             AF => self.af.into(),
-            BC => self.regs[0].into(),
-            DE => self.regs[1].into(),
-            HL => self.regs[2].into(),
+            BC => self.bc.into(),
+            DE => self.de.into(),
+            HL => self.hl.into(),
             _ => unreachable!("Attempted to get u16 from get_regu8"),
         };
         *reg = val;
