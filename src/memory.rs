@@ -20,11 +20,165 @@ impl Memory {
             ie_reg: 0x0,
         }
     }
+
+    pub fn get_address<'a>(&'a self, addr: u16) -> &'a [u8] {
+        match addr {
+            0x0000..=0x3FFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from ROM, bank 00");
+
+                &self.rom.mem[addr as usize % self.rom.start..]
+            }
+            0x4000..=0x7FFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from ROM, bank 01");
+
+                unimplemented!()
+            }
+            0x8000..=0x9FFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from VRAM");
+
+                unimplemented!()
+            }
+            0xA000..=0xBFFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from RAM");
+
+                unimplemented!()
+            }
+            0xC000..=0xCFFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from WRAM");
+
+                unimplemented!()
+            }
+            0xD000..=0xDFFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from WRAM");
+
+                unimplemented!()
+            }
+            0xE000..=0xFDFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from Echo RAM");
+
+                unimplemented!()
+            }
+            0xFE00..=0xFE9F => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from Sprite Attribute Table");
+
+                unimplemented!()
+            }
+            0xFEA0..=0xFEFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from prohibited area");
+
+                unimplemented!()
+            }
+            0xFF00..=0xFF7F => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from I/O registers");
+
+                unimplemented!()
+            }
+            0xFF80..=0xFFFE => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from high RAM");
+
+                unimplemented!()
+            }
+            0xFFFF..=0xFFFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from Interrupt Enable register");
+
+                unimplemented!()
+            }
+        }
+    }
+
+    pub fn get_address_mut<'a>(&'a mut self, addr: u16) -> &'a mut [u8] {
+        match addr {
+            0x0000..=0x3FFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from ROM, bank 00");
+
+                &mut self.rom.mem[addr as usize % self.rom.start..]
+            }
+            0x4000..=0x7FFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from ROM, bank 01");
+
+                unimplemented!()
+            }
+            0x8000..=0x9FFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from VRAM");
+
+                unimplemented!()
+            }
+            0xA000..=0xBFFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from RAM");
+
+                unimplemented!()
+            }
+            0xC000..=0xCFFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from WRAM");
+
+                unimplemented!()
+            }
+            0xD000..=0xDFFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from WRAM");
+
+                unimplemented!()
+            }
+            0xE000..=0xFDFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from Echo RAM");
+
+                unimplemented!()
+            }
+            0xFE00..=0xFE9F => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from Sprite Attribute Table");
+
+                unimplemented!()
+            }
+            0xFEA0..=0xFEFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from prohibited area");
+
+                unimplemented!()
+            }
+            0xFF00..=0xFF7F => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from I/O registers");
+
+                unimplemented!()
+            }
+            0xFF80..=0xFFFE => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from high RAM");
+
+                unimplemented!()
+            }
+            0xFFFF..=0xFFFF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from Interrupt Enable register");
+
+                unimplemented!()
+            }
+        }
+    }
 }
 
 pub struct Rom {
     mem: [u8; 0x8000],
-    start: u16,
+    start: usize,
 }
 
 impl Default for Rom {
@@ -56,30 +210,10 @@ impl Default for Rom {
         Self { mem, start: 0x0 }
     }
 }
-impl Memory {
-    pub fn map_address<'a>(addr: u16) -> &'a [u8] {
-        match addr {
-            0x0000..=0x3FFF => println!("Attempt to read from ROM, bank 00"),
-            0x4000..=0x7FFF => println!("Attempt to read from ROM, bank 01"),
-            0x8000..=0x9FFF => println!("Attempt to read from VRAM"),
-            0xA000..=0xBFFF => println!("Attempt to read from RAM"),
-            0xC000..=0xCFFF => println!("Attempt to read from WRAM"),
-            0xD000..=0xDFFF => println!("Attempt to read from WRAM"),
-            0xE000..=0xFDFF => println!("Attempt to read from Echo RAM"),
-            0xFE00..=0xFE9F => println!("Attempt to read from Sprite Attribute Table"),
-            0xFEA0..=0xFEFF => println!("Attempt to read from prohibited area"),
-            0xFF00..=0xFF7F => println!("Attempt to read from I/O registers"),
-            0xFF80..=0xFFFE => println!("Attempt to read from high RAM"),
-            0xFFFF..=0xFFFF => println!("Attempt to read from Interrupt Enable register"),
-        }
-
-        unimplemented!()
-    }
-}
 
 pub struct VRam {
     mem: [u8; 0x8000],
-    start: u16,
+    start: usize,
 }
 
 impl Default for VRam {
@@ -93,7 +227,7 @@ impl Default for VRam {
 
 pub struct Ram {
     mem: [u8; 0x8000],
-    start: u16,
+    start: usize,
 }
 
 impl Default for Ram {
@@ -107,7 +241,7 @@ impl Default for Ram {
 
 pub struct SprAttrTable {
     mem: [u8; 0xA0],
-    start: u16,
+    start: usize,
 }
 
 impl Default for SprAttrTable {
@@ -121,7 +255,7 @@ impl Default for SprAttrTable {
 
 pub struct IOReg {
     mem: [u8; 0x80],
-    start: u16,
+    start: usize,
 }
 
 impl Default for IOReg {
@@ -135,7 +269,7 @@ impl Default for IOReg {
 
 pub struct HRam {
     mem: [u8; 0x80],
-    start: u16,
+    start: usize,
 }
 
 impl Default for HRam {
