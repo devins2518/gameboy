@@ -4,13 +4,13 @@ use std::ops::{Deref, DerefMut};
 use crate::memory::Memory;
 
 pub struct Cpu {
-    af: AFReg,
-    bc: GPReg,
-    de: GPReg,
-    hl: GPReg,
-    sp: u16,
-    pc: u16,
-    memory: Memory,
+    pub(in super::opcode) af: AFReg,
+    pub(in super::opcode) bc: GPReg,
+    pub(in super::opcode) de: GPReg,
+    pub(in super::opcode) hl: GPReg,
+    pub(in super::opcode) sp: u16,
+    pub(in super::opcode) pc: u16,
+    pub(in super::opcode) memory: Memory,
 }
 
 pub enum Register {
@@ -237,6 +237,283 @@ impl Cpu {
         self.af.set_n(true);
         self.af.set_h(true);
     }
+
+    fn ccf(&mut self) {
+        self.af.set_n(false);
+        self.af.set_h(false);
+        self.af.set_c(!self.af.c());
+    }
+
+    fn scf(&mut self) {
+        self.af.set_n(false);
+        self.af.set_h(false);
+        self.af.set_c(true);
+    }
+
+    fn nop(&self) {}
+
+    fn halt(&mut self) {
+        unimplemented!("Halt instruction encountered")
+    }
+
+    fn stop(&mut self) {
+        unimplemented!("Stop instruction encountered")
+    }
+
+    fn di(&mut self) {
+        unimplemented!("Disable interrupts instruction encountered")
+    }
+
+    fn ei(&mut self) {
+        unimplemented!("Enable interrupts instruction encountered")
+    }
+
+    fn rlca(&mut self) {
+        self.af.set_c(self.af.a() >> 7 == 1);
+        let res = self.af.a().rotate_left(1);
+        self.af.set_a(res);
+        self.af.set_z(res == 0);
+        unimplemented!();
+    }
+
+    fn rla(&mut self) {
+        unimplemented!()
+    }
+
+    fn rrca(&mut self) {
+        unimplemented!();
+    }
+
+    fn rra(&mut self) {
+        unimplemented!()
+    }
+
+    fn rlc(&mut self) {
+        unimplemented!()
+    }
+
+    fn rl(&mut self) {
+        unimplemented!()
+    }
+
+    fn rrc(&mut self) {
+        unimplemented!()
+    }
+
+    fn rr(&mut self) {
+        unimplemented!()
+    }
+
+    fn sla(&mut self) {
+        unimplemented!()
+    }
+
+    fn sra(&mut self) {
+        unimplemented!()
+    }
+
+    fn srl(&mut self) {
+        unimplemented!()
+    }
+
+    fn bit(&mut self, bit: u8, reg: Register) {
+        use Register::*;
+        let val = match reg {
+            A => self.af.a(),
+            B => self.bc[0],
+            C => self.bc[1],
+            D => self.de[0],
+            E => self.de[1],
+            H => self.hl[0],
+            L => self.hl[1],
+            HL => self.memory.get_address(self.hl.into())[0],
+            _ => unreachable!("Tried to access invalid register in bit()"),
+        };
+
+        assert!(bit <= 7);
+
+        self.af.set_z((val >> bit) == 0);
+        self.af.set_n(false);
+        self.af.set_h(true);
+    }
+
+    fn set(&mut self, bit: u8, reg: Register) {
+        assert!(bit <= 7);
+        let val = 1 << bit;
+
+        use Register::*;
+        match reg {
+            A => {
+                self.af.set_a(self.af.a() | 1 << bit);
+            }
+            B => {
+                self.bc[0] |= val;
+            }
+            C => {
+                self.bc[1] |= val;
+            }
+            D => {
+                self.de[0] |= val;
+            }
+            E => {
+                self.de[1] |= val;
+            }
+            H => {
+                self.hl[0] |= val;
+            }
+            L => {
+                self.hl[1] |= val;
+            }
+            HL => {
+                self.memory.get_address_mut(self.hl.into())[0] |= val;
+            }
+            _ => unreachable!("Tried to access invalid register in set()"),
+        };
+    }
+
+    fn res(&mut self, bit: u8, reg: Register) {
+        assert!(bit <= 7);
+        let val = !(1 << bit);
+
+        use Register::*;
+        match reg {
+            A => {
+                self.af.set_a(self.af.a() & val);
+            }
+            B => {
+                self.bc[0] &= val;
+            }
+            C => {
+                self.bc[1] &= val;
+            }
+            D => {
+                self.de[0] &= val;
+            }
+            E => {
+                self.de[1] &= val;
+            }
+            H => {
+                self.hl[0] &= val;
+            }
+            L => {
+                self.hl[1] &= val;
+            }
+            HL => {
+                self.memory.get_address_mut(self.hl.into())[0] &= val;
+            }
+            _ => unreachable!("Tried to access invalid register in res()"),
+        };
+    }
+
+    fn jp(&mut self, val: u16) {
+        unimplemented!()
+    }
+
+    fn jpc(&mut self, cond: Condition, val: u16) {
+        let cond = match cond {
+            Condition::NZ => self.af.z() == false,
+            Condition::Z => self.af.z() == true,
+            Condition::NC => self.af.c() == false,
+            Condition::C => self.af.c() == true,
+        };
+
+        if cond {
+            self.pc = val;
+        }
+    }
+
+    fn jr(&mut self, n: i8) {
+        if n <= 0 {
+            self.pc += (0 - n) as u16
+        } else {
+            self.pc += n as u16
+        }
+    }
+
+    fn jrc(&mut self, cond: Condition, n: u8) {
+        let cond = match cond {
+            Condition::NZ => self.af.z() == false,
+            Condition::Z => self.af.z() == true,
+            Condition::NC => self.af.c() == false,
+            Condition::C => self.af.c() == true,
+        };
+
+        if cond {
+            if n <= 0 {
+                self.pc += (0 - n) as u16
+            } else {
+                self.pc += n as u16
+            }
+        }
+    }
+
+    fn call(&mut self, addr: u16) {
+        let range = self.memory.get_address_mut(self.pc);
+        let val = u16::to_ne_bytes(self.pc);
+
+        // Push PC to stack
+        range[0] = val[0];
+        self.sp -= 1;
+        range[1] = val[1];
+        self.sp -= 1;
+
+        self.pc = addr;
+    }
+
+    fn callc(&mut self, cond: Condition, addr: u16) {
+        let cond = match cond {
+            Condition::NZ => self.af.z() == false,
+            Condition::Z => self.af.z() == true,
+            Condition::NC => self.af.c() == false,
+            Condition::C => self.af.c() == true,
+        };
+
+        if cond {
+            let range = self.memory.get_address_mut(self.pc);
+            let val = u16::to_ne_bytes(self.pc);
+
+            // Push PC to stack
+            range[0] = val[0];
+            self.sp -= 1;
+            range[1] = val[1];
+            self.sp -= 1;
+
+            self.pc = addr;
+        }
+    }
+
+    fn rst(&mut self) {
+        unimplemented!()
+    }
+
+    fn ret(&mut self) {
+        let range = self.memory.get_address_mut(self.pc);
+
+        // Push PC to stack
+        self.pc = u16::from_le_bytes([range[0], range[1]]);
+        self.sp += 2;
+    }
+
+    fn retc(&mut self, cond: Condition) {
+        let cond = match cond {
+            Condition::NZ => self.af.z() == false,
+            Condition::Z => self.af.z() == true,
+            Condition::NC => self.af.c() == false,
+            Condition::C => self.af.c() == true,
+        };
+
+        if cond {
+            let range = self.memory.get_address_mut(self.pc);
+
+            // Push PC to stack
+            self.pc = u16::from_le_bytes([range[0], range[1]]);
+            self.sp += 2;
+        }
+    }
+
+    fn reti(&mut self) {
+        unimplemented!()
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -303,6 +580,13 @@ impl From<AFReg> for u16 {
     fn from(x: AFReg) -> Self {
         u16::from_ne_bytes(x.into_bytes())
     }
+}
+
+enum Condition {
+    NZ,
+    Z,
+    NC,
+    C,
 }
 
 #[test]

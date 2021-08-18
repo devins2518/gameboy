@@ -1,5 +1,6 @@
 mod cpu;
 mod memory;
+mod opcode;
 
 use cpu::Cpu;
 
