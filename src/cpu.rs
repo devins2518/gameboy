@@ -4,13 +4,13 @@ use std::ops::{Deref, DerefMut};
 use crate::memory::Memory;
 
 pub struct Cpu {
-    pub(in super::opcode) af: AFReg,
-    pub(in super::opcode) bc: GPReg,
-    pub(in super::opcode) de: GPReg,
-    pub(in super::opcode) hl: GPReg,
-    pub(in super::opcode) sp: u16,
-    pub(in super::opcode) pc: u16,
-    pub(in super::opcode) memory: Memory,
+    af: AFReg,
+    bc: GPReg,
+    de: GPReg,
+    hl: GPReg,
+    sp: u16,
+    pc: u16,
+    memory: Memory,
 }
 
 pub enum Register {
