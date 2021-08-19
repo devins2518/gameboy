@@ -29,7 +29,8 @@ impl Bus {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from ROM, bank 00");
 
-                self.rom[addr as usize % ROM_START]
+                // ROM_START = 0x0000 so it will panic at runtime
+                self.rom[addr as usize]
             }
             0x4000..=0x7FFF => {
                 #[cfg(debug_assertions)]
@@ -59,7 +60,9 @@ impl Bus {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from Echo RAM");
 
-                unimplemented!()
+                // I think
+                // 0xE000 - 0xC000 = 0x2000
+                self.ram[(addr as usize - 0x2000) % RAM_START]
             }
             0xFE00..=0xFE9F => {
                 #[cfg(debug_assertions)]

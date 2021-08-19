@@ -4,5 +4,8 @@ mod memory;
 use cpu::Cpu;
 
 fn main() {
-    let cpu = Cpu::new();
+    let mut cpu = Cpu::new();
+    loop {
+        cpu.clock();
+    }
 }

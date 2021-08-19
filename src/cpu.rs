@@ -49,7 +49,7 @@ impl Cpu {
                 let b2 = self.memory.get_address(self.pc + 1);
                 self.ld_regu16(Register::BC, u16::from_le_bytes([b2, b1]));
             }
-            _ => unimplemented!("Unhandled opcode {}", opcode),
+            _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
         self.pc += 1;
     }
