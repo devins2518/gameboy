@@ -1,4 +1,6 @@
-pub struct Memory {
+use std::ops::{Deref, DerefMut};
+
+pub struct Bus {
     rom: Rom,
     vram: VRam,
     ram: Ram,
@@ -8,7 +10,7 @@ pub struct Memory {
     ie_reg: u8,
 }
 
-impl Memory {
+impl Bus {
     pub fn new() -> Self {
         Self {
             rom: Rom::default(),
@@ -21,13 +23,13 @@ impl Memory {
         }
     }
 
-    pub fn get_address<'a>(&'a self, addr: u16) -> &'a [u8] {
+    pub fn get_address(&self, addr: u16) -> u8 {
         match addr {
             0x0000..=0x3FFF => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from ROM, bank 00");
 
-                &self.rom.mem[addr as usize % self.rom.start..]
+                self.rom[addr as usize % ROM_START]
             }
             0x4000..=0x7FFF => {
                 #[cfg(debug_assertions)]
@@ -39,7 +41,7 @@ impl Memory {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from VRAM");
 
-                unimplemented!()
+                self.vram[addr as usize % VRAM_START]
             }
             0xA000..=0xBFFF => {
                 #[cfg(debug_assertions)]
@@ -47,17 +49,11 @@ impl Memory {
 
                 unimplemented!()
             }
-            0xC000..=0xCFFF => {
+            0xC000..=0xDFFF => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from WRAM");
 
-                unimplemented!()
-            }
-            0xD000..=0xDFFF => {
-                #[cfg(debug_assertions)]
-                println!("Attempt to read from WRAM");
-
-                unimplemented!()
+                self.ram[addr as usize % RAM_START]
             }
             0xE000..=0xFDFF => {
                 #[cfg(debug_assertions)]
@@ -69,42 +65,39 @@ impl Memory {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from Sprite Attribute Table");
 
-                unimplemented!()
+                self.spr_attr_table[addr as usize % SPRATTRTABLE_START]
             }
             0xFEA0..=0xFEFF => {
-                #[cfg(debug_assertions)]
-                println!("Attempt to read from prohibited area");
-
-                unimplemented!()
+                unreachable!("Attempted to read from prohibited are")
             }
             0xFF00..=0xFF7F => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from I/O registers");
 
-                unimplemented!()
+                self.io_reg[addr as usize % IOREG_START]
             }
             0xFF80..=0xFFFE => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from high RAM");
 
-                unimplemented!()
+                self.hram[addr as usize % HRAM_START]
             }
             0xFFFF..=0xFFFF => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from Interrupt Enable register");
 
-                unimplemented!()
+                self.ie_reg
             }
         }
     }
 
-    pub fn get_address_mut<'a>(&'a mut self, addr: u16) -> &'a mut [u8] {
+    pub fn write_byte(&mut self, addr: u16, byte: u8) {
         match addr {
             0x0000..=0x3FFF => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from ROM, bank 00");
 
-                &mut self.rom.mem[addr as usize % self.rom.start..]
+                self.rom[addr as usize % ROM_START] = byte;
             }
             0x4000..=0x7FFF => {
                 #[cfg(debug_assertions)]
@@ -116,7 +109,7 @@ impl Memory {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from VRAM");
 
-                unimplemented!()
+                self.vram[addr as usize % VRAM_START] = byte;
             }
             0xA000..=0xBFFF => {
                 #[cfg(debug_assertions)]
@@ -124,17 +117,11 @@ impl Memory {
 
                 unimplemented!()
             }
-            0xC000..=0xCFFF => {
+            0xC000..=0xDFFF => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from WRAM");
 
-                unimplemented!()
-            }
-            0xD000..=0xDFFF => {
-                #[cfg(debug_assertions)]
-                println!("Attempt to read from WRAM");
-
-                unimplemented!()
+                self.ram[addr as usize % RAM_START] = byte;
             }
             0xE000..=0xFDFF => {
                 #[cfg(debug_assertions)]
@@ -146,44 +133,40 @@ impl Memory {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from Sprite Attribute Table");
 
-                unimplemented!()
+                self.spr_attr_table[addr as usize % SPRATTRTABLE_START] = byte;
             }
             0xFEA0..=0xFEFF => {
-                #[cfg(debug_assertions)]
-                println!("Attempt to read from prohibited area");
-
-                unimplemented!()
+                unreachable!("Attempted to read from prohibited are")
             }
             0xFF00..=0xFF7F => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from I/O registers");
 
-                unimplemented!()
+                self.io_reg[addr as usize % IOREG_START] = byte;
             }
             0xFF80..=0xFFFE => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from high RAM");
 
-                unimplemented!()
+                self.hram[addr as usize % HRAM_START] = byte;
             }
             0xFFFF..=0xFFFF => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from Interrupt Enable register");
 
-                unimplemented!()
+                self.ie_reg = byte;
             }
         }
     }
 }
 
-pub struct Rom {
-    mem: [u8; 0x8000],
-    start: usize,
-}
+pub const ROM_SIZE: usize = 0x8000;
+pub const ROM_START: usize = 0x0000;
+pub struct Rom([u8; ROM_SIZE]);
 
 impl Default for Rom {
     fn default() -> Self {
-        let mut mem = [0; 0x8000];
+        let mut mem = [0; ROM_SIZE];
         // https://gbdev.gg8.se/wiki/articles/Gameboy_Bootstrap_ROM#Contents_of_the_ROM
         mem[0x0..=0xFF].copy_from_slice(&[
             0x31, 0xfe, 0xff, 0x3e, 0x30, 0xe0, 0x00, 0xaf, 0x21, 0xff, 0x9f, 0x32, 0xcb, 0x7c,
@@ -207,76 +190,140 @@ impl Default for Rom {
             0x3e, 0x01, 0xe0, 0x50,
         ]);
 
-        Self { mem, start: 0x0 }
+        Self(mem)
     }
 }
 
-pub struct VRam {
-    mem: [u8; 0x8000],
-    start: usize,
+impl Deref for Rom {
+    type Target = [u8; ROM_SIZE];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
+
+impl DerefMut for Rom {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+pub const VRAM_SIZE: usize = 0x8000;
+pub const VRAM_START: usize = 0x8000;
+pub struct VRam([u8; VRAM_SIZE]);
 
 impl Default for VRam {
     fn default() -> Self {
-        Self {
-            mem: [0; 0x8000],
-            start: 0x8000,
-        }
+        Self([0; VRAM_SIZE])
     }
 }
 
-pub struct Ram {
-    mem: [u8; 0x8000],
-    start: usize,
+impl Deref for VRam {
+    type Target = [u8; VRAM_SIZE];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
+
+impl DerefMut for VRam {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+pub const RAM_SIZE: usize = 0x8000;
+pub const RAM_START: usize = 0xC000;
+pub struct Ram([u8; RAM_SIZE]);
 
 impl Default for Ram {
     fn default() -> Self {
-        Self {
-            mem: [0; 0x8000],
-            start: 0xA000,
-        }
+        Self([0; RAM_SIZE])
     }
 }
 
-pub struct SprAttrTable {
-    mem: [u8; 0xA0],
-    start: usize,
+impl Deref for Ram {
+    type Target = [u8; RAM_SIZE];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
+
+impl DerefMut for Ram {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+pub const SPRATTRTABLE_SIZE: usize = 0xA0;
+pub const SPRATTRTABLE_START: usize = 0xFE00;
+pub struct SprAttrTable([u8; SPRATTRTABLE_SIZE]);
 
 impl Default for SprAttrTable {
     fn default() -> Self {
-        Self {
-            mem: [0; 0xA0],
-            start: 0xFE00,
-        }
+        Self([0; SPRATTRTABLE_SIZE])
     }
 }
 
-pub struct IOReg {
-    mem: [u8; 0x80],
-    start: usize,
+impl Deref for SprAttrTable {
+    type Target = [u8; SPRATTRTABLE_SIZE];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
+
+impl DerefMut for SprAttrTable {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+pub const IOREG_SIZE: usize = 0x80;
+pub const IOREG_START: usize = 0xFF00;
+pub struct IOReg([u8; IOREG_SIZE]);
 
 impl Default for IOReg {
     fn default() -> Self {
-        Self {
-            mem: [0; 0x80],
-            start: 0xFF00,
-        }
+        Self([0; IOREG_SIZE])
     }
 }
 
-pub struct HRam {
-    mem: [u8; 0x80],
-    start: usize,
+impl Deref for IOReg {
+    type Target = [u8; IOREG_SIZE];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
 }
+
+impl DerefMut for IOReg {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+pub const HRAM_SIZE: usize = 0x80;
+pub const HRAM_START: usize = 0xFF80;
+pub struct HRam([u8; HRAM_SIZE]);
 
 impl Default for HRam {
     fn default() -> Self {
-        Self {
-            mem: [0; 0x80],
-            start: 0xFF80,
-        }
+        Self([0; HRAM_SIZE])
+    }
+}
+
+impl Deref for HRam {
+    type Target = [u8; HRAM_SIZE];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for HRam {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }

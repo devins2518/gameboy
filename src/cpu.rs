@@ -1,7 +1,7 @@
 use modular_bitfield::prelude::*;
 use std::ops::{Deref, DerefMut};
 
-use crate::memory::Memory;
+use crate::memory::Bus;
 
 pub struct Cpu {
     af: AFReg,
@@ -10,7 +10,7 @@ pub struct Cpu {
     hl: GPReg,
     sp: u16,
     pc: u16,
-    memory: Memory,
+    memory: Bus,
 }
 
 pub enum Register {
@@ -37,9 +37,23 @@ impl Cpu {
             hl: 0.into(),
             sp: 0x0000,
             pc: 0x0000,
-            memory: Memory::new(),
+            memory: Bus::new(),
         }
     }
+    pub fn clock(&mut self) {
+        let opcode = self.memory.get_address(self.pc);
+        match opcode {
+            0x00 => self.nop(),
+            0x01 => {
+                let b1 = opcode;
+                let b2 = self.memory.get_address(self.pc + 1);
+                self.ld_regu16(Register::BC, u16::from_le_bytes([b2, b1]));
+            }
+            _ => unimplemented!("Unhandled opcode {}", opcode),
+        }
+        self.pc += 1;
+    }
+
     fn get_regu8(&self, reg: Register) -> u8 {
         use Register::*;
         match reg {
@@ -102,8 +116,6 @@ impl Cpu {
     fn push(&mut self, reg: Register) {
         use Register::*;
 
-        let mut range = self.memory.get_address_mut(self.pc);
-
         let ref reg = match reg {
             AF => self.af.into_bytes(),
             BC => self.bc.0,
@@ -112,29 +124,27 @@ impl Cpu {
             _ => unreachable!("Attempted to push single byte register onto stack"),
         };
 
-        range[0] = reg[0];
-        self.pc -= 1;
-        range[1] = reg[1];
-        self.pc -= 1;
+        self.memory.write_byte(self.sp, reg[0]);
+        self.sp = self.sp.wrapping_sub(1);
+        self.memory.write_byte(self.sp, reg[1]);
+        self.sp = self.sp.wrapping_sub(1);
     }
 
     fn pop(&mut self, reg: Register) {
         use Register::*;
 
-        let range = self.memory.get_address(self.pc);
-
-        let mut reg = match reg {
+        let reg = match reg {
             AF => self.af.into_bytes(),
             BC => self.bc.0,
             DE => self.de.0,
             HL => self.hl.0,
-            _ => unreachable!("Attempted to push single byte register onto stack"),
+            _ => unreachable!("Attempted to pop single byte register onto stack"),
         };
 
-        reg[0] = range[0];
-        self.pc += 1;
-        reg[1] = range[1];
-        self.pc += 1;
+        self.memory.write_byte(self.sp, reg[0]);
+        self.sp = self.sp.wrapping_add(1);
+        self.memory.write_byte(self.sp, reg[1]);
+        self.sp = self.sp.wrapping_add(1);
     }
 
     fn add(&mut self, n: u8) {
@@ -219,10 +229,9 @@ impl Cpu {
                 res
             }
             HL => {
-                let bytes = self.memory.get_address_mut(self.hl.into());
-                let byte = bytes[0];
-                let res = ((byte & 0x0f) << 4) | ((byte & 0xf0) >> 4);
-                bytes[0] = res;
+                let b = self.memory.get_address(self.hl.into());
+                let res = ((b & 0x0f) << 4) | ((b & 0xf0) >> 4);
+                self.memory.write_byte(self.hl.into(), res);
                 res
             }
             _ => unreachable!(),
@@ -326,7 +335,7 @@ impl Cpu {
             E => self.de[1],
             H => self.hl[0],
             L => self.hl[1],
-            HL => self.memory.get_address(self.hl.into())[0],
+            HL => self.memory.get_address(self.hl.into()),
             _ => unreachable!("Tried to access invalid register in bit()"),
         };
 
@@ -365,7 +374,8 @@ impl Cpu {
                 self.hl[1] |= val;
             }
             HL => {
-                self.memory.get_address_mut(self.hl.into())[0] |= val;
+                let b = self.memory.get_address(self.hl.into());
+                self.memory.write_byte(self.hl.into(), b | val);
             }
             _ => unreachable!("Tried to access invalid register in set()"),
         };
@@ -399,7 +409,8 @@ impl Cpu {
                 self.hl[1] &= val;
             }
             HL => {
-                self.memory.get_address_mut(self.hl.into())[0] &= val;
+                let b = self.memory.get_address(self.hl.into());
+                self.memory.write_byte(self.hl.into(), b & val);
             }
             _ => unreachable!("Tried to access invalid register in res()"),
         };
@@ -448,14 +459,14 @@ impl Cpu {
     }
 
     fn call(&mut self, addr: u16) {
-        let range = self.memory.get_address_mut(self.pc);
-        let val = u16::to_ne_bytes(self.pc);
+        let b1 = self.memory.get_address(self.pc);
+        let b2 = self.memory.get_address(self.pc + 1);
 
         // Push PC to stack
-        range[0] = val[0];
-        self.sp -= 1;
-        range[1] = val[1];
-        self.sp -= 1;
+        self.memory.write_byte(self.pc, b1);
+        self.sp = self.sp.wrapping_sub(1);
+        self.memory.write_byte(self.pc, b2);
+        self.sp = self.sp.wrapping_sub(1);
 
         self.pc = addr;
     }
@@ -469,14 +480,14 @@ impl Cpu {
         };
 
         if cond {
-            let range = self.memory.get_address_mut(self.pc);
-            let val = u16::to_ne_bytes(self.pc);
+            let b1 = self.memory.get_address(self.pc);
+            let b2 = self.memory.get_address(self.pc + 1);
 
             // Push PC to stack
-            range[0] = val[0];
-            self.sp -= 1;
-            range[1] = val[1];
-            self.sp -= 1;
+            self.memory.write_byte(self.pc, b1);
+            self.sp = self.sp.wrapping_sub(1);
+            self.memory.write_byte(self.pc, b2);
+            self.sp = self.sp.wrapping_sub(1);
 
             self.pc = addr;
         }
@@ -487,10 +498,11 @@ impl Cpu {
     }
 
     fn ret(&mut self) {
-        let range = self.memory.get_address_mut(self.pc);
+        let b1 = self.memory.get_address(self.pc);
+        let b2 = self.memory.get_address(self.pc + 1);
 
         // Push PC to stack
-        self.pc = u16::from_le_bytes([range[0], range[1]]);
+        self.pc = u16::from_le_bytes([b1, b2]);
         self.sp += 2;
     }
 
@@ -503,11 +515,12 @@ impl Cpu {
         };
 
         if cond {
-            let range = self.memory.get_address_mut(self.pc);
+            let b1 = self.memory.get_address(self.pc);
+            let b2 = self.memory.get_address(self.pc + 1);
 
             // Push PC to stack
-            self.pc = u16::from_le_bytes([range[0], range[1]]);
-            self.sp += 2;
+            self.pc = u16::from_le_bytes([b2, b1]);
+            self.sp = self.sp.wrapping_sub(2);
         }
     }
 
@@ -598,4 +611,5 @@ fn test_cpu() {
     assert_eq!(cpu.af.z(), false);
     cpu.af.set_z(true);
     assert_eq!(cpu.get_regu8(Register::F), 0b10000000);
+    println!("{}", 0xA0 % 0x0);
 }
