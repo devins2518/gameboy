@@ -45,10 +45,21 @@ impl Cpu {
         match opcode {
             0x00 => self.nop(),
             0x01 => {
-                let b1 = opcode;
-                let b2 = self.memory.get_address(self.pc + 1);
-                self.ld_regu16(Register::BC, u16::from_le_bytes([b2, b1]));
+                let b1 = self.memory.get_address(self.pc + 1);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc + 2);
+                self.pc = self.pc.wrapping_add(1);
+                self.ld_regu16(Register::BC, u16::from_le_bytes([b1, b2]));
             }
+            0x02 => self.memory.write_byte(self.hl.into(), self.af.a()),
+            0x03 => self.inc(Register::BC),
+            0x04 => self.inc(Register::B),
+            0x05 => self.dec(Register::B),
+            0x06 => {
+                let b = self.memory.get_address(self.pc + 1);
+                self.ld_regu8(Register::B, b);
+            }
+
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
         self.pc += 1;
@@ -79,7 +90,7 @@ impl Cpu {
             E => self.de[1],
             H => self.hl[0],
             L => self.hl[1],
-            _ => unreachable!("Attempted to get u16 from get_regu8"),
+            _ => unreachable!("Attempted to get u16 from set_regu8"),
         };
         *reg = val;
     }
@@ -111,6 +122,74 @@ impl Cpu {
 
     fn ld_regu16(&mut self, reg: Register, n: u16) {
         self.set_regu16(reg, n);
+    }
+
+    fn inc(&mut self, reg: Register) {
+        use Register::*;
+
+        let res = match reg {
+            A => self.af.a().wrapping_add(1),
+            B => self.bc[0].wrapping_add(1),
+            C => self.bc[1].wrapping_add(1),
+            D => self.de[0].wrapping_add(1),
+            E => self.de[1].wrapping_add(1),
+            H => self.hl[0].wrapping_add(1),
+            L => self.hl[1].wrapping_add(1),
+            BC => {
+                let res = self.memory.get_address(self.bc.into()).wrapping_add(1);
+                self.memory.write_byte(self.bc.into(), res);
+                res
+            }
+            DE => {
+                let res = self.memory.get_address(self.de.into()).wrapping_add(1);
+                self.memory.write_byte(self.de.into(), res);
+                res
+            }
+            HL => {
+                let res = self.memory.get_address(self.hl.into()).wrapping_add(1);
+                self.memory.write_byte(self.hl.into(), res);
+                res
+            }
+            _ => unimplemented!(),
+        };
+
+        self.af.set_z(res == 0);
+        self.af.set_n(false);
+        unimplemented!("H flag")
+    }
+
+    fn dec(&mut self, reg: Register) {
+        use Register::*;
+
+        let res = match reg {
+            A => self.af.a().wrapping_sub(1),
+            B => self.bc[0].wrapping_sub(1),
+            C => self.bc[1].wrapping_sub(1),
+            D => self.de[0].wrapping_sub(1),
+            E => self.de[1].wrapping_sub(1),
+            H => self.hl[0].wrapping_sub(1),
+            L => self.hl[1].wrapping_sub(1),
+            BC => {
+                let res = self.memory.get_address(self.bc.into()).wrapping_sub(1);
+                self.memory.write_byte(self.bc.into(), res);
+                res
+            }
+            DE => {
+                let res = self.memory.get_address(self.de.into()).wrapping_sub(1);
+                self.memory.write_byte(self.de.into(), res);
+                res
+            }
+            HL => {
+                let res = self.memory.get_address(self.hl.into()).wrapping_sub(1);
+                self.memory.write_byte(self.hl.into(), res);
+                res
+            }
+            _ => unimplemented!(),
+        };
+
+        self.af.set_z(res == 0);
+        self.af.set_n(false);
+        unimplemented!("H flag")
     }
 
     fn push(&mut self, reg: Register) {

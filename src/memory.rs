@@ -100,7 +100,8 @@ impl Bus {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from ROM, bank 00");
 
-                self.rom[addr as usize % ROM_START] = byte;
+                // ROM_START = 0x0000 so it will panic at runtime
+                self.rom[addr as usize] = byte;
             }
             0x4000..=0x7FFF => {
                 #[cfg(debug_assertions)]
