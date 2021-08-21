@@ -13,6 +13,7 @@ pub struct Cpu {
     memory: Bus,
 }
 
+#[derive(Clone, Copy, Debug)]
 pub enum Register {
     A,
     F,
@@ -60,6 +61,23 @@ impl Cpu {
                 let b = self.memory.get_address(self.pc);
                 self.ld_regu8(Register::B, b);
             }
+            0x07 => self.rlca(),
+            0x08 => {
+                let bytes = self.sp.to_le_bytes();
+                self.memory.write_byte(self.pc, bytes[0]);
+                self.pc = self.pc.wrapping_add(1);
+                self.memory.write_byte(self.pc, bytes[1]);
+            }
+            0x09 => self.add(Register::HL, self.get_regu8(Register::BC)),
+            0x0A => self.ld_regu8(
+                Register::A,
+                self.memory.get_address(self.get_regu16(Register::BC)),
+            ),
+            0x0B => self.dec(Register::BC),
+            0x0C => self.inc(Register::C),
+            0x0D => self.dec(Register::C),
+            0x0E => self.ld_regu8(Register::C, self.memory.get_address(self.pc)),
+            0x0F => self.rrca(),
 
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
@@ -102,7 +120,7 @@ impl Cpu {
             BC => self.bc.into(),
             DE => self.de.into(),
             HL => self.hl.into(),
-            _ => unreachable!("Attempted to get u16 from get_regu8"),
+            _ => unreachable!("Attempted to set regu16 into regu8"),
         }
     }
     fn set_regu16(&self, reg: Register, val: u16) {
@@ -112,7 +130,7 @@ impl Cpu {
             BC => self.bc.into(),
             DE => self.de.into(),
             HL => self.hl.into(),
-            _ => unreachable!("Attempted to get u16 from get_regu8"),
+            _ => unreachable!("Attempted to set regu8 into regu16"),
         };
         *reg = val;
     }
@@ -227,12 +245,10 @@ impl Cpu {
         self.sp = self.sp.wrapping_add(1);
     }
 
-    fn add(&mut self, n: u8) {
-        let (val, over) = self.af.into_bytes()[0].overflowing_add(n);
-        self.af.set_a(val);
-        if over {
-            self.af.set_z(true);
-        }
+    fn add(&mut self, reg: Register, n: u8) {
+        let (val, over) = self.get_regu8(reg).overflowing_add(n);
+        self.set_regu8(reg, val);
+        self.af.set_z(over);
         unimplemented!("Rest of flags")
     }
 
