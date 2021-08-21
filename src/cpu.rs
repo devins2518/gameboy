@@ -103,10 +103,25 @@ impl Cpu {
             0x1D => self.dec(Register::E),
             0x1E => self.ld_regu8(Register::E, self.memory.get_address(self.pc)),
             0x1F => self.rra(),
+            0x20 => self.jrc(Condition::NZ, self.memory.get_address(self.pc) as i8),
+            0x21 => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                self.ld_regu16(Register::HL, u16::from_le_bytes([b1, b2]));
+            }
+            0x22 => self.memory.write_byte(
+                self.get_regu16(Register::HL).wrapping_add(1),
+                self.get_regu8(Register::A),
+            ),
+            0x23 => self.inc(Register::HL),
+            0x24 => self.inc(Register::H),
+            0x25 => self.dec(Register::H),
+            0x26 => self.ld_regu8(Register::H, self.memory.get_address(self.pc)),
 
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
-        self.pc += 1;
     }
 
     fn get_regu8(&self, reg: Register) -> u8 {
@@ -532,7 +547,7 @@ impl Cpu {
         }
     }
 
-    fn jrc(&mut self, cond: Condition, n: u8) {
+    fn jrc(&mut self, cond: Condition, n: i8) {
         let cond = match cond {
             Condition::NZ => self.af.z() == false,
             Condition::Z => self.af.z() == true,
