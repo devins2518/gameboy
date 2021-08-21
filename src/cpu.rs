@@ -53,7 +53,7 @@ impl Cpu {
                 self.pc = self.pc.wrapping_add(1);
                 self.ld_regu16(Register::BC, u16::from_le_bytes([b1, b2]));
             }
-            0x02 => self.memory.write_byte(self.hl.into(), self.af.a()),
+            0x02 => self.memory.write_byte(self.bc.into(), self.af.a()),
             0x03 => self.inc(Register::BC),
             0x04 => self.inc(Register::B),
             0x05 => self.dec(Register::B),
@@ -78,6 +78,31 @@ impl Cpu {
             0x0D => self.dec(Register::C),
             0x0E => self.ld_regu8(Register::C, self.memory.get_address(self.pc)),
             0x0F => self.rrca(),
+            0x10 => self.stop(),
+            0x11 => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                self.ld_regu16(Register::DE, u16::from_le_bytes([b1, b2]));
+            }
+            0x12 => self.memory.write_byte(self.de.into(), self.af.a()),
+            0x13 => self.inc(Register::DE),
+            0x14 => self.inc(Register::D),
+            0x15 => self.dec(Register::D),
+            0x16 => self.ld_regu8(Register::D, self.memory.get_address(self.pc)),
+            0x17 => self.rla(),
+            0x18 => self.jr(self.memory.get_address(self.pc) as i8),
+            0x19 => self.add(Register::HL, self.get_regu8(Register::DE)),
+            0x1A => self.ld_regu8(
+                Register::A,
+                self.memory.get_address(self.get_regu16(Register::DE)),
+            ),
+            0x1B => self.dec(Register::DE),
+            0x1C => self.inc(Register::E),
+            0x1D => self.dec(Register::E),
+            0x1E => self.ld_regu8(Register::E, self.memory.get_address(self.pc)),
+            0x1F => self.rra(),
 
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
@@ -431,7 +456,7 @@ impl Cpu {
             E => self.de[1],
             H => self.hl[0],
             L => self.hl[1],
-            HL => self.memory.get_address(self.hl.into()),
+            _ => self.memory.get_address(self.get_regu16(reg)),
             _ => unreachable!("Tried to access invalid register in bit()"),
         };
 
@@ -448,32 +473,17 @@ impl Cpu {
 
         use Register::*;
         match reg {
-            A => {
-                self.af.set_a(self.af.a() | 1 << bit);
+            A => self.af.set_a(self.af.a() | 1 << bit),
+            B => self.bc[0] |= val,
+            C => self.bc[1] |= val,
+            D => self.de[0] |= val,
+            E => self.de[1] |= val,
+            H => self.hl[0] |= val,
+            L => self.hl[1] |= val,
+            _ => {
+                let b = self.memory.get_address(self.get_regu16(reg));
+                self.memory.write_byte(self.get_regu16(reg), b | val);
             }
-            B => {
-                self.bc[0] |= val;
-            }
-            C => {
-                self.bc[1] |= val;
-            }
-            D => {
-                self.de[0] |= val;
-            }
-            E => {
-                self.de[1] |= val;
-            }
-            H => {
-                self.hl[0] |= val;
-            }
-            L => {
-                self.hl[1] |= val;
-            }
-            HL => {
-                let b = self.memory.get_address(self.hl.into());
-                self.memory.write_byte(self.hl.into(), b | val);
-            }
-            _ => unreachable!("Tried to access invalid register in set()"),
         };
     }
 
@@ -483,32 +493,17 @@ impl Cpu {
 
         use Register::*;
         match reg {
-            A => {
-                self.af.set_a(self.af.a() & val);
+            A => self.af.set_a(self.af.a() & val),
+            B => self.bc[0] &= val,
+            C => self.bc[1] &= val,
+            D => self.de[0] &= val,
+            E => self.de[1] &= val,
+            H => self.hl[0] &= val,
+            L => self.hl[1] &= val,
+            _ => {
+                let b = self.memory.get_address(self.get_regu16(reg));
+                self.memory.write_byte(self.get_regu16(reg), b & val);
             }
-            B => {
-                self.bc[0] &= val;
-            }
-            C => {
-                self.bc[1] &= val;
-            }
-            D => {
-                self.de[0] &= val;
-            }
-            E => {
-                self.de[1] &= val;
-            }
-            H => {
-                self.hl[0] &= val;
-            }
-            L => {
-                self.hl[1] &= val;
-            }
-            HL => {
-                let b = self.memory.get_address(self.hl.into());
-                self.memory.write_byte(self.hl.into(), b & val);
-            }
-            _ => unreachable!("Tried to access invalid register in res()"),
         };
     }
 
