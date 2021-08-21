@@ -781,5 +781,4 @@ fn test_cpu() {
     assert_eq!(cpu.af.z(), false);
     cpu.af.set_z(true);
     assert_eq!(cpu.get_regu8(Register::F), 0b10000000);
-    println!("{}", 0xA0 % 0x0);
 }
