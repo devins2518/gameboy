@@ -42,12 +42,13 @@ impl Cpu {
     }
     pub fn clock(&mut self) {
         let opcode = self.memory.get_address(self.pc);
+        self.pc = self.pc.wrapping_add(1);
         match opcode {
             0x00 => self.nop(),
             0x01 => {
-                let b1 = self.memory.get_address(self.pc + 1);
+                let b1 = self.memory.get_address(self.pc);
                 self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc + 2);
+                let b2 = self.memory.get_address(self.pc);
                 self.pc = self.pc.wrapping_add(1);
                 self.ld_regu16(Register::BC, u16::from_le_bytes([b1, b2]));
             }
@@ -56,7 +57,7 @@ impl Cpu {
             0x04 => self.inc(Register::B),
             0x05 => self.dec(Register::B),
             0x06 => {
-                let b = self.memory.get_address(self.pc + 1);
+                let b = self.memory.get_address(self.pc);
                 self.ld_regu8(Register::B, b);
             }
 
