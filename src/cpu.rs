@@ -29,6 +29,10 @@ pub enum Register {
     HL,
     SP,
     PC,
+    PAF,
+    PBC,
+    PDE,
+    PHL,
 }
 
 impl Cpu {
@@ -165,6 +169,53 @@ impl Cpu {
                 self.pc = self.pc.wrapping_add(1);
             }
             0x2F => self.cpl(),
+            0x30 => {
+                self.jrc(Condition::NC, self.memory.get_address(self.pc) as i8);
+                self.pc = self.pc.wrapping_add(1);
+            }
+            0x31 => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                self.ld_regu16(Register::SP, u16::from_le_bytes([b1, b2]));
+            }
+            0x32 => {
+                self.memory
+                    .write_byte(self.get_regu16(Register::HL), self.get_regu8(Register::A));
+                self.hl = GPReg::from(self.get_regu16(Register::HL).wrapping_sub(1));
+            }
+            0x33 => self.inc(Register::SP),
+            0x34 => self.inc(Register::PHL),
+            0x35 => self.dec(Register::PHL),
+            0x36 => {
+                self.ld_regu8(Register::PHL, self.memory.get_address(self.pc));
+                self.pc = self.pc.wrapping_add(1);
+            }
+            0x37 => self.scf(),
+            0x38 => {
+                self.jrc(Condition::C, self.memory.get_address(self.pc) as i8);
+                self.pc = self.pc.wrapping_add(1);
+            }
+            0x39 => self.add_u16(Register::HL, self.get_regu16(Register::SP)),
+            0x3A => {
+                self.ld_regu8(Register::A, self.get_regu8(Register::PHL));
+                self.memory.write_byte(
+                    self.get_regu16(Register::PHL),
+                    self.memory
+                        .get_address(self.get_regu16(Register::PHL))
+                        .wrapping_sub(1),
+                );
+            }
+            0x3B => self.dec(Register::SP),
+            0x3C => self.inc(Register::A),
+            0x3D => self.dec(Register::A),
+            0x3E => {
+                let b = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(self.pc);
+                self.ld_regu8(Register::A, b);
+            }
+            0x3F => self.ccf(),
 
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
@@ -181,6 +232,7 @@ impl Cpu {
             E => self.de[1],
             H => self.hl[0],
             L => self.hl[1],
+            PHL | PBC | PDE => self.memory.get_address(self.get_regu16(reg)),
             _ => unreachable!("Attempted to get u16 from get_regu8"),
         }
     }
@@ -195,6 +247,7 @@ impl Cpu {
             E => self.de[1],
             H => self.hl[0],
             L => self.hl[1],
+            PHL | PBC | PDE => self.memory.get_address(self.get_regu16(reg)),
             _ => unreachable!("Attempted to get u16 from set_regu8"),
         };
         *reg = val;
@@ -202,10 +255,10 @@ impl Cpu {
     fn get_regu16(&self, reg: Register) -> u16 {
         use Register::*;
         match reg {
-            AF => self.af.into(),
-            BC => self.bc.into(),
-            DE => self.de.into(),
-            HL => self.hl.into(),
+            AF | PAF => self.af.into(),
+            BC | PBC => self.bc.into(),
+            DE | PDE => self.de.into(),
+            HL | PHL => self.hl.into(),
             _ => unreachable!("Attempted to set regu16 into regu8"),
         }
     }
@@ -216,6 +269,8 @@ impl Cpu {
             BC => self.bc.into(),
             DE => self.de.into(),
             HL => self.hl.into(),
+            SP => self.sp,
+            PC => self.pc,
             _ => unreachable!("Attempted to set regu8 into regu16"),
         };
         *reg = val;
@@ -232,33 +287,76 @@ impl Cpu {
     fn inc(&mut self, reg: Register) {
         use Register::*;
 
-        let res = match reg {
-            A => self.af.a().wrapping_add(1),
-            B => self.bc[0].wrapping_add(1),
-            C => self.bc[1].wrapping_add(1),
-            D => self.de[0].wrapping_add(1),
-            E => self.de[1].wrapping_add(1),
-            H => self.hl[0].wrapping_add(1),
-            L => self.hl[1].wrapping_add(1),
+        let zero = match reg {
+            A => {
+                let res = self.af.a().wrapping_add(1);
+                self.af.set_a(res);
+                res == 0
+            }
+            B => {
+                let res = self.bc[0].wrapping_add(1);
+                self.bc[0] = res;
+                res == 0
+            }
+            C => {
+                let res = self.bc[1].wrapping_add(1);
+                self.bc[1] = res;
+                res == 0
+            }
+            D => {
+                let res = self.de[0].wrapping_add(1);
+                self.de[0] = res;
+                res == 0
+            }
+            E => {
+                let res = self.de[1].wrapping_add(1);
+                self.de[1] = res;
+                res == 0
+            }
+            H => {
+                let res = self.hl[0].wrapping_add(1);
+                self.hl[0] = res;
+                res == 0
+            }
+            L => {
+                let res = self.hl[1].wrapping_add(1);
+                self.hl[1] = res;
+                res == 0
+            }
             BC => {
-                let res = self.memory.get_address(self.bc.into()).wrapping_add(1);
-                self.memory.write_byte(self.bc.into(), res);
-                res
+                let res = u16::from(self.bc).wrapping_add(1);
+                self.bc = GPReg::from(res);
+                res == 0
             }
             DE => {
-                let res = self.memory.get_address(self.de.into()).wrapping_add(1);
-                self.memory.write_byte(self.de.into(), res);
-                res
+                let res = u16::from(self.de).wrapping_add(1);
+                self.de = GPReg::from(res);
+                res == 0
             }
             HL => {
+                let res = u16::from(self.hl).wrapping_add(1);
+                self.hl = GPReg::from(res);
+                res == 0
+            }
+            PBC => {
+                let res = self.memory.get_address(self.bc.into()).wrapping_add(1);
+                self.memory.write_byte(self.bc.into(), res);
+                res == 0
+            }
+            PDE => {
+                let res = self.memory.get_address(self.de.into()).wrapping_add(1);
+                self.memory.write_byte(self.de.into(), res);
+                res == 0
+            }
+            PHL => {
                 let res = self.memory.get_address(self.hl.into()).wrapping_add(1);
                 self.memory.write_byte(self.hl.into(), res);
-                res
+                res == 0
             }
             _ => unimplemented!(),
         };
 
-        self.af.set_z(res == 0);
+        self.af.set_z(zero);
         self.af.set_n(false);
         unimplemented!("H flag")
     }
@@ -725,6 +823,17 @@ impl From<u16> for GPReg {
 impl From<GPReg> for u16 {
     fn from(x: GPReg) -> Self {
         u16::from_ne_bytes(*x)
+    }
+}
+
+impl GPReg {
+    fn wrapping_add(&self, n: u16) -> Self {
+        let x: u16 = u16::from(*self).wrapping_add(n);
+        GPReg::from(x)
+    }
+    fn wrapping_sub(&self, n: u16) -> Self {
+        let x: u16 = u16::from(*self).wrapping_sub(n);
+        GPReg::from(x)
     }
 }
 
