@@ -216,6 +216,28 @@ impl Cpu {
                 self.ld_regu8(Register::A, b);
             }
             0x3F => self.ccf(),
+            0x40 => self.ld_regu8(Register::B, self.get_regu8(Register::B)),
+            0x41 => self.ld_regu8(Register::B, self.get_regu8(Register::C)),
+            0x42 => self.ld_regu8(Register::B, self.get_regu8(Register::D)),
+            0x43 => self.ld_regu8(Register::B, self.get_regu8(Register::E)),
+            0x44 => self.ld_regu8(Register::B, self.get_regu8(Register::H)),
+            0x45 => self.ld_regu8(Register::B, self.get_regu8(Register::L)),
+            0x46 => self.ld_regu8(
+                Register::B,
+                self.memory.get_address(self.get_regu16(Register::HL)),
+            ),
+            0x47 => self.ld_regu8(Register::B, self.get_regu8(Register::A)),
+            0x48 => self.ld_regu8(Register::C, self.get_regu8(Register::B)),
+            0x49 => self.ld_regu8(Register::C, self.get_regu8(Register::C)),
+            0x4A => self.ld_regu8(Register::C, self.get_regu8(Register::D)),
+            0x4B => self.ld_regu8(Register::C, self.get_regu8(Register::E)),
+            0x4C => self.ld_regu8(Register::C, self.get_regu8(Register::H)),
+            0x4D => self.ld_regu8(Register::C, self.get_regu8(Register::L)),
+            0x4E => self.ld_regu8(
+                Register::C,
+                self.memory.get_address(self.get_regu16(Register::HL)),
+            ),
+            0x4F => self.ld_regu8(Register::C, self.get_regu8(Register::A)),
 
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
