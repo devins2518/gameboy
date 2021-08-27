@@ -348,7 +348,61 @@ impl Cpu {
             0xBD => self.cp(self.get_regu8(Register::L)),
             0xBE => self.cp(self.get_regu8(Register::PHL)),
             0xBF => self.cp(self.get_regu8(Register::A)),
-
+            0xC0 => self.retc(Condition::NZ),
+            0xC1 => self.pop(Register::BC),
+            0xC2 => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                let addr = u16::from_le_bytes([b2, b1]);
+                self.jpc(Condition::NZ, addr);
+            }
+            0xC3 => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                let addr = u16::from_le_bytes([b2, b1]);
+                self.jp(addr);
+            }
+            0xC4 => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                let addr = u16::from_le_bytes([b2, b1]);
+                self.callc(Condition::NZ, addr);
+            }
+            0xC5 => self.push(Register::BC),
+            0xC6 => {
+                let b = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                self.add_u8(Register::A, b);
+            }
+            0xC7 => self.rst(),
+            0xC8 => self.retc(Condition::C),
+            0xC9 => self.retc(Condition::Z),
+            0xCA => self.ret(),
+            0xCB => unimplemented!("Prefix CB"),
+            0xCC => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                let addr = u16::from_le_bytes([b2, b1]);
+                self.callc(Condition::Z, addr);
+            }
+            0xCD => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                let addr = u16::from_le_bytes([b2, b1]);
+                self.call(addr);
+            }
+            // Unimplemented ADC
+            // 0xCE => {
+            //     let b = self.memory.get_address(self.pc);
+            //     self.pc = self.pc.wrapping_add(1);
+            //     self.adc(Register::A, b);
+            // }
+            0xCF => self.rst(),
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
     }
