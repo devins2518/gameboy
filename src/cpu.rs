@@ -403,6 +403,9 @@ impl Cpu {
             //     self.adc(Register::A, b);
             // }
             0xCF => self.rst(),
+            0xD0 => self.retc(Condition::NC),
+            0xD1 => self.pop(Register::DE),
+
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
     }
@@ -601,7 +604,7 @@ impl Cpu {
     fn pop(&mut self, reg: Register) {
         use Register::*;
 
-        let reg = match reg {
+        let ref mut reg = match reg {
             AF => self.af.into_bytes(),
             BC => self.bc.0,
             DE => self.de.0,
@@ -609,9 +612,9 @@ impl Cpu {
             _ => unreachable!("Attempted to pop single byte register onto stack"),
         };
 
-        self.memory.write_byte(self.sp, reg[0]);
+        reg[1] = self.memory.get_address(self.sp);
         self.sp = self.sp.wrapping_add(1);
-        self.memory.write_byte(self.sp, reg[1]);
+        reg[0] = self.memory.get_address(self.sp);
         self.sp = self.sp.wrapping_add(1);
     }
 
