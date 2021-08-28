@@ -50,6 +50,10 @@ impl Cpu {
     pub fn clock(&mut self) {
         let opcode = self.memory.get_address(self.pc);
         self.pc = self.pc.wrapping_add(1);
+
+        #[cfg(debug_assertions)]
+        println!("Matching opcode: {:#X}", opcode);
+
         match opcode {
             0x00 => self.nop(),
             0x01 => {
@@ -57,7 +61,7 @@ impl Cpu {
                 self.pc = self.pc.wrapping_add(1);
                 let b2 = self.memory.get_address(self.pc);
                 self.pc = self.pc.wrapping_add(1);
-                self.ld_regu16(Register::BC, u16::from_le_bytes([b1, b2]));
+                self.ld_regu16(Register::BC, u16::from_ne_bytes([b1, b2]));
             }
             0x02 => self.memory.write_byte(self.bc.into(), self.af.a()),
             0x03 => self.inc(Register::BC),
@@ -94,7 +98,7 @@ impl Cpu {
                 self.pc = self.pc.wrapping_add(1);
                 let b2 = self.memory.get_address(self.pc);
                 self.pc = self.pc.wrapping_add(1);
-                self.ld_regu16(Register::DE, u16::from_le_bytes([b1, b2]));
+                self.ld_regu16(Register::DE, u16::from_ne_bytes([b1, b2]));
             }
             0x12 => self.memory.write_byte(self.de.into(), self.af.a()),
             0x13 => self.inc(Register::DE),
@@ -131,7 +135,7 @@ impl Cpu {
                 self.pc = self.pc.wrapping_add(1);
                 let b2 = self.memory.get_address(self.pc);
                 self.pc = self.pc.wrapping_add(1);
-                self.ld_regu16(Register::HL, u16::from_le_bytes([b1, b2]));
+                self.ld_regu16(Register::HL, u16::from_ne_bytes([b1, b2]));
             }
             0x22 => {
                 self.memory
@@ -178,7 +182,8 @@ impl Cpu {
                 self.pc = self.pc.wrapping_add(1);
                 let b2 = self.memory.get_address(self.pc);
                 self.pc = self.pc.wrapping_add(1);
-                self.ld_regu16(Register::SP, u16::from_le_bytes([b1, b2]));
+                let n = u16::from_ne_bytes([b1, b2]);
+                self.ld_regu16(Register::SP, n);
             }
             0x32 => {
                 self.memory
@@ -354,21 +359,21 @@ impl Cpu {
                 let b1 = self.memory.get_address(self.pc);
                 self.pc = self.pc.wrapping_add(1);
                 let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_le_bytes([b2, b1]);
+                let addr = u16::from_ne_bytes([b2, b1]);
                 self.jpc(Condition::NZ, addr);
             }
             0xC3 => {
                 let b1 = self.memory.get_address(self.pc);
                 self.pc = self.pc.wrapping_add(1);
                 let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_le_bytes([b2, b1]);
+                let addr = u16::from_ne_bytes([b2, b1]);
                 self.jp(addr);
             }
             0xC4 => {
                 let b1 = self.memory.get_address(self.pc);
                 self.pc = self.pc.wrapping_add(1);
                 let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_le_bytes([b2, b1]);
+                let addr = u16::from_ne_bytes([b2, b1]);
                 self.callc(Condition::NZ, addr);
             }
             0xC5 => self.push(Register::BC),
@@ -386,14 +391,14 @@ impl Cpu {
                 let b1 = self.memory.get_address(self.pc);
                 self.pc = self.pc.wrapping_add(1);
                 let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_le_bytes([b2, b1]);
+                let addr = u16::from_ne_bytes([b2, b1]);
                 self.callc(Condition::Z, addr);
             }
             0xCD => {
                 let b1 = self.memory.get_address(self.pc);
                 self.pc = self.pc.wrapping_add(1);
                 let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_le_bytes([b2, b1]);
+                let addr = u16::from_ne_bytes([b2, b1]);
                 self.call(addr);
             }
             // Unimplemented ADC
@@ -405,6 +410,51 @@ impl Cpu {
             0xCF => self.rst(),
             0xD0 => self.retc(Condition::NC),
             0xD1 => self.pop(Register::DE),
+            0xD2 => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                let addr = u16::from_ne_bytes([b2, b1]);
+                self.jpc(Condition::NZ, addr);
+            }
+            0xD4 => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                let addr = u16::from_ne_bytes([b2, b1]);
+                self.jp(addr);
+            }
+            0xD5 => self.push(Register::DE),
+            // Unimplemented SUB
+            // 0xD6 => {
+            //     let b = self.memory.get_address(self.pc);
+            //     self.pc = self.pc.wrapping_add(1);
+            //     self.sub_u8(Register::A, b);
+            // }
+            0xD7 => self.rst(),
+            0xD8 => self.retc(Condition::C),
+            0xD9 => self.reti(),
+            0xDA => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                let addr = u16::from_ne_bytes([b2, b1]);
+                self.jpc(Condition::C, addr);
+            }
+            0xDC => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                let addr = u16::from_ne_bytes([b2, b1]);
+                self.callc(Condition::C, addr);
+            }
+            // Unimplemented SBC
+            // 0xDE => {
+            //     let b = self.memory.get_address(self.pc);
+            //     self.pc = self.pc.wrapping_add(1);
+            //     self.sbc(Condition::C, addr);
+            // }
+            0xDF => self.rst(),
 
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
@@ -957,7 +1007,7 @@ impl Cpu {
         self.pc = self.pc.wrapping_add(self.pc);
 
         // Push PC to stack
-        self.pc = u16::from_le_bytes([b1, b2]);
+        self.pc = u16::from_ne_bytes([b1, b2]);
         self.sp += 2;
     }
 
@@ -976,7 +1026,7 @@ impl Cpu {
             self.pc = self.pc.wrapping_add(self.pc);
 
             // Push PC to stack
-            self.pc = u16::from_le_bytes([b2, b1]);
+            self.pc = u16::from_ne_bytes([b2, b1]);
             self.sp = self.sp.wrapping_sub(2);
         }
     }
