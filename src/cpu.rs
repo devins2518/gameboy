@@ -455,6 +455,92 @@ impl Cpu {
             //     self.sbc(Condition::C, addr);
             // }
             0xDF => self.rst(),
+            0xE0 => {
+                let b = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                self.memory
+                    .write_byte(0xFF00 + b as u16, self.get_regu8(Register::A))
+            }
+            0xE1 => self.pop(Register::HL),
+            0xE2 => self.memory.write_byte(
+                0xFF00 + self.get_regu8(Register::C) as u16,
+                self.get_regu8(Register::A),
+            ),
+            0xE5 => self.push(Register::HL),
+            // Unimplemented AND
+            // 0xE6 => {
+            //     let b = self.memory.get_address(self.pc);
+            //     self.pc = self.pc.wrapping_add(1);
+            //     self.and(b);
+            // }
+            0xE7 => self.rst(),
+            // TODO
+            // 0xE8 => {
+            //     self.add_u16(Register::SP, self.memory.get_address(self.pc) as i16);
+            //     self.pc = self.pc.wrapping_add(1);
+            // }
+            0xE9 => self.jp(self.get_regu16(Register::HL)),
+            0xEA => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let addr = u16::from_ne_bytes([b2, b1]);
+                self.memory.write_byte(addr, self.get_regu8(Register::A));
+            }
+            0xEE => {
+                let b = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                self.xor(b);
+            }
+            // TODO
+            0xEF => self.rst(),
+            0xF0 => {
+                let b = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                self.ld_regu8(Register::A, self.memory.get_address(0xFF00 + b as u16))
+            }
+            0xF1 => self.pop(Register::AF),
+            0xF2 => {
+                let b = self
+                    .memory
+                    .get_address(0xFF00 + self.get_regu8(Register::C) as u16);
+                self.ld_regu8(Register::A, b)
+            }
+            0xF3 => self.di(),
+            0xF5 => self.push(Register::AF),
+            0xF6 => {
+                let b = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                self.or(b);
+            }
+            // TODO
+            0xF7 => self.rst(),
+            0xF8 => {
+                let b = self.memory.get_address(self.pc) as i8;
+                self.pc = self.pc.wrapping_add(1);
+
+                // https://stackoverflow.com/a/53455823
+                let sp = self.get_regu16(Register::SP).wrapping_add(b as u16);
+                self.ld_regu16(Register::HL, sp)
+            }
+            0xF9 => self.ld_regu16(Register::SP, self.get_regu16(Register::HL)),
+            0xFA => {
+                let b1 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let b2 = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                let addr = u16::from_ne_bytes([b2, b1]);
+                self.ld_regu8(Register::A, self.memory.get_address(addr));
+            }
+            0xFB => self.ei(),
+            0xFE => {
+                let b = self.memory.get_address(self.pc);
+                self.pc = self.pc.wrapping_add(1);
+                self.cp(b);
+            }
+            // TODO
+            0xFF => self.rst(),
 
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
