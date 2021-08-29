@@ -903,12 +903,14 @@ impl Cpu {
                 let a = self.hl[0];
                 let res = a.wrapping_add(b);
                 self.hl[0] = res;
+                self.half_carry(a, b);
                 res == 0
             }
             L => {
                 let a = self.hl[1];
                 let res = a.wrapping_add(b);
                 self.hl[1] = res;
+                self.half_carry(a, b);
                 res == 0
             }
             BC => {
@@ -930,16 +932,19 @@ impl Cpu {
             PBC => {
                 let res = self.memory.get_address(self.bc.into()).wrapping_add(b);
                 self.memory.write_byte(self.bc.into(), res);
+                // self.half_carry(a, b);
                 res == 0
             }
             PDE => {
                 let res = self.memory.get_address(self.de.into()).wrapping_add(b);
                 self.memory.write_byte(self.de.into(), res);
+                // self.half_carry(a, b);
                 res == 0
             }
             PHL => {
                 let res = self.memory.get_address(self.hl.into()).wrapping_add(b);
                 self.memory.write_byte(self.hl.into(), res);
+                // self.half_carry(a, b);
                 res == 0
             }
             _ => unimplemented!(),
@@ -947,7 +952,6 @@ impl Cpu {
 
         self.af.set_z(zero);
         self.af.set_n(false);
-        unimplemented!("H flag")
     }
 
     fn dec(&mut self, reg: Register) {
