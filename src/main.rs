@@ -1,5 +1,6 @@
 mod cpu;
 mod memory;
+mod utils;
 
 use cpu::Cpu;
 

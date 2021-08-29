@@ -2,6 +2,7 @@ use modular_bitfield::prelude::*;
 use std::ops::{Deref, DerefMut};
 
 use crate::memory::Bus;
+use crate::utils::{Condition, Register};
 
 pub struct Cpu {
     af: AFReg,
@@ -11,28 +12,6 @@ pub struct Cpu {
     sp: u16,
     pc: u16,
     memory: Bus,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub enum Register {
-    A,
-    F,
-    B,
-    C,
-    D,
-    E,
-    H,
-    L,
-    AF,
-    BC,
-    DE,
-    HL,
-    SP,
-    PC,
-    PAF,
-    PBC,
-    PDE,
-    PHL,
 }
 
 impl Cpu {
@@ -1304,6 +1283,7 @@ impl Cpu {
     }
 
     fn jr(&mut self, n: i8) {
+        self.pc = self.pc.wrapping_add(n as u16);
         if n <= 0 {
             self.pc += (0 - n) as u16
         } else {
@@ -1491,13 +1471,6 @@ impl From<AFReg> for u16 {
     fn from(x: AFReg) -> Self {
         u16::from_ne_bytes(x.into_bytes())
     }
-}
-
-enum Condition {
-    NZ,
-    Z,
-    NC,
-    C,
 }
 
 #[test]
