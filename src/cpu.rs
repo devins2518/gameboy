@@ -881,70 +881,85 @@ impl Cpu {
 
     fn inc(&mut self, reg: Register) {
         use Register::*;
+        #[allow(non_upper_case_globals)]
+        const b: u8 = 1;
 
         let zero = match reg {
             A => {
-                let res = self.af.a().wrapping_add(1);
+                let a = self.af.a();
+                let res = a.wrapping_add(b);
                 self.af.set_a(res);
+                self.half_carry(a, b);
                 res == 0
             }
             B => {
-                let res = self.bc[0].wrapping_add(1);
+                let a = self.bc[0];
+                let res = a.wrapping_add(b);
                 self.bc[0] = res;
+                self.half_carry(a, b);
                 res == 0
             }
             C => {
-                let res = self.bc[1].wrapping_add(1);
+                let a = self.bc[1];
+                let res = a.wrapping_add(b);
                 self.bc[1] = res;
+                self.half_carry(a, b);
                 res == 0
             }
             D => {
-                let res = self.de[0].wrapping_add(1);
+                let a = self.de[0];
+                let res = a.wrapping_add(b);
                 self.de[0] = res;
+                self.half_carry(a, b);
                 res == 0
             }
             E => {
-                let res = self.de[1].wrapping_add(1);
+                let a = self.de[1];
+                let res = a.wrapping_add(b);
                 self.de[1] = res;
+                self.half_carry(a, b);
                 res == 0
             }
             H => {
-                let res = self.hl[0].wrapping_add(1);
+                let a = self.hl[0];
+                let res = a.wrapping_add(b);
                 self.hl[0] = res;
                 res == 0
             }
             L => {
-                let res = self.hl[1].wrapping_add(1);
+                let a = self.hl[1];
+                let res = a.wrapping_add(b);
                 self.hl[1] = res;
                 res == 0
             }
             BC => {
-                let res = u16::from(self.bc).wrapping_add(1);
+                let a = u16::from(self.bc);
+                let res = a.wrapping_add(b as u16);
                 self.bc = GPReg::from(res);
                 res == 0
             }
             DE => {
-                let res = u16::from(self.de).wrapping_add(1);
+                let res = u16::from(self.de).wrapping_add(b as u16);
                 self.de = GPReg::from(res);
                 res == 0
             }
             HL => {
-                let res = u16::from(self.hl).wrapping_add(1);
+                let res = u16::from(self.hl).wrapping_add(b as u16);
                 self.hl = GPReg::from(res);
                 res == 0
             }
             PBC => {
-                let res = self.memory.get_address(self.bc.into()).wrapping_add(1);
+                let res = self.memory.get_address(self.bc.into()).wrapping_add(b);
                 self.memory.write_byte(self.bc.into(), res);
                 res == 0
             }
             PDE => {
-                let res = self.memory.get_address(self.de.into()).wrapping_add(1);
+                let res = self.memory.get_address(self.de.into()).wrapping_add(b);
                 self.memory.write_byte(self.de.into(), res);
                 res == 0
             }
             PHL => {
-                let res = self.memory.get_address(self.hl.into()).wrapping_add(1);
+                let res = self.memory.get_address(self.hl.into()).wrapping_add(b);
                 self.memory.write_byte(self.hl.into(), res);
                 res == 0
             }
@@ -1389,6 +1404,15 @@ impl Cpu {
 
     fn reti(&mut self) {
         unimplemented!()
+    }
+
+    // https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/
+    fn half_carry(&mut self, a: u8, b: u8) {
+        self.af.set_h((((a & 0xf) + (b & 0xf)) & 0x10) == 0x10)
+    }
+
+    fn carry(&mut self, a: u16, b: u16) {
+        self.af.set_c((((a & 0xf0) + (b & 0xf0)) & 0x100) == 0x100)
     }
 }
 
