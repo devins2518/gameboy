@@ -85,7 +85,7 @@ impl Bus {
 
                 self.hram[addr as usize % HRAM_START]
             }
-            0xFFFF..=0xFFFF => {
+            0xFFFF => {
                 #[cfg(debug_assertions)]
                 println!(
                     "Attempt to read from Interrupt Enable register: {:#X}",

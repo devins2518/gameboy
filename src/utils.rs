@@ -26,3 +26,12 @@ pub enum Register {
     PDE,
     PHL,
 }
+
+pub enum InterruptStatus {
+    Unset,
+    ProgressDisable,
+    StartDisable,
+    ProgressEnable,
+    StartEnable,
+    Set,
+}

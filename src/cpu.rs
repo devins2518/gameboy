@@ -2,7 +2,7 @@ use modular_bitfield::prelude::*;
 use std::ops::{Deref, DerefMut};
 
 use crate::memory::Bus;
-use crate::utils::{Condition, Register};
+use crate::utils::{Condition, InterruptStatus, Register};
 
 pub struct Cpu {
     af: AFReg,
@@ -12,6 +12,7 @@ pub struct Cpu {
     sp: u16,
     pc: u16,
     memory: Bus,
+    interrupt_enable: InterruptStatus,
 }
 
 impl Cpu {
@@ -24,6 +25,7 @@ impl Cpu {
             sp: 0x0000,
             pc: 0x0000,
             memory: Bus::new(),
+            interrupt_enable: InterruptStatus::Unset,
         }
     }
     pub fn clock(&mut self) {
@@ -793,6 +795,16 @@ impl Cpu {
 
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
+
+        match self.interrupt_enable {
+            InterruptStatus::StartDisable => {
+                self.interrupt_enable = InterruptStatus::ProgressDisable
+            }
+            InterruptStatus::StartEnable => self.interrupt_enable = InterruptStatus::ProgressEnable,
+            InterruptStatus::ProgressDisable => self.interrupt_enable = InterruptStatus::Unset,
+            InterruptStatus::ProgressEnable => self.interrupt_enable = InterruptStatus::Set,
+            _ => {}
+        }
     }
 
     fn get_regu8(&self, reg: Register) -> u8 {
@@ -1146,11 +1158,11 @@ impl Cpu {
     }
 
     fn di(&mut self) {
-        unimplemented!("Disable interrupts instruction encountered")
+        self.interrupt_enable = InterruptStatus::StartDisable;
     }
 
     fn ei(&mut self) {
-        unimplemented!("Enable interrupts instruction encountered")
+        self.interrupt_enable = InterruptStatus::StartEnable;
     }
 
     fn rlca(&mut self) {
