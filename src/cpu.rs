@@ -652,11 +652,10 @@ impl Cpu {
             0xD5 => self.push(Register::DE),
             // TODO
             // Unimplemented SUB
-            // 0xD6 => {
-            //     let b = self.memory.get_address(self.pc);
-            //     self.pc = self.pc.wrapping_add(1);
-            //     self.sub_u8(Register::A, b);
-            // }
+            0xD6 => {
+                let b = self.imm_u8();
+                self.sub(b);
+            }
             0xD7 => self.rst(),
             0xD8 => self.retc(Condition::C),
             0xD9 => self.reti(),
@@ -984,12 +983,13 @@ impl Cpu {
     }
 
     fn add_u8(&mut self, reg: Register, n: u8) {
-        let (val, over) = self.get_regu8(reg).overflowing_add(n);
+        let prev = self.get_regu8(reg);
+        let (val, over) = prev.overflowing_add(n);
         self.set_regu8(reg, val);
+        self.af.set_z(val == 0);
+        self.af.set_n(false);
+        self.half_carry(prev, n);
         self.af.set_c(over);
-        // self.half_carry(a, n);
-        // self.af.set_z(val == 0);
-        // self.af.set_n(false);
     }
 
     fn add_u16(&mut self, reg: Register, n: u16) {
@@ -997,6 +997,17 @@ impl Cpu {
         self.set_regu16(reg, val);
         self.af.set_z(over);
         unimplemented!("Rest of flags")
+    }
+
+    fn sub(&mut self, n: u8) {
+        let prev = self.get_regu8(Register::A);
+        let (val, over) = prev.overflowing_sub(n);
+        self.set_regu8(Register::A, val);
+        self.af.set_z(val == 0);
+        self.af.set_n(true);
+        // TODO > Set if no borrow from bit 4
+        self.half_carry(prev, n);
+        self.af.set_c(over);
     }
 
     fn or(&mut self, n: u8) {
@@ -1018,12 +1029,11 @@ impl Cpu {
     }
 
     fn cp(&mut self, n: u8) {
-        let val = self.af.a() - n;
-        if val == 0 {
-            self.af.set_z(true);
-        }
+        let a = self.af.a();
+        self.af.set_c(a < n);
+        self.half_carry(a, n);
+        self.af.set_z(a == n);
         self.af.set_n(true);
-        unimplemented!("Failed to handle h and c flags");
     }
 
     fn swap(&mut self, reg: Register) {
@@ -1233,7 +1243,8 @@ impl Cpu {
     }
 
     fn jp(&mut self, val: u16) {
-        unimplemented!()
+        // TODO check
+        self.pc = val;
     }
 
     fn jpc(&mut self, cond: Condition, val: u16) {
