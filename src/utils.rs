@@ -29,9 +29,9 @@ pub enum Register {
 
 pub enum InterruptStatus {
     Unset,
-    ProgressDisable,
+    PendingDisable,
     StartDisable,
-    ProgressEnable,
+    PendingEnable,
     StartEnable,
     Set,
 }

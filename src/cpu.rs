@@ -798,11 +798,11 @@ impl Cpu {
 
         match self.interrupt_enable {
             InterruptStatus::StartDisable => {
-                self.interrupt_enable = InterruptStatus::ProgressDisable
+                self.interrupt_enable = InterruptStatus::PendingDisable
             }
-            InterruptStatus::StartEnable => self.interrupt_enable = InterruptStatus::ProgressEnable,
-            InterruptStatus::ProgressDisable => self.interrupt_enable = InterruptStatus::Unset,
-            InterruptStatus::ProgressEnable => self.interrupt_enable = InterruptStatus::Set,
+            InterruptStatus::StartEnable => self.interrupt_enable = InterruptStatus::PendingEnable,
+            InterruptStatus::PendingDisable => self.interrupt_enable = InterruptStatus::Unset,
+            InterruptStatus::PendingEnable => self.interrupt_enable = InterruptStatus::Set,
             _ => {}
         }
     }
