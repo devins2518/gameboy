@@ -28,9 +28,27 @@ impl Cpu {
             interrupt_enable: InterruptStatus::Unset,
         }
     }
-    pub fn clock(&mut self) {
+
+    fn next_instruction(&mut self) -> u8 {
         let opcode = self.memory.get_address(self.pc);
         self.pc = self.pc.wrapping_add(1);
+        opcode
+    }
+
+    fn imm_u8(&mut self) -> u8 {
+        let opcode = self.memory.get_address(self.pc);
+        self.pc = self.pc.wrapping_add(1);
+        opcode
+    }
+
+    fn imm_u16(&mut self) -> u16 {
+        let b1 = self.next_instruction();
+        let b2 = self.next_instruction();
+        u16::from_ne_bytes([b1, b2])
+    }
+
+    pub fn clock(&mut self) {
+        let opcode = self.next_instruction();
 
         #[cfg(debug_assertions)]
         println!("Matching opcode: {:#X}", opcode);
@@ -38,22 +56,19 @@ impl Cpu {
         match opcode {
             0x00 => self.nop(),
             0x01 => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                self.ld_regu16(Register::BC, u16::from_ne_bytes([b1, b2]));
+                let byte = self.imm_u16();
+                self.ld_regu16(Register::BC, byte);
             }
             0x02 => self.memory.write_byte(self.bc.into(), self.af.a()),
             0x03 => self.inc(Register::BC),
             0x04 => self.inc(Register::B),
             0x05 => self.dec(Register::B),
             0x06 => {
-                let b = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(self.pc);
-                self.ld_regu8(Register::B, b);
+                let byte = self.imm_u8();
+                self.ld_regu8(Register::B, byte);
             }
             0x07 => self.rlca(),
+            // TODO: ??
             0x08 => {
                 let bytes = self.sp.to_le_bytes();
                 self.memory.write_byte(self.pc, bytes[0]);
@@ -69,30 +84,27 @@ impl Cpu {
             0x0C => self.inc(Register::C),
             0x0D => self.dec(Register::C),
             0x0E => {
-                self.ld_regu8(Register::C, self.memory.get_address(self.pc));
-                self.pc = self.pc.wrapping_add(self.pc);
+                let byte = self.imm_u8();
+                self.ld_regu8(Register::C, byte);
             }
             0x0F => self.rrca(),
             0x10 => self.stop(),
             0x11 => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                self.ld_regu16(Register::DE, u16::from_ne_bytes([b1, b2]));
+                let bytes = self.imm_u16();
+                self.ld_regu16(Register::DE, bytes);
             }
             0x12 => self.memory.write_byte(self.de.into(), self.af.a()),
             0x13 => self.inc(Register::DE),
             0x14 => self.inc(Register::D),
             0x15 => self.dec(Register::D),
             0x16 => {
-                self.ld_regu8(Register::D, self.memory.get_address(self.pc));
-                self.pc = self.pc.wrapping_add(1);
+                let byte = self.imm_u8();
+                self.ld_regu8(Register::D, byte);
             }
             0x17 => self.rla(),
             0x18 => {
-                self.jr(self.memory.get_address(self.pc) as i8);
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u16();
+                self.jr(self.memory.get_address(b) as i8);
             }
             0x19 => self.add_u8(Register::HL, self.get_regu8(Register::DE)),
             0x1A => self.ld_regu8(
@@ -103,20 +115,17 @@ impl Cpu {
             0x1C => self.inc(Register::E),
             0x1D => self.dec(Register::E),
             0x1E => {
-                self.ld_regu8(Register::E, self.memory.get_address(self.pc));
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
+                self.ld_regu8(Register::E, b);
             }
             0x1F => self.rra(),
             0x20 => {
-                self.jrc(Condition::NZ, self.memory.get_address(self.pc) as i8);
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
+                self.jrc(Condition::NZ, b as i8);
             }
             0x21 => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                self.ld_regu16(Register::HL, u16::from_ne_bytes([b1, b2]));
+                let b = self.imm_u16();
+                self.ld_regu16(Register::HL, b);
             }
             0x22 => {
                 self.memory
@@ -127,13 +136,13 @@ impl Cpu {
             0x24 => self.inc(Register::H),
             0x25 => self.dec(Register::H),
             0x26 => {
-                self.ld_regu8(Register::H, self.memory.get_address(self.pc));
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
+                self.ld_regu8(Register::H, b);
             }
             0x27 => self.daa(),
             0x28 => {
-                self.jrc(Condition::Z, self.memory.get_address(self.pc) as i8);
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
+                self.jrc(Condition::Z, b as i8);
             }
             0x29 => self.add_u16(Register::HL, self.get_regu16(Register::HL)),
             0x2A => {
@@ -150,21 +159,17 @@ impl Cpu {
             0x2C => self.inc(Register::L),
             0x2D => self.dec(Register::L),
             0x2E => {
-                self.ld_regu8(Register::L, self.memory.get_address(self.pc));
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
+                self.ld_regu8(Register::L, b);
             }
             0x2F => self.cpl(),
             0x30 => {
-                self.jrc(Condition::NC, self.memory.get_address(self.pc) as i8);
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
+                self.jrc(Condition::NC, b as i8);
             }
             0x31 => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let n = u16::from_ne_bytes([b1, b2]);
-                self.ld_regu16(Register::SP, n);
+                let b = self.imm_u16();
+                self.ld_regu16(Register::SP, b);
             }
             0x32 => {
                 self.memory
@@ -175,13 +180,13 @@ impl Cpu {
             0x34 => self.inc(Register::PHL),
             0x35 => self.dec(Register::PHL),
             0x36 => {
-                self.ld_regu8(Register::PHL, self.memory.get_address(self.pc));
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
+                self.ld_regu8(Register::PHL, b);
             }
             0x37 => self.scf(),
             0x38 => {
-                self.jrc(Condition::C, self.memory.get_address(self.pc) as i8);
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
+                self.jrc(Condition::C, b as i8);
             }
             0x39 => self.add_u16(Register::HL, self.get_regu16(Register::SP)),
             0x3A => {
@@ -197,8 +202,7 @@ impl Cpu {
             0x3C => self.inc(Register::A),
             0x3D => self.dec(Register::A),
             0x3E => {
-                let b = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(self.pc);
+                let b = self.imm_u8();
                 self.ld_regu8(Register::A, b);
             }
             0x3F => self.ccf(),
@@ -341,312 +345,291 @@ impl Cpu {
             0xC0 => self.retc(Condition::NZ),
             0xC1 => self.pop(Register::BC),
             0xC2 => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_ne_bytes([b2, b1]);
-                self.jpc(Condition::NZ, addr);
+                let b = self.imm_u16();
+                self.jpc(Condition::NZ, b);
             }
             0xC3 => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_ne_bytes([b2, b1]);
-                self.jp(addr);
+                let b = self.imm_u16();
+                self.jp(b);
             }
             0xC4 => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_ne_bytes([b2, b1]);
-                self.callc(Condition::NZ, addr);
+                let b = self.imm_u16();
+                self.callc(Condition::NZ, b);
             }
             0xC5 => self.push(Register::BC),
             0xC6 => {
-                let b = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
                 self.add_u8(Register::A, b);
             }
             0xC7 => self.rst(),
             0xC8 => self.retc(Condition::C),
             0xC9 => self.retc(Condition::Z),
             0xCA => self.ret(),
-            0xCB => {
-                let cb = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-
-                match cb {
-                    0x00 => self.rlc(Register::B),
-                    0x01 => self.rlc(Register::C),
-                    0x02 => self.rlc(Register::D),
-                    0x03 => self.rlc(Register::E),
-                    0x04 => self.rlc(Register::H),
-                    0x05 => self.rlc(Register::L),
-                    0x06 => self.rlc(Register::PHL),
-                    0x07 => self.rlc(Register::A),
-                    0x08 => self.rrc(Register::B),
-                    0x09 => self.rrc(Register::C),
-                    0x0A => self.rrc(Register::D),
-                    0x0B => self.rrc(Register::E),
-                    0x0C => self.rrc(Register::H),
-                    0x0D => self.rrc(Register::L),
-                    0x0E => self.rrc(Register::PHL),
-                    0x0F => self.rrc(Register::A),
-                    0x10 => self.rl(Register::B),
-                    0x11 => self.rl(Register::C),
-                    0x12 => self.rl(Register::D),
-                    0x13 => self.rl(Register::E),
-                    0x14 => self.rl(Register::H),
-                    0x15 => self.rl(Register::L),
-                    0x16 => self.rl(Register::PHL),
-                    0x17 => self.rl(Register::A),
-                    0x18 => self.rr(Register::B),
-                    0x19 => self.rr(Register::C),
-                    0x1A => self.rr(Register::D),
-                    0x1B => self.rr(Register::E),
-                    0x1C => self.rr(Register::H),
-                    0x1D => self.rr(Register::L),
-                    0x1E => self.rr(Register::PHL),
-                    0x1F => self.rr(Register::A),
-                    0x20 => self.sla(Register::B),
-                    0x21 => self.sla(Register::C),
-                    0x22 => self.sla(Register::D),
-                    0x23 => self.sla(Register::E),
-                    0x24 => self.sla(Register::H),
-                    0x25 => self.sla(Register::L),
-                    0x26 => self.sla(Register::PHL),
-                    0x27 => self.sla(Register::A),
-                    0x28 => self.sra(Register::B),
-                    0x29 => self.sra(Register::C),
-                    0x2A => self.sra(Register::D),
-                    0x2B => self.sra(Register::E),
-                    0x2C => self.sra(Register::H),
-                    0x2D => self.sra(Register::L),
-                    0x2E => self.sra(Register::PHL),
-                    0x2F => self.sra(Register::A),
-                    0x30 => self.swap(Register::B),
-                    0x31 => self.swap(Register::C),
-                    0x32 => self.swap(Register::D),
-                    0x33 => self.swap(Register::E),
-                    0x34 => self.swap(Register::H),
-                    0x35 => self.swap(Register::L),
-                    0x36 => self.swap(Register::PHL),
-                    0x37 => self.swap(Register::A),
-                    0x38 => self.srl(Register::B),
-                    0x39 => self.srl(Register::C),
-                    0x3A => self.srl(Register::D),
-                    0x3B => self.srl(Register::E),
-                    0x3C => self.srl(Register::H),
-                    0x3D => self.srl(Register::L),
-                    0x3E => self.srl(Register::PHL),
-                    0x3F => self.srl(Register::A),
-                    0x40 => self.bit(0, Register::B),
-                    0x41 => self.bit(0, Register::C),
-                    0x42 => self.bit(0, Register::D),
-                    0x43 => self.bit(0, Register::E),
-                    0x44 => self.bit(0, Register::H),
-                    0x45 => self.bit(0, Register::L),
-                    0x46 => self.bit(0, Register::PHL),
-                    0x47 => self.bit(0, Register::A),
-                    0x48 => self.bit(1, Register::B),
-                    0x49 => self.bit(1, Register::C),
-                    0x4A => self.bit(1, Register::D),
-                    0x4B => self.bit(1, Register::E),
-                    0x4C => self.bit(1, Register::H),
-                    0x4D => self.bit(1, Register::L),
-                    0x4E => self.bit(1, Register::PHL),
-                    0x4F => self.bit(1, Register::A),
-                    0x50 => self.bit(2, Register::B),
-                    0x51 => self.bit(2, Register::C),
-                    0x52 => self.bit(2, Register::D),
-                    0x53 => self.bit(2, Register::E),
-                    0x54 => self.bit(2, Register::H),
-                    0x55 => self.bit(2, Register::L),
-                    0x56 => self.bit(2, Register::PHL),
-                    0x57 => self.bit(2, Register::A),
-                    0x58 => self.bit(3, Register::B),
-                    0x59 => self.bit(3, Register::C),
-                    0x5A => self.bit(3, Register::D),
-                    0x5B => self.bit(3, Register::E),
-                    0x5C => self.bit(3, Register::H),
-                    0x5D => self.bit(3, Register::L),
-                    0x5E => self.bit(3, Register::PHL),
-                    0x5F => self.bit(3, Register::A),
-                    0x60 => self.bit(4, Register::B),
-                    0x61 => self.bit(4, Register::C),
-                    0x62 => self.bit(4, Register::D),
-                    0x63 => self.bit(4, Register::E),
-                    0x64 => self.bit(4, Register::H),
-                    0x65 => self.bit(4, Register::L),
-                    0x66 => self.bit(4, Register::PHL),
-                    0x67 => self.bit(4, Register::A),
-                    0x68 => self.bit(5, Register::B),
-                    0x69 => self.bit(5, Register::C),
-                    0x6A => self.bit(5, Register::D),
-                    0x6B => self.bit(5, Register::E),
-                    0x6C => self.bit(5, Register::H),
-                    0x6D => self.bit(5, Register::L),
-                    0x6E => self.bit(5, Register::PHL),
-                    0x6F => self.bit(5, Register::A),
-                    0x70 => self.bit(6, Register::B),
-                    0x71 => self.bit(6, Register::C),
-                    0x72 => self.bit(6, Register::D),
-                    0x73 => self.bit(6, Register::E),
-                    0x74 => self.bit(6, Register::H),
-                    0x75 => self.bit(6, Register::L),
-                    0x76 => self.bit(6, Register::PHL),
-                    0x77 => self.bit(6, Register::A),
-                    0x78 => self.bit(7, Register::B),
-                    0x79 => self.bit(7, Register::C),
-                    0x7A => self.bit(7, Register::D),
-                    0x7B => self.bit(7, Register::E),
-                    0x7C => self.bit(7, Register::H),
-                    0x7D => self.bit(7, Register::L),
-                    0x7E => self.bit(7, Register::PHL),
-                    0x7F => self.bit(7, Register::A),
-                    0x80 => self.res(0, Register::B),
-                    0x81 => self.res(0, Register::C),
-                    0x82 => self.res(0, Register::D),
-                    0x83 => self.res(0, Register::E),
-                    0x84 => self.res(0, Register::H),
-                    0x85 => self.res(0, Register::L),
-                    0x86 => self.res(0, Register::PHL),
-                    0x87 => self.res(0, Register::A),
-                    0x88 => self.res(1, Register::B),
-                    0x89 => self.res(1, Register::C),
-                    0x8A => self.res(1, Register::D),
-                    0x8B => self.res(1, Register::E),
-                    0x8C => self.res(1, Register::H),
-                    0x8D => self.res(1, Register::L),
-                    0x8E => self.res(1, Register::PHL),
-                    0x8F => self.res(1, Register::A),
-                    0x90 => self.res(2, Register::B),
-                    0x91 => self.res(2, Register::C),
-                    0x92 => self.res(2, Register::D),
-                    0x93 => self.res(2, Register::E),
-                    0x94 => self.res(2, Register::H),
-                    0x95 => self.res(2, Register::L),
-                    0x96 => self.res(2, Register::PHL),
-                    0x97 => self.res(2, Register::A),
-                    0x98 => self.res(3, Register::B),
-                    0x99 => self.res(3, Register::C),
-                    0x9A => self.res(3, Register::D),
-                    0x9B => self.res(3, Register::E),
-                    0x9C => self.res(3, Register::H),
-                    0x9D => self.res(3, Register::L),
-                    0x9E => self.res(3, Register::PHL),
-                    0x9F => self.res(3, Register::A),
-                    0xA0 => self.res(4, Register::B),
-                    0xA1 => self.res(4, Register::C),
-                    0xA2 => self.res(4, Register::D),
-                    0xA3 => self.res(4, Register::E),
-                    0xA4 => self.res(4, Register::H),
-                    0xA5 => self.res(4, Register::L),
-                    0xA6 => self.res(4, Register::PHL),
-                    0xA7 => self.res(4, Register::A),
-                    0xA8 => self.res(5, Register::B),
-                    0xA9 => self.res(5, Register::C),
-                    0xAA => self.res(5, Register::D),
-                    0xAB => self.res(5, Register::E),
-                    0xAC => self.res(5, Register::H),
-                    0xAD => self.res(5, Register::L),
-                    0xAE => self.res(5, Register::PHL),
-                    0xAF => self.res(5, Register::A),
-                    0xB0 => self.res(6, Register::B),
-                    0xB1 => self.res(6, Register::C),
-                    0xB2 => self.res(6, Register::D),
-                    0xB3 => self.res(6, Register::E),
-                    0xB4 => self.res(6, Register::H),
-                    0xB5 => self.res(6, Register::L),
-                    0xB6 => self.res(6, Register::PHL),
-                    0xB7 => self.res(6, Register::A),
-                    0xB8 => self.res(7, Register::B),
-                    0xB9 => self.res(7, Register::C),
-                    0xBA => self.res(7, Register::D),
-                    0xBB => self.res(7, Register::E),
-                    0xBC => self.res(7, Register::H),
-                    0xBD => self.res(7, Register::L),
-                    0xBE => self.res(7, Register::PHL),
-                    0xBF => self.res(7, Register::A),
-                    0xC0 => self.set(0, Register::B),
-                    0xC1 => self.set(0, Register::C),
-                    0xC2 => self.set(0, Register::D),
-                    0xC3 => self.set(0, Register::E),
-                    0xC4 => self.set(0, Register::H),
-                    0xC5 => self.set(0, Register::L),
-                    0xC6 => self.set(0, Register::PHL),
-                    0xC7 => self.set(0, Register::A),
-                    0xC8 => self.set(1, Register::B),
-                    0xC9 => self.set(1, Register::C),
-                    0xCA => self.set(1, Register::D),
-                    0xCB => self.set(1, Register::E),
-                    0xCC => self.set(1, Register::H),
-                    0xCD => self.set(1, Register::L),
-                    0xCE => self.set(1, Register::PHL),
-                    0xCF => self.set(1, Register::A),
-                    0xD0 => self.set(2, Register::B),
-                    0xD1 => self.set(2, Register::C),
-                    0xD2 => self.set(2, Register::D),
-                    0xD3 => self.set(2, Register::E),
-                    0xD4 => self.set(2, Register::H),
-                    0xD5 => self.set(2, Register::L),
-                    0xD6 => self.set(2, Register::PHL),
-                    0xD7 => self.set(2, Register::A),
-                    0xD8 => self.set(3, Register::B),
-                    0xD9 => self.set(3, Register::C),
-                    0xDA => self.set(3, Register::D),
-                    0xDB => self.set(3, Register::E),
-                    0xDC => self.set(3, Register::H),
-                    0xDD => self.set(3, Register::L),
-                    0xDE => self.set(3, Register::PHL),
-                    0xDF => self.set(3, Register::A),
-                    0xE0 => self.set(4, Register::B),
-                    0xE1 => self.set(4, Register::C),
-                    0xE2 => self.set(4, Register::D),
-                    0xE3 => self.set(4, Register::E),
-                    0xE4 => self.set(4, Register::H),
-                    0xE5 => self.set(4, Register::L),
-                    0xE6 => self.set(4, Register::PHL),
-                    0xE7 => self.set(4, Register::A),
-                    0xE8 => self.set(5, Register::B),
-                    0xE9 => self.set(5, Register::C),
-                    0xEA => self.set(5, Register::D),
-                    0xEB => self.set(5, Register::E),
-                    0xEC => self.set(5, Register::H),
-                    0xED => self.set(5, Register::L),
-                    0xEE => self.set(5, Register::PHL),
-                    0xEF => self.set(5, Register::A),
-                    0xF0 => self.set(6, Register::B),
-                    0xF1 => self.set(6, Register::C),
-                    0xF2 => self.set(6, Register::D),
-                    0xF3 => self.set(6, Register::E),
-                    0xF4 => self.set(6, Register::H),
-                    0xF5 => self.set(6, Register::L),
-                    0xF6 => self.set(6, Register::PHL),
-                    0xF7 => self.set(6, Register::A),
-                    0xF8 => self.set(7, Register::B),
-                    0xF9 => self.set(7, Register::C),
-                    0xFA => self.set(7, Register::D),
-                    0xFB => self.set(7, Register::E),
-                    0xFC => self.set(7, Register::H),
-                    0xFD => self.set(7, Register::L),
-                    0xFE => self.set(7, Register::PHL),
-                    0xFF => self.set(7, Register::A),
-                }
-            }
+            0xCB => match self.next_instruction() {
+                0x00 => self.rlc(Register::B),
+                0x01 => self.rlc(Register::C),
+                0x02 => self.rlc(Register::D),
+                0x03 => self.rlc(Register::E),
+                0x04 => self.rlc(Register::H),
+                0x05 => self.rlc(Register::L),
+                0x06 => self.rlc(Register::PHL),
+                0x07 => self.rlc(Register::A),
+                0x08 => self.rrc(Register::B),
+                0x09 => self.rrc(Register::C),
+                0x0A => self.rrc(Register::D),
+                0x0B => self.rrc(Register::E),
+                0x0C => self.rrc(Register::H),
+                0x0D => self.rrc(Register::L),
+                0x0E => self.rrc(Register::PHL),
+                0x0F => self.rrc(Register::A),
+                0x10 => self.rl(Register::B),
+                0x11 => self.rl(Register::C),
+                0x12 => self.rl(Register::D),
+                0x13 => self.rl(Register::E),
+                0x14 => self.rl(Register::H),
+                0x15 => self.rl(Register::L),
+                0x16 => self.rl(Register::PHL),
+                0x17 => self.rl(Register::A),
+                0x18 => self.rr(Register::B),
+                0x19 => self.rr(Register::C),
+                0x1A => self.rr(Register::D),
+                0x1B => self.rr(Register::E),
+                0x1C => self.rr(Register::H),
+                0x1D => self.rr(Register::L),
+                0x1E => self.rr(Register::PHL),
+                0x1F => self.rr(Register::A),
+                0x20 => self.sla(Register::B),
+                0x21 => self.sla(Register::C),
+                0x22 => self.sla(Register::D),
+                0x23 => self.sla(Register::E),
+                0x24 => self.sla(Register::H),
+                0x25 => self.sla(Register::L),
+                0x26 => self.sla(Register::PHL),
+                0x27 => self.sla(Register::A),
+                0x28 => self.sra(Register::B),
+                0x29 => self.sra(Register::C),
+                0x2A => self.sra(Register::D),
+                0x2B => self.sra(Register::E),
+                0x2C => self.sra(Register::H),
+                0x2D => self.sra(Register::L),
+                0x2E => self.sra(Register::PHL),
+                0x2F => self.sra(Register::A),
+                0x30 => self.swap(Register::B),
+                0x31 => self.swap(Register::C),
+                0x32 => self.swap(Register::D),
+                0x33 => self.swap(Register::E),
+                0x34 => self.swap(Register::H),
+                0x35 => self.swap(Register::L),
+                0x36 => self.swap(Register::PHL),
+                0x37 => self.swap(Register::A),
+                0x38 => self.srl(Register::B),
+                0x39 => self.srl(Register::C),
+                0x3A => self.srl(Register::D),
+                0x3B => self.srl(Register::E),
+                0x3C => self.srl(Register::H),
+                0x3D => self.srl(Register::L),
+                0x3E => self.srl(Register::PHL),
+                0x3F => self.srl(Register::A),
+                0x40 => self.bit(0, Register::B),
+                0x41 => self.bit(0, Register::C),
+                0x42 => self.bit(0, Register::D),
+                0x43 => self.bit(0, Register::E),
+                0x44 => self.bit(0, Register::H),
+                0x45 => self.bit(0, Register::L),
+                0x46 => self.bit(0, Register::PHL),
+                0x47 => self.bit(0, Register::A),
+                0x48 => self.bit(1, Register::B),
+                0x49 => self.bit(1, Register::C),
+                0x4A => self.bit(1, Register::D),
+                0x4B => self.bit(1, Register::E),
+                0x4C => self.bit(1, Register::H),
+                0x4D => self.bit(1, Register::L),
+                0x4E => self.bit(1, Register::PHL),
+                0x4F => self.bit(1, Register::A),
+                0x50 => self.bit(2, Register::B),
+                0x51 => self.bit(2, Register::C),
+                0x52 => self.bit(2, Register::D),
+                0x53 => self.bit(2, Register::E),
+                0x54 => self.bit(2, Register::H),
+                0x55 => self.bit(2, Register::L),
+                0x56 => self.bit(2, Register::PHL),
+                0x57 => self.bit(2, Register::A),
+                0x58 => self.bit(3, Register::B),
+                0x59 => self.bit(3, Register::C),
+                0x5A => self.bit(3, Register::D),
+                0x5B => self.bit(3, Register::E),
+                0x5C => self.bit(3, Register::H),
+                0x5D => self.bit(3, Register::L),
+                0x5E => self.bit(3, Register::PHL),
+                0x5F => self.bit(3, Register::A),
+                0x60 => self.bit(4, Register::B),
+                0x61 => self.bit(4, Register::C),
+                0x62 => self.bit(4, Register::D),
+                0x63 => self.bit(4, Register::E),
+                0x64 => self.bit(4, Register::H),
+                0x65 => self.bit(4, Register::L),
+                0x66 => self.bit(4, Register::PHL),
+                0x67 => self.bit(4, Register::A),
+                0x68 => self.bit(5, Register::B),
+                0x69 => self.bit(5, Register::C),
+                0x6A => self.bit(5, Register::D),
+                0x6B => self.bit(5, Register::E),
+                0x6C => self.bit(5, Register::H),
+                0x6D => self.bit(5, Register::L),
+                0x6E => self.bit(5, Register::PHL),
+                0x6F => self.bit(5, Register::A),
+                0x70 => self.bit(6, Register::B),
+                0x71 => self.bit(6, Register::C),
+                0x72 => self.bit(6, Register::D),
+                0x73 => self.bit(6, Register::E),
+                0x74 => self.bit(6, Register::H),
+                0x75 => self.bit(6, Register::L),
+                0x76 => self.bit(6, Register::PHL),
+                0x77 => self.bit(6, Register::A),
+                0x78 => self.bit(7, Register::B),
+                0x79 => self.bit(7, Register::C),
+                0x7A => self.bit(7, Register::D),
+                0x7B => self.bit(7, Register::E),
+                0x7C => self.bit(7, Register::H),
+                0x7D => self.bit(7, Register::L),
+                0x7E => self.bit(7, Register::PHL),
+                0x7F => self.bit(7, Register::A),
+                0x80 => self.res(0, Register::B),
+                0x81 => self.res(0, Register::C),
+                0x82 => self.res(0, Register::D),
+                0x83 => self.res(0, Register::E),
+                0x84 => self.res(0, Register::H),
+                0x85 => self.res(0, Register::L),
+                0x86 => self.res(0, Register::PHL),
+                0x87 => self.res(0, Register::A),
+                0x88 => self.res(1, Register::B),
+                0x89 => self.res(1, Register::C),
+                0x8A => self.res(1, Register::D),
+                0x8B => self.res(1, Register::E),
+                0x8C => self.res(1, Register::H),
+                0x8D => self.res(1, Register::L),
+                0x8E => self.res(1, Register::PHL),
+                0x8F => self.res(1, Register::A),
+                0x90 => self.res(2, Register::B),
+                0x91 => self.res(2, Register::C),
+                0x92 => self.res(2, Register::D),
+                0x93 => self.res(2, Register::E),
+                0x94 => self.res(2, Register::H),
+                0x95 => self.res(2, Register::L),
+                0x96 => self.res(2, Register::PHL),
+                0x97 => self.res(2, Register::A),
+                0x98 => self.res(3, Register::B),
+                0x99 => self.res(3, Register::C),
+                0x9A => self.res(3, Register::D),
+                0x9B => self.res(3, Register::E),
+                0x9C => self.res(3, Register::H),
+                0x9D => self.res(3, Register::L),
+                0x9E => self.res(3, Register::PHL),
+                0x9F => self.res(3, Register::A),
+                0xA0 => self.res(4, Register::B),
+                0xA1 => self.res(4, Register::C),
+                0xA2 => self.res(4, Register::D),
+                0xA3 => self.res(4, Register::E),
+                0xA4 => self.res(4, Register::H),
+                0xA5 => self.res(4, Register::L),
+                0xA6 => self.res(4, Register::PHL),
+                0xA7 => self.res(4, Register::A),
+                0xA8 => self.res(5, Register::B),
+                0xA9 => self.res(5, Register::C),
+                0xAA => self.res(5, Register::D),
+                0xAB => self.res(5, Register::E),
+                0xAC => self.res(5, Register::H),
+                0xAD => self.res(5, Register::L),
+                0xAE => self.res(5, Register::PHL),
+                0xAF => self.res(5, Register::A),
+                0xB0 => self.res(6, Register::B),
+                0xB1 => self.res(6, Register::C),
+                0xB2 => self.res(6, Register::D),
+                0xB3 => self.res(6, Register::E),
+                0xB4 => self.res(6, Register::H),
+                0xB5 => self.res(6, Register::L),
+                0xB6 => self.res(6, Register::PHL),
+                0xB7 => self.res(6, Register::A),
+                0xB8 => self.res(7, Register::B),
+                0xB9 => self.res(7, Register::C),
+                0xBA => self.res(7, Register::D),
+                0xBB => self.res(7, Register::E),
+                0xBC => self.res(7, Register::H),
+                0xBD => self.res(7, Register::L),
+                0xBE => self.res(7, Register::PHL),
+                0xBF => self.res(7, Register::A),
+                0xC0 => self.set(0, Register::B),
+                0xC1 => self.set(0, Register::C),
+                0xC2 => self.set(0, Register::D),
+                0xC3 => self.set(0, Register::E),
+                0xC4 => self.set(0, Register::H),
+                0xC5 => self.set(0, Register::L),
+                0xC6 => self.set(0, Register::PHL),
+                0xC7 => self.set(0, Register::A),
+                0xC8 => self.set(1, Register::B),
+                0xC9 => self.set(1, Register::C),
+                0xCA => self.set(1, Register::D),
+                0xCB => self.set(1, Register::E),
+                0xCC => self.set(1, Register::H),
+                0xCD => self.set(1, Register::L),
+                0xCE => self.set(1, Register::PHL),
+                0xCF => self.set(1, Register::A),
+                0xD0 => self.set(2, Register::B),
+                0xD1 => self.set(2, Register::C),
+                0xD2 => self.set(2, Register::D),
+                0xD3 => self.set(2, Register::E),
+                0xD4 => self.set(2, Register::H),
+                0xD5 => self.set(2, Register::L),
+                0xD6 => self.set(2, Register::PHL),
+                0xD7 => self.set(2, Register::A),
+                0xD8 => self.set(3, Register::B),
+                0xD9 => self.set(3, Register::C),
+                0xDA => self.set(3, Register::D),
+                0xDB => self.set(3, Register::E),
+                0xDC => self.set(3, Register::H),
+                0xDD => self.set(3, Register::L),
+                0xDE => self.set(3, Register::PHL),
+                0xDF => self.set(3, Register::A),
+                0xE0 => self.set(4, Register::B),
+                0xE1 => self.set(4, Register::C),
+                0xE2 => self.set(4, Register::D),
+                0xE3 => self.set(4, Register::E),
+                0xE4 => self.set(4, Register::H),
+                0xE5 => self.set(4, Register::L),
+                0xE6 => self.set(4, Register::PHL),
+                0xE7 => self.set(4, Register::A),
+                0xE8 => self.set(5, Register::B),
+                0xE9 => self.set(5, Register::C),
+                0xEA => self.set(5, Register::D),
+                0xEB => self.set(5, Register::E),
+                0xEC => self.set(5, Register::H),
+                0xED => self.set(5, Register::L),
+                0xEE => self.set(5, Register::PHL),
+                0xEF => self.set(5, Register::A),
+                0xF0 => self.set(6, Register::B),
+                0xF1 => self.set(6, Register::C),
+                0xF2 => self.set(6, Register::D),
+                0xF3 => self.set(6, Register::E),
+                0xF4 => self.set(6, Register::H),
+                0xF5 => self.set(6, Register::L),
+                0xF6 => self.set(6, Register::PHL),
+                0xF7 => self.set(6, Register::A),
+                0xF8 => self.set(7, Register::B),
+                0xF9 => self.set(7, Register::C),
+                0xFA => self.set(7, Register::D),
+                0xFB => self.set(7, Register::E),
+                0xFC => self.set(7, Register::H),
+                0xFD => self.set(7, Register::L),
+                0xFE => self.set(7, Register::PHL),
+                0xFF => self.set(7, Register::A),
+            },
             0xCC => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_ne_bytes([b2, b1]);
-                self.callc(Condition::Z, addr);
+                let b = self.imm_u16();
+                self.callc(Condition::Z, b);
             }
             0xCD => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_ne_bytes([b2, b1]);
-                self.call(addr);
+                let b = self.imm_u16();
+                self.call(b);
             }
             // TODO
             // Unimplemented ADC
@@ -659,18 +642,12 @@ impl Cpu {
             0xD0 => self.retc(Condition::NC),
             0xD1 => self.pop(Register::DE),
             0xD2 => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_ne_bytes([b2, b1]);
-                self.jpc(Condition::NZ, addr);
+                let b = self.imm_u16();
+                self.jpc(Condition::NZ, b);
             }
             0xD4 => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_ne_bytes([b2, b1]);
-                self.jp(addr);
+                let b = self.imm_u16();
+                self.jp(b);
             }
             0xD5 => self.push(Register::DE),
             // TODO
@@ -684,18 +661,12 @@ impl Cpu {
             0xD8 => self.retc(Condition::C),
             0xD9 => self.reti(),
             0xDA => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_ne_bytes([b2, b1]);
-                self.jpc(Condition::C, addr);
+                let b = self.imm_u16();
+                self.jpc(Condition::C, b);
             }
             0xDC => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                let addr = u16::from_ne_bytes([b2, b1]);
-                self.callc(Condition::C, addr);
+                let b = self.imm_u16();
+                self.callc(Condition::C, b);
             }
             // TODO
             // Unimplemented SBC
@@ -706,8 +677,7 @@ impl Cpu {
             // }
             0xDF => self.rst(),
             0xE0 => {
-                let b = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
                 self.memory
                     .write_byte(0xFF00 + b as u16, self.get_regu8(Register::A))
             }
@@ -732,23 +702,17 @@ impl Cpu {
             // }
             0xE9 => self.jp(self.get_regu16(Register::HL)),
             0xEA => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let addr = u16::from_ne_bytes([b2, b1]);
-                self.memory.write_byte(addr, self.get_regu8(Register::A));
+                let b = self.imm_u16();
+                self.memory.write_byte(b, self.get_regu8(Register::A));
             }
             0xEE => {
-                let b = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
                 self.xor(b);
             }
             // TODO
             0xEF => self.rst(),
             0xF0 => {
-                let b = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
                 self.ld_regu8(Register::A, self.memory.get_address(0xFF00 + b as u16))
             }
             0xF1 => self.pop(Register::AF),
@@ -761,15 +725,13 @@ impl Cpu {
             0xF3 => self.di(),
             0xF5 => self.push(Register::AF),
             0xF6 => {
-                let b = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
                 self.or(b);
             }
             // TODO
             0xF7 => self.rst(),
             0xF8 => {
-                let b = self.memory.get_address(self.pc) as i8;
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8() as i8;
 
                 // https://stackoverflow.com/a/53455823
                 let sp = self.get_regu16(Register::SP).wrapping_add(b as u16);
@@ -777,17 +739,12 @@ impl Cpu {
             }
             0xF9 => self.ld_regu16(Register::SP, self.get_regu16(Register::HL)),
             0xFA => {
-                let b1 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let b2 = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
-                let addr = u16::from_ne_bytes([b2, b1]);
-                self.ld_regu8(Register::A, self.memory.get_address(addr));
+                let b = self.imm_u16();
+                self.ld_regu8(Register::A, self.memory.get_address(b));
             }
             0xFB => self.ei(),
             0xFE => {
-                let b = self.memory.get_address(self.pc);
-                self.pc = self.pc.wrapping_add(1);
+                let b = self.imm_u8();
                 self.cp(b);
             }
             // TODO
@@ -1029,8 +986,10 @@ impl Cpu {
     fn add_u8(&mut self, reg: Register, n: u8) {
         let (val, over) = self.get_regu8(reg).overflowing_add(n);
         self.set_regu8(reg, val);
-        self.af.set_z(over);
-        unimplemented!("Rest of flags")
+        self.af.set_c(over);
+        // self.half_carry(a, n);
+        // self.af.set_z(val == 0);
+        // self.af.set_n(false);
     }
 
     fn add_u16(&mut self, reg: Register, n: u16) {
