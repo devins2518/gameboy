@@ -280,36 +280,34 @@ impl Cpu {
             0x87 => self.add_u8(Register::A, self.get_regu8(Register::A)),
             // TODO
             // Unimplemented adc
-            // 0x88 => self.adc(Register::A, self.get_regu8(Register::B)),
-            // 0x89 => self.adc(Register::A, self.get_regu8(Register::C)),
-            // 0x8A => self.adc(Register::A, self.get_regu8(Register::D)),
-            // 0x8B => self.adc(Register::A, self.get_regu8(Register::E)),
-            // 0x8C => self.adc(Register::A, self.get_regu8(Register::H)),
-            // 0x8D => self.adc(Register::A, self.get_regu8(Register::L)),
-            // 0x8E => self.adc(Register::A, self.get_regu8(Register::PHL)),
-            // 0x8F => self.adc(Register::A, self.get_regu8(Register::A)),
+            0x88 => self.adc(self.get_regu8(Register::B)),
+            0x89 => self.adc(self.get_regu8(Register::C)),
+            0x8A => self.adc(self.get_regu8(Register::D)),
+            0x8B => self.adc(self.get_regu8(Register::E)),
+            0x8C => self.adc(self.get_regu8(Register::H)),
+            0x8D => self.adc(self.get_regu8(Register::L)),
+            0x8E => self.adc(self.get_regu8(Register::PHL)),
+            0x8F => self.adc(self.get_regu8(Register::A)),
             // TODO
             // Unimplemented sub
-            // 0x90 => self.sub(Register::A, self.get_regu8(Register::B)),
-            // 0x91 => self.sub(Register::A, self.get_regu8(Register::C)),
-            // 0x92 => self.sub(Register::A, self.get_regu8(Register::D)),
-            // 0x93 => self.sub(Register::A, self.get_regu8(Register::E)),
-            // 0x94 => self.sub(Register::A, self.get_regu8(Register::H)),
-            // 0x95 => self.sub(Register::A, self.get_regu8(Register::L)),
-            // 0x96 => self.sub(Register::A, self.get_regu8(Register::PHL)),
-            // 0x97 => self.sub(Register::A, self.get_regu8(Register::A)),
+            0x90 => self.sub(self.get_regu8(Register::B)),
+            0x91 => self.sub(self.get_regu8(Register::C)),
+            0x92 => self.sub(self.get_regu8(Register::D)),
+            0x93 => self.sub(self.get_regu8(Register::E)),
+            0x94 => self.sub(self.get_regu8(Register::H)),
+            0x95 => self.sub(self.get_regu8(Register::L)),
+            0x96 => self.sub(self.get_regu8(Register::PHL)),
+            0x97 => self.sub(self.get_regu8(Register::A)),
             // TODO
             // Unimplemented sbc
-            // 0x98 => self.sbc(Register::A, self.get_regu8(Register::B)),
-            // 0x99 => self.sbc(Register::A, self.get_regu8(Register::C)),
-            // 0x9A => self.sbc(Register::A, self.get_regu8(Register::D)),
-            // 0x9B => self.sbc(Register::A, self.get_regu8(Register::E)),
-            // 0x9C => self.sbc(Register::A, self.get_regu8(Register::H)),
-            // 0x9D => self.sbc(Register::A, self.get_regu8(Register::L)),
-            // 0x9E => self.sbc(Register::A, self.get_regu8(Register::PHL)),
-            // 0x9F => self.sbc(Register::A, self.get_regu8(Register::A)),
-            // TODO
-            // Unimplemented and
+            0x98 => self.sbc(self.get_regu8(Register::B)),
+            0x99 => self.sbc(self.get_regu8(Register::C)),
+            0x9A => self.sbc(self.get_regu8(Register::D)),
+            0x9B => self.sbc(self.get_regu8(Register::E)),
+            0x9C => self.sbc(self.get_regu8(Register::H)),
+            0x9D => self.sbc(self.get_regu8(Register::L)),
+            0x9E => self.sbc(self.get_regu8(Register::PHL)),
+            0x9F => self.sbc(self.get_regu8(Register::A)),
             0xA0 => self.and(self.get_regu8(Register::B)),
             0xA1 => self.and(self.get_regu8(Register::C)),
             0xA2 => self.and(self.get_regu8(Register::D)),
@@ -633,11 +631,10 @@ impl Cpu {
             }
             // TODO
             // Unimplemented ADC
-            // 0xCE => {
-            //     let b = self.memory.get_address(self.pc);
-            //     self.pc = self.pc.wrapping_add(1);
-            //     self.adc(Register::A, b);
-            // }
+            0xCE => {
+                let b = self.imm_u8();
+                self.adc(b);
+            }
             0xCF => self.rst(),
             0xD0 => self.retc(Condition::NC),
             0xD1 => self.pop(Register::DE),
@@ -999,9 +996,30 @@ impl Cpu {
         unimplemented!("Rest of flags")
     }
 
+    fn adc(&mut self, n: u8) {
+        let prev = self.get_regu8(Register::A);
+        let (val, over) = prev.overflowing_add(n.wrapping_add(self.af.c() as u8));
+        self.set_regu8(Register::A, val);
+        self.af.set_z(val == 0);
+        self.af.set_n(false);
+        self.half_carry(prev, n);
+        self.af.set_c(over);
+    }
+
     fn sub(&mut self, n: u8) {
         let prev = self.get_regu8(Register::A);
         let (val, over) = prev.overflowing_sub(n);
+        self.set_regu8(Register::A, val);
+        self.af.set_z(val == 0);
+        self.af.set_n(true);
+        // TODO > Set if no borrow from bit 4
+        self.half_carry(prev, n);
+        self.af.set_c(over);
+    }
+
+    fn sbc(&mut self, n: u8) {
+        let prev = self.get_regu8(Register::A);
+        let (val, over) = prev.overflowing_sub(n.wrapping_sub(!(self.af.c() as u8)));
         self.set_regu8(Register::A, val);
         self.af.set_z(val == 0);
         self.af.set_n(true);
@@ -1081,7 +1099,7 @@ impl Cpu {
                 self.hl[1] = res;
                 res
             }
-            HL => {
+            PHL => {
                 let b = self.memory.get_address(self.hl.into());
                 let res = ((b & 0x0f) << 4) | ((b & 0xf0) >> 4);
                 self.memory.write_byte(self.hl.into(), res);
@@ -1167,7 +1185,71 @@ impl Cpu {
     }
 
     fn rr(&mut self, reg: Register) {
-        unimplemented!()
+        use Register::*;
+        let result = match reg {
+            A => {
+                let a = self.af.a();
+                let x = (self.af.c() as u8) << 7 | a >> 1;
+                self.af.set_c(a & 0x1 == 1);
+                self.af.set_a(x);
+                x
+            }
+            B => {
+                let b = self.bc[0];
+                let x = (self.af.c() as u8) << 7 | b >> 1;
+                self.af.set_c(b & 0x1 == 1);
+                self.bc[0] = x;
+                x
+            }
+            C => {
+                let c = self.bc[1];
+                let x = (self.af.c() as u8) << 7 | c >> 1;
+                self.af.set_c(c & 0x1 == 1);
+                self.bc[1] = x;
+                x
+            }
+            D => {
+                let d = self.de[0];
+                let x = (self.af.c() as u8) << 7 | d >> 1;
+                self.af.set_c(d & 0x1 == 1);
+                self.de[0] = x;
+                x
+            }
+            E => {
+                let e = self.de[1];
+                let x = (self.af.c() as u8) << 7 | e >> 1;
+                self.af.set_c(e & 0x1 == 1);
+                self.de[1] = x;
+                x
+            }
+            H => {
+                let h = self.hl[0];
+                let x = (self.af.c() as u8) << 7 | h >> 1;
+                self.af.set_c(h & 0x1 == 1);
+                self.hl[0] = x;
+                x
+            }
+            L => {
+                let l = self.hl[1];
+                let x = (self.af.c() as u8) << 7 | l >> 1;
+                self.af.set_c(l & 0x1 == 1);
+                self.hl[1] = x;
+                x
+            }
+            PHL => {
+                let p = self.memory.get_address(self.hl.into());
+                let x = (self.af.c() as u8) << 7 | p >> 1;
+                self.af.set_c(p & 0x1 == 1);
+                self.memory.write_byte(self.hl.into(), x);
+                x
+            }
+            _ => unreachable!(),
+        };
+
+        self.af.set_z(result == 0);
+        self.af.set_n(false);
+        self.af.set_h(false);
+        self.af.set_c(false);
     }
 
     fn sla(&mut self, reg: Register) {
@@ -1249,10 +1331,10 @@ impl Cpu {
 
     fn jpc(&mut self, cond: Condition, val: u16) {
         let cond = match cond {
-            Condition::NZ => self.af.z() == false,
-            Condition::Z => self.af.z() == true,
-            Condition::NC => self.af.c() == false,
-            Condition::C => self.af.c() == true,
+            Condition::NZ => !self.af.z(),
+            Condition::Z => self.af.z(),
+            Condition::NC => !self.af.c(),
+            Condition::C => self.af.c(),
         };
 
         if cond {
@@ -1271,10 +1353,10 @@ impl Cpu {
 
     fn jrc(&mut self, cond: Condition, n: i8) {
         let cond = match cond {
-            Condition::NZ => self.af.z() == false,
-            Condition::Z => self.af.z() == true,
-            Condition::NC => self.af.c() == false,
-            Condition::C => self.af.c() == true,
+            Condition::NZ => !self.af.z(),
+            Condition::Z => self.af.z(),
+            Condition::NC => !self.af.c(),
+            Condition::C => self.af.c(),
         };
 
         if cond {

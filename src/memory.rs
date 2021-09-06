@@ -36,7 +36,7 @@ impl Bus {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from ROM, bank 01: {:#X}", addr);
 
-                unimplemented!()
+                self.rom[addr as usize]
             }
             0x8000..=0x9FFF => {
                 #[cfg(debug_assertions)]
@@ -46,7 +46,7 @@ impl Bus {
             }
             0xA000..=0xBFFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to read from RAM: {:#X}", addr);
+                println!("Attempt to read from cartridge RAM: {:#X}", addr);
 
                 unimplemented!()
             }
@@ -110,7 +110,7 @@ impl Bus {
                 #[cfg(debug_assertions)]
                 println!("Attempt to write to ROM, bank 01: {:#X}", addr);
 
-                unimplemented!()
+                self.rom[addr as usize] = byte;
             }
             0x8000..=0x9FFF => {
                 #[cfg(debug_assertions)]
