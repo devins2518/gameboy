@@ -1153,11 +1153,14 @@ impl Cpu {
     }
 
     fn rlca(&mut self) {
-        self.af.set_c(self.af.a() >> 7 == 1);
-        let res = self.af.a().rotate_left(1);
-        self.af.set_a(res);
-        self.af.set_z(res == 0);
-        unimplemented!();
+        let a = self.af.a();
+        let x = self.af.c() as u8 | a << 7;
+        self.af.set_c(a & 0x80 == 1);
+        self.af.set_a(x);
+
+        self.af.set_z(x == 0);
+        self.af.set_n(false);
+        self.af.set_h(false);
     }
 
     fn rla(&mut self) {
@@ -1249,7 +1252,6 @@ impl Cpu {
         self.af.set_z(result == 0);
         self.af.set_n(false);
         self.af.set_h(false);
-        self.af.set_c(false);
     }
 
     fn sla(&mut self, reg: Register) {
