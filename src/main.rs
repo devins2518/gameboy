@@ -10,6 +10,12 @@ struct GameBoy {
     cpu: Cpu,
 }
 
+impl GameBoy {
+    fn clock(&mut self) {
+        self.cpu.clock();
+    }
+}
+
 fn main() {
     let path = std::env::args().nth(0).unwrap();
     let bus = Bus::new(&path);
@@ -19,6 +25,6 @@ fn main() {
     let mut gb = GameBoy { cpu };
 
     loop {
-        gb.cpu.clock();
+        gb.clock();
     }
 }

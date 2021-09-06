@@ -6,6 +6,7 @@ use std::{
 
 #[derive(Clone)]
 pub struct Bus {
+    bootrom: BootRom,
     cartridge: Cartridge,
     vram: VRam,
     ram: Ram,
@@ -18,6 +19,7 @@ pub struct Bus {
 impl Bus {
     pub fn new<P: AsRef<Path>>(path: P) -> Self {
         Self {
+            bootrom: BootRom::default(),
             cartridge: Cartridge::new(path),
             vram: VRam::default(),
             ram: Ram::default(),
@@ -30,7 +32,14 @@ impl Bus {
 
     pub fn get_address(&self, addr: u16) -> u8 {
         match addr {
-            0x0000..=0x3FFF => {
+            0x0000..=0x00FF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to read from ROM, bank 00: {:#X}", addr);
+
+                // ROM_START = 0x0000 so it will panic at runtime
+                self.bootrom[addr as usize]
+            }
+            0x0100..=0x3FFF => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from ROM, bank 00: {:#X}", addr);
 
@@ -106,7 +115,14 @@ impl Bus {
 
     pub fn write_byte(&mut self, addr: u16, byte: u8) {
         match addr {
-            0x0000..=0x3FFF => {
+            0x0000..=0x00FF => {
+                #[cfg(debug_assertions)]
+                println!("Attempt to write to ROM, bank 00: {:#X}", addr);
+
+                // ROM_START = 0x0000 so it will panic at runtime
+                self.bootrom[addr as usize] = byte;
+            }
+            0x0100..=0x3FFF => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to write to ROM, bank 00: {:#X}", addr);
 
@@ -176,16 +192,15 @@ impl Bus {
     }
 }
 
-pub const ROM_SIZE: usize = 0x8000;
-pub const ROM_START: usize = 0x0000;
+pub const BOOTROM_SIZE: usize = 0x0100;
+pub const BOOTROM_START: usize = 0x0000;
 #[derive(Clone)]
-pub struct Rom([u8; ROM_SIZE]);
+struct BootRom([u8; BOOTROM_SIZE]);
 
-impl Default for Rom {
+impl Default for BootRom {
     fn default() -> Self {
-        let mut mem = [0; ROM_SIZE];
         // https://gbdev.gg8.se/wiki/articles/Gameboy_Bootstrap_ROM#Contents_of_the_ROM
-        mem[0x0..=0xFF].copy_from_slice(&[
+        let mut mem: [u8; BOOTROM_SIZE] = [
             0x31, 0xfe, 0xff, 0x3e, 0x30, 0xe0, 0x00, 0xaf, 0x21, 0xff, 0x9f, 0x32, 0xcb, 0x7c,
             0x20, 0xfb, 0x21, 0x26, 0xff, 0x0e, 0x11, 0x3e, 0x80, 0x32, 0xe2, 0x0c, 0x3e, 0xf3,
             0xe2, 0x32, 0x3e, 0x77, 0x77, 0x3e, 0xfc, 0xe0, 0x47, 0x21, 0x5f, 0xc0, 0x0e, 0x08,
@@ -205,21 +220,21 @@ impl Default for Rom {
             0xf5, 0x22, 0x23, 0x22, 0x23, 0xc9, 0x3c, 0x42, 0xb9, 0xa5, 0xb9, 0xa5, 0x42, 0x3c,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x3e, 0x01, 0xe0, 0x50,
-        ]);
+        ];
 
         Self(mem)
     }
 }
 
-impl Deref for Rom {
-    type Target = [u8; ROM_SIZE];
+impl Deref for BootRom {
+    type Target = [u8; BOOTROM_SIZE];
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl DerefMut for Rom {
+impl DerefMut for BootRom {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -228,7 +243,7 @@ impl DerefMut for Rom {
 pub const VRAM_SIZE: usize = 0x8000;
 pub const VRAM_START: usize = 0x8000;
 #[derive(Clone)]
-pub struct VRam([u8; VRAM_SIZE]);
+struct VRam([u8; VRAM_SIZE]);
 
 impl Default for VRam {
     fn default() -> Self {
@@ -253,7 +268,7 @@ impl DerefMut for VRam {
 pub const RAM_SIZE: usize = 0x8000;
 pub const RAM_START: usize = 0xC000;
 #[derive(Clone)]
-pub struct Ram([u8; RAM_SIZE]);
+struct Ram([u8; RAM_SIZE]);
 
 impl Default for Ram {
     fn default() -> Self {
@@ -278,7 +293,7 @@ impl DerefMut for Ram {
 pub const SPRATTRTABLE_SIZE: usize = 0xA0;
 pub const SPRATTRTABLE_START: usize = 0xFE00;
 #[derive(Clone)]
-pub struct SprAttrTable([u8; SPRATTRTABLE_SIZE]);
+struct SprAttrTable([u8; SPRATTRTABLE_SIZE]);
 
 impl Default for SprAttrTable {
     fn default() -> Self {
@@ -303,7 +318,7 @@ impl DerefMut for SprAttrTable {
 pub const IOREG_SIZE: usize = 0x80;
 pub const IOREG_START: usize = 0xFF00;
 #[derive(Clone)]
-pub struct IOReg([u8; IOREG_SIZE]);
+struct IOReg([u8; IOREG_SIZE]);
 
 impl Default for IOReg {
     fn default() -> Self {
@@ -328,7 +343,7 @@ impl DerefMut for IOReg {
 pub const HRAM_SIZE: usize = 0x80;
 pub const HRAM_START: usize = 0xFF80;
 #[derive(Clone)]
-pub struct HRam([u8; HRAM_SIZE]);
+struct HRam([u8; HRAM_SIZE]);
 
 impl Default for HRam {
     fn default() -> Self {
