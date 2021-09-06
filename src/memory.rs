@@ -1,7 +1,12 @@
-use std::ops::{Deref, DerefMut};
+use crate::cartridge::Cartridge;
+use std::{
+    ops::{Deref, DerefMut},
+    path::Path,
+};
 
+#[derive(Clone)]
 pub struct Bus {
-    rom: Rom,
+    cartridge: Cartridge,
     vram: VRam,
     ram: Ram,
     spr_attr_table: SprAttrTable,
@@ -11,9 +16,9 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new() -> Self {
+    pub fn new<P: AsRef<Path>>(path: P) -> Self {
         Self {
-            rom: Rom::default(),
+            cartridge: Cartridge::new(path),
             vram: VRam::default(),
             ram: Ram::default(),
             spr_attr_table: SprAttrTable::default(),
@@ -30,13 +35,15 @@ impl Bus {
                 println!("Attempt to read from ROM, bank 00: {:#X}", addr);
 
                 // ROM_START = 0x0000 so it will panic at runtime
-                self.rom[addr as usize]
+                // self.rom[addr as usize]
+                unimplemented!()
             }
             0x4000..=0x7FFF => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to read from ROM, bank 01: {:#X}", addr);
 
-                self.rom[addr as usize]
+                // self.rom[addr as usize]
+                unimplemented!()
             }
             0x8000..=0x9FFF => {
                 #[cfg(debug_assertions)]
@@ -104,13 +111,15 @@ impl Bus {
                 println!("Attempt to write to ROM, bank 00: {:#X}", addr);
 
                 // ROM_START = 0x0000 so it will panic at runtime
-                self.rom[addr as usize] = byte;
+                // self.rom[addr as usize] = byte;
+                unimplemented!()
             }
             0x4000..=0x7FFF => {
                 #[cfg(debug_assertions)]
                 println!("Attempt to write to ROM, bank 01: {:#X}", addr);
 
-                self.rom[addr as usize] = byte;
+                // self.rom[addr as usize] = byte;
+                unimplemented!()
             }
             0x8000..=0x9FFF => {
                 #[cfg(debug_assertions)]
@@ -169,6 +178,7 @@ impl Bus {
 
 pub const ROM_SIZE: usize = 0x8000;
 pub const ROM_START: usize = 0x0000;
+#[derive(Clone)]
 pub struct Rom([u8; ROM_SIZE]);
 
 impl Default for Rom {
@@ -217,6 +227,7 @@ impl DerefMut for Rom {
 
 pub const VRAM_SIZE: usize = 0x8000;
 pub const VRAM_START: usize = 0x8000;
+#[derive(Clone)]
 pub struct VRam([u8; VRAM_SIZE]);
 
 impl Default for VRam {
@@ -241,6 +252,7 @@ impl DerefMut for VRam {
 
 pub const RAM_SIZE: usize = 0x8000;
 pub const RAM_START: usize = 0xC000;
+#[derive(Clone)]
 pub struct Ram([u8; RAM_SIZE]);
 
 impl Default for Ram {
@@ -265,6 +277,7 @@ impl DerefMut for Ram {
 
 pub const SPRATTRTABLE_SIZE: usize = 0xA0;
 pub const SPRATTRTABLE_START: usize = 0xFE00;
+#[derive(Clone)]
 pub struct SprAttrTable([u8; SPRATTRTABLE_SIZE]);
 
 impl Default for SprAttrTable {
@@ -289,6 +302,7 @@ impl DerefMut for SprAttrTable {
 
 pub const IOREG_SIZE: usize = 0x80;
 pub const IOREG_START: usize = 0xFF00;
+#[derive(Clone)]
 pub struct IOReg([u8; IOREG_SIZE]);
 
 impl Default for IOReg {
@@ -313,6 +327,7 @@ impl DerefMut for IOReg {
 
 pub const HRAM_SIZE: usize = 0x80;
 pub const HRAM_START: usize = 0xFF80;
+#[derive(Clone)]
 pub struct HRam([u8; HRAM_SIZE]);
 
 impl Default for HRam {

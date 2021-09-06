@@ -16,7 +16,7 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new() -> Self {
+    pub fn new(bus: Bus) -> Self {
         Cpu {
             af: 0.into(),
             bc: 0.into(),
@@ -24,7 +24,7 @@ impl Cpu {
             hl: 0.into(),
             sp: 0x0000,
             pc: 0x0000,
-            memory: Bus::new(),
+            memory: bus,
             interrupt_enable: InterruptStatus::Unset,
         }
     }
