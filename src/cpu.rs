@@ -1537,11 +1537,18 @@ impl From<AFReg> for u16 {
 
 #[test]
 fn test_cpu() {
-    let mut cpu = Cpu::new();
+    let bus = Bus::new(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/roms/blargg/cpu_instrs/cpu_instrs.gb"
+    ));
+    let mut cpu = Cpu::new(bus);
     cpu.af.set_z(true);
     assert_eq!(cpu.af.z(), true);
     cpu.af.set_z(false);
     assert_eq!(cpu.af.z(), false);
     cpu.af.set_z(true);
     assert_eq!(cpu.get_regu8(Register::F), 0b10000000);
+    loop {
+        cpu.clock();
+    }
 }
