@@ -34,14 +34,17 @@ impl Bus {
         match addr {
             0x0000..=0x00FF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to read from ROM, bank 00: {:#X}", addr);
+                println!(
+                    "Attempt to read from ROM, bank 00: {:#06X}, value: {:#04X}",
+                    addr, self.bootrom[addr as usize]
+                );
 
                 // ROM_START = 0x0000 so it will panic at runtime
                 self.bootrom[addr as usize]
             }
             0x0100..=0x3FFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to read from ROM, bank 00: {:#X}", addr);
+                println!("Attempt to read from ROM, bank 00: {:#06X}", addr);
 
                 // ROM_START = 0x0000 so it will panic at runtime
                 // self.rom[addr as usize]
@@ -49,32 +52,44 @@ impl Bus {
             }
             0x4000..=0x7FFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to read from ROM, bank 01: {:#X}", addr);
+                println!("Attempt to read from ROM, bank 01: {:#06X}", addr);
 
                 // self.rom[addr as usize]
                 unimplemented!()
             }
             0x8000..=0x9FFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to read from VRAM: {:#X}", addr);
+                println!(
+                    "Attempt to read from VRAM: {:#06X}, value: {:#04X}",
+                    addr,
+                    self.vram[addr as usize % VRAM_START]
+                );
 
                 self.vram[addr as usize % VRAM_START]
             }
             0xA000..=0xBFFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to read from cartridge RAM: {:#X}", addr);
+                println!("Attempt to read from cartridge RAM: {:#06X}", addr);
 
                 unimplemented!()
             }
             0xC000..=0xDFFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to read from WRAM: {:#X}", addr);
+                println!(
+                    "Attempt to read from WRAM: {:#06X}, value: {:#04X}",
+                    addr,
+                    self.ram[addr as usize % RAM_START]
+                );
 
                 self.ram[addr as usize % RAM_START]
             }
             0xE000..=0xFDFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to read from Echo RAM: {:#X}", addr);
+                println!(
+                    "Attempt to read from Echo RAM: {:#06X}, value: {:#04X}",
+                    addr,
+                    self.ram[(addr as usize - 0x2000) % RAM_START]
+                );
 
                 // I think
                 // 0xE000 - 0xC000 = 0x2000
@@ -82,30 +97,42 @@ impl Bus {
             }
             0xFE00..=0xFE9F => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to read from Sprite Attribute Table: {:#X}", addr);
+                println!(
+                    "Attempt to read from Sprite Attribute Table: {:#06X}, value: {:#04X}",
+                    addr,
+                    self.spr_attr_table[addr as usize % SPRATTRTABLE_START]
+                );
 
                 self.spr_attr_table[addr as usize % SPRATTRTABLE_START]
             }
             0xFEA0..=0xFEFF => {
-                unreachable!("Attempted to read from prohibited area: {:#X}", addr)
+                unreachable!("Attempted to read from prohibited area: {:#06X}", addr)
             }
             0xFF00..=0xFF7F => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to read from I/O registers: {:#X}", addr);
+                println!(
+                    "Attempt to read from I/O registers: {:#06X}, value: {:#04X}",
+                    addr,
+                    self.io_reg[addr as usize % IOREG_START]
+                );
 
                 self.io_reg[addr as usize % IOREG_START]
             }
             0xFF80..=0xFFFE => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to read from high RAM: {:#X}", addr);
+                println!(
+                    "Attempt to read from high RAM: {:#06X}, value: {:#04X}",
+                    addr,
+                    self.hram[addr as usize % HRAM_START]
+                );
 
                 self.hram[addr as usize % HRAM_START]
             }
             0xFFFF => {
                 #[cfg(debug_assertions)]
                 println!(
-                    "Attempt to read from Interrupt Enable register: {:#X}",
-                    addr
+                    "Attempt to read from Interrupt Enable register: {:#06X}, value: {:#04X}",
+                    addr, self.ie_reg
                 );
 
                 self.ie_reg
@@ -117,14 +144,14 @@ impl Bus {
         match addr {
             0x0000..=0x00FF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to write to ROM, bank 00: {:#X}", addr);
+                println!("Attempt to write to ROM, bank 00. {:#06X}", addr);
 
                 // ROM_START = 0x0000 so it will panic at runtime
                 self.bootrom[addr as usize] = byte;
             }
             0x0100..=0x3FFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to write to ROM, bank 00: {:#X}", addr);
+                println!("Attempt to write to ROM, bank 00. Addr: {:#06X}", addr);
 
                 // ROM_START = 0x0000 so it will panic at runtime
                 // self.rom[addr as usize] = byte;
@@ -132,59 +159,65 @@ impl Bus {
             }
             0x4000..=0x7FFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to write to ROM, bank 01: {:#X}", addr);
+                println!("Attempt to write to ROM, bank 01. Addr: {:#06X}", addr);
 
                 // self.rom[addr as usize] = byte;
                 unimplemented!()
             }
             0x8000..=0x9FFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to write to VRAM: {:#X}", addr);
+                println!("Attempt to write to VRAM. Addr: {:#06X}", addr);
 
                 self.vram[addr as usize % VRAM_START] = byte;
             }
             0xA000..=0xBFFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to write to RAM: {:#X}", addr);
+                println!("Attempt to write to RAM. Addr: {:#06X}", addr);
 
                 unimplemented!()
             }
             0xC000..=0xDFFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to write to WRAM: {:#X}", addr);
+                println!("Attempt to write to WRAM. Addr: {:#06X}", addr);
 
                 self.ram[addr as usize % RAM_START] = byte;
             }
             0xE000..=0xFDFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to write to Echo RAM: {:#X}", addr);
+                println!("Attempt to write to Echo RAM. Addr: {:#06X}", addr);
 
                 unimplemented!()
             }
             0xFE00..=0xFE9F => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to write to Sprite Attribute Table: {:#X}", addr);
+                println!(
+                    "Attempt to write to Sprite Attribute Table. Addr: {:#06X}",
+                    addr
+                );
 
                 self.spr_attr_table[addr as usize % SPRATTRTABLE_START] = byte;
             }
             0xFEA0..=0xFEFF => {
-                unreachable!("Attempted to write to prohibited are: {:#X}", addr)
+                unreachable!("Attempted to write to prohibited are. Addr: {:#06X}", addr)
             }
             0xFF00..=0xFF7F => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to write to I/O registers: {:#X}", addr);
+                println!("Attempt to write to I/O registers. Addr: {:#06X}", addr);
 
                 self.io_reg[addr as usize % IOREG_START] = byte;
             }
             0xFF80..=0xFFFE => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to write to high RAM: {:#X}", addr);
+                println!("Attempt to write to high RAM. Addr: {:#06X}", addr);
 
                 self.hram[addr as usize % HRAM_START] = byte;
             }
             0xFFFF..=0xFFFF => {
                 #[cfg(debug_assertions)]
-                println!("Attempt to write to Interrupt Enable register: {:#X}", addr);
+                println!(
+                    "Attempt to write to Interrupt Enable register. Addr: {:#06X}",
+                    addr
+                );
 
                 self.ie_reg = byte;
             }

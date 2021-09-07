@@ -103,8 +103,8 @@ impl Cpu {
             }
             0x17 => self.rla(),
             0x18 => {
-                let b = self.imm_u16();
-                self.jr(self.memory.get_address(b) as i8);
+                let b = self.imm_u8();
+                self.jr(b as i8);
             }
             0x19 => self.add_u8(Register::HL, self.get_regu8(Register::DE)),
             0x1A => self.ld_regu8(
@@ -1345,15 +1345,26 @@ impl Cpu {
     }
 
     fn jr(&mut self, n: i8) {
+        #[cfg(debug_assertions)]
+        println!(
+            "i8: {:#04X}, self.pc: {:#06X}, new pc: {:#06X}",
+            n,
+            self.pc,
+            self.pc.wrapping_add(n as u16)
+        );
+
         self.pc = self.pc.wrapping_add(n as u16);
-        if n <= 0 {
-            self.pc += (0 - n) as u16
-        } else {
-            self.pc += n as u16
-        }
     }
 
     fn jrc(&mut self, cond: Condition, n: i8) {
+        #[cfg(debug_assertions)]
+        println!(
+            "i8: {:#04X}, self.pc: {:#06X}, new pc: {:#06X}",
+            n,
+            self.pc,
+            self.pc.wrapping_add(n as u16)
+        );
+
         let cond = match cond {
             Condition::NZ => !self.af.z(),
             Condition::Z => self.af.z(),
@@ -1362,11 +1373,7 @@ impl Cpu {
         };
 
         if cond {
-            if n <= 0 {
-                self.pc += (0 - n) as u16
-            } else {
-                self.pc += n as u16
-            }
+            self.pc = self.pc.wrapping_add(n as u16);
         }
     }
 
