@@ -58,6 +58,9 @@ impl Cpu {
             0x01 => {
                 let byte = self.imm_u16();
                 self.ld_regu16(Register::BC, byte);
+
+                #[cfg(debug_assertions)]
+                println!("LD {:?} {:#06X}", Register::BC, byte);
             }
             0x02 => self.memory.write_byte(self.bc.into(), self.af.a()),
             0x03 => self.inc(Register::BC),
@@ -126,6 +129,9 @@ impl Cpu {
             0x21 => {
                 let b = self.imm_u16();
                 self.ld_regu16(Register::HL, b);
+
+                #[cfg(debug_assertions)]
+                println!("LD HL {:#06X}", b);
             }
             0x22 => {
                 self.memory
@@ -166,19 +172,43 @@ impl Cpu {
             0x30 => {
                 let b = self.imm_u8();
                 self.jrc(Condition::NC, b as i8);
+
+                #[cfg(debug_assertions)]
+                println!("JR NC {:#06X}", b as i8);
             }
             0x31 => {
                 let b = self.imm_u16();
                 self.ld_regu16(Register::SP, b);
+
+                #[cfg(debug_assertions)]
+                println!("LD {:?} {:#06X}", Register::SP, b);
             }
             0x32 => {
                 self.memory
                     .write_byte(self.get_regu16(Register::HL), self.get_regu8(Register::A));
                 self.hl = GPReg::from(self.get_regu16(Register::HL).wrapping_sub(1));
+
+                #[cfg(debug_assertions)]
+                println!("LD (HL-) A");
             }
-            0x33 => self.inc(Register::SP),
-            0x34 => self.inc(Register::PHL),
-            0x35 => self.dec(Register::PHL),
+            0x33 => {
+                self.inc(Register::SP);
+
+                #[cfg(debug_assertions)]
+                println!("INC SP");
+            }
+            0x34 => {
+                self.inc(Register::PHL);
+
+                #[cfg(debug_assertions)]
+                println!("INC (HL)");
+            }
+            0x35 => {
+                self.dec(Register::PHL);
+
+                #[cfg(debug_assertions)]
+                println!("DEC (HL)");
+            }
             0x36 => {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::PHL, b);
@@ -204,9 +234,17 @@ impl Cpu {
             0x3E => {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::A, b);
+
+                #[cfg(debug_assertions)]
+                println!("LD {:?} {:#04X}", Register::A, b);
             }
             0x3F => self.ccf(),
-            0x40 => self.ld_regu8(Register::B, self.get_regu8(Register::B)),
+            0x40 => {
+                self.ld_regu8(Register::B, self.get_regu8(Register::B));
+
+                #[cfg(debug_assertions)]
+                println!("LD {:?} {:?}", Register::B, Register::B);
+            }
             0x41 => self.ld_regu8(Register::B, self.get_regu8(Register::C)),
             0x42 => self.ld_regu8(Register::B, self.get_regu8(Register::D)),
             0x43 => self.ld_regu8(Register::B, self.get_regu8(Register::E)),
@@ -300,30 +338,89 @@ impl Cpu {
             0x97 => self.sub(self.get_regu8(Register::A)),
             // TODO
             // Unimplemented sbc
-            0x98 => self.sbc(self.get_regu8(Register::B)),
-            0x99 => self.sbc(self.get_regu8(Register::C)),
-            0x9A => self.sbc(self.get_regu8(Register::D)),
-            0x9B => self.sbc(self.get_regu8(Register::E)),
-            0x9C => self.sbc(self.get_regu8(Register::H)),
-            0x9D => self.sbc(self.get_regu8(Register::L)),
-            0x9E => self.sbc(self.get_regu8(Register::PHL)),
-            0x9F => self.sbc(self.get_regu8(Register::A)),
-            0xA0 => self.and(self.get_regu8(Register::B)),
-            0xA1 => self.and(self.get_regu8(Register::C)),
-            0xA2 => self.and(self.get_regu8(Register::D)),
-            0xA3 => self.and(self.get_regu8(Register::E)),
-            0xA4 => self.and(self.get_regu8(Register::H)),
-            0xA5 => self.and(self.get_regu8(Register::L)),
-            0xA6 => self.and(self.get_regu8(Register::PHL)),
-            0xA7 => self.and(self.get_regu8(Register::A)),
-            0xA8 => self.xor(self.get_regu8(Register::B)),
-            0xA9 => self.xor(self.get_regu8(Register::C)),
-            0xAA => self.xor(self.get_regu8(Register::D)),
-            0xAB => self.xor(self.get_regu8(Register::E)),
-            0xAC => self.xor(self.get_regu8(Register::H)),
-            0xAD => self.xor(self.get_regu8(Register::L)),
-            0xAE => self.xor(self.get_regu8(Register::PHL)),
-            0xAF => self.xor(self.get_regu8(Register::A)),
+            0x98 => {
+                self.sbc(self.get_regu8(Register::B));
+            }
+            0x99 => {
+                self.sbc(self.get_regu8(Register::C));
+            }
+            0x9A => {
+                self.sbc(self.get_regu8(Register::D));
+            }
+            0x9B => {
+                self.sbc(self.get_regu8(Register::E));
+            }
+            0x9C => {
+                self.sbc(self.get_regu8(Register::H));
+            }
+            0x9D => {
+                self.sbc(self.get_regu8(Register::L));
+            }
+            0x9E => {
+                self.sbc(self.get_regu8(Register::PHL));
+            }
+            0x9F => {
+                self.sbc(self.get_regu8(Register::A));
+            }
+            0xA0 => {
+                self.and(self.get_regu8(Register::B));
+            }
+            0xA1 => {
+                self.and(self.get_regu8(Register::C));
+            }
+            0xA2 => {
+                self.and(self.get_regu8(Register::D));
+            }
+            0xA3 => {
+                self.and(self.get_regu8(Register::E));
+            }
+            0xA4 => {
+                self.and(self.get_regu8(Register::H));
+            }
+            0xA5 => {
+                self.and(self.get_regu8(Register::L));
+            }
+            0xA6 => {
+                self.and(self.get_regu8(Register::PHL));
+            }
+            0xA7 => {
+                self.and(self.get_regu8(Register::A));
+            }
+            0xA8 => {
+                self.xor(self.get_regu8(Register::B));
+                println!("XOR {:?}", Register::B);
+            }
+            0xA9 => {
+                self.xor(self.get_regu8(Register::C));
+                println!("XOR {:?}", Register::C);
+            }
+            0xAA => {
+                self.xor(self.get_regu8(Register::D));
+                println!("XOR {:?}", Register::D);
+            }
+            0xAB => {
+                self.xor(self.get_regu8(Register::E));
+                println!("XOR {:?}", Register::E);
+            }
+            0xAC => {
+                self.xor(self.get_regu8(Register::H));
+                println!("XOR {:?}", Register::H);
+            }
+            0xAD => {
+                self.xor(self.get_regu8(Register::L));
+                println!("XOR {:?}", Register::L);
+            }
+            0xAE => {
+                self.xor(self.get_regu8(Register::PHL));
+                println!(
+                    "XOR {:?}",
+                    self.memory.get_address(self.get_regu16(Register::PHL))
+                );
+            }
+            0xAF => {
+                self.xor(self.get_regu8(Register::A));
+                println!("XOR {:?}", Register::A);
+            }
             0xB0 => self.or(self.get_regu8(Register::B)),
             0xB1 => self.or(self.get_regu8(Register::C)),
             0xB2 => self.or(self.get_regu8(Register::D)),
