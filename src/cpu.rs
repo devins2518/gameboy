@@ -54,41 +54,104 @@ impl Cpu {
         println!("Matching opcode: {:#X}", opcode);
 
         match opcode {
-            0x00 => self.nop(),
+            0x00 => {
+                self.nop();
+
+                #[cfg(debug_assertions)]
+                println!("NOP")
+            }
             0x01 => {
                 let byte = self.imm_u16();
                 self.ld_regu16(Register::BC, byte);
 
                 #[cfg(debug_assertions)]
-                println!("LD {:?} {:#06X}", Register::BC, byte);
+                println!("LD BC, {:#06X}", byte);
             }
-            0x02 => self.memory.write_byte(self.bc.into(), self.af.a()),
-            0x03 => self.inc(Register::BC),
-            0x04 => self.inc(Register::B),
-            0x05 => self.dec(Register::B),
+            0x02 => {
+                self.memory.write_byte(self.bc.into(), self.af.a());
+
+                #[cfg(debug_assertions)]
+                println!("LD (BC), A");
+            }
+            0x03 => {
+                self.inc(Register::BC);
+
+                #[cfg(debug_assertions)]
+                println!("INC BC");
+            }
+            0x04 => {
+                self.inc(Register::B);
+
+                #[cfg(debug_assertions)]
+                println!("INC B");
+            }
+            0x05 => {
+                self.dec(Register::B);
+
+                #[cfg(debug_assertions)]
+                println!("DEC B");
+            }
             0x06 => {
-                let byte = self.imm_u8();
-                self.ld_regu8(Register::B, byte);
+                let b = self.imm_u8();
+                self.ld_regu8(Register::B, b);
+
+                #[cfg(debug_assertions)]
+                println!("LD B, {:#06X}", b);
             }
-            0x07 => self.rlca(),
-            // TODO: ??
+            0x07 => {
+                self.rlca();
+
+                #[cfg(debug_assertions)]
+                println!("RLCA");
+            }
             0x08 => {
-                let bytes = self.sp.to_le_bytes();
-                self.memory.write_byte(self.pc, bytes[0]);
-                self.pc = self.pc.wrapping_add(1);
-                self.memory.write_byte(self.pc, bytes[1]);
+                let b = self.imm_u16();
+                let sp = self.sp.to_le_bytes();
+                self.memory.write_byte(b, sp[0]);
+                self.memory.write_byte(b.wrapping_add(1), sp[1]);
+
+                #[cfg(debug_assertions)]
+                println!("LD {:#06X}, SP", b);
             }
-            0x09 => self.add_u8(Register::HL, self.get_regu8(Register::BC)),
-            0x0A => self.ld_regu8(
-                Register::A,
-                self.memory.get_address(self.get_regu16(Register::BC)),
-            ),
-            0x0B => self.dec(Register::BC),
-            0x0C => self.inc(Register::C),
-            0x0D => self.dec(Register::C),
+            0x09 => {
+                self.add_u16(Register::HL, self.get_regu16(Register::BC));
+
+                #[cfg(debug_assertions)]
+                println!("ADD HL, BC");
+            }
+            0x0A => {
+                self.ld_regu8(
+                    Register::A,
+                    self.memory.get_address(self.get_regu16(Register::BC)),
+                );
+
+                #[cfg(debug_assertions)]
+                println!("LD A, (BC)");
+            }
+            0x0B => {
+                self.dec(Register::BC);
+
+                #[cfg(debug_assertions)]
+                println!("DEC BC");
+            }
+            0x0C => {
+                self.inc(Register::C);
+
+                #[cfg(debug_assertions)]
+                println!("INC C");
+            }
+            0x0D => {
+                self.dec(Register::C);
+
+                #[cfg(debug_assertions)]
+                println!("DEC C");
+            }
             0x0E => {
-                let byte = self.imm_u8();
-                self.ld_regu8(Register::C, byte);
+                let b = self.imm_u8();
+                self.ld_regu8(Register::C, b);
+
+                #[cfg(debug_assertions)]
+                println!("LD C, {:#06X}", b);
             }
             0x0F => self.rrca(),
             0x10 => self.stop(),
@@ -120,11 +183,17 @@ impl Cpu {
             0x1E => {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::E, b);
+
+                #[cfg(debug_assertions)]
+                println!("LD E {:#06X}", b);
             }
             0x1F => self.rra(),
             0x20 => {
                 let b = self.imm_u8();
                 self.jrc(Condition::NZ, b as i8);
+
+                #[cfg(debug_assertions)]
+                println!("JR C {:#06X}", b as i8);
             }
             0x21 => {
                 let b = self.imm_u16();
@@ -898,7 +967,7 @@ impl Cpu {
             _ => unreachable!("Attempted to set regu16 into regu8"),
         }
     }
-    fn set_regu16(&self, reg: Register, val: u16) {
+    fn set_regu16(&mut self, reg: Register, val: u16) {
         use Register::*;
         let ref mut reg = match reg {
             AF => self.af.into(),
