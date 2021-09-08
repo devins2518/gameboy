@@ -7,3 +7,4 @@ edition = "2018"
 
 [dependencies]
 modular-bitfield = "0.11.2"
+sdl2 = "0.34.5"
