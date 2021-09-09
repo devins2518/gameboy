@@ -151,35 +151,104 @@ impl Cpu {
                 self.ld_regu8(Register::C, b);
 
                 #[cfg(debug_assertions)]
-                println!("LD C, {:#06X}", b);
+                println!("LD C, {:#04X}", b);
             }
-            0x0F => self.rrca(),
-            0x10 => self.stop(),
+            0x0F => {
+                self.rrca();
+
+                #[cfg(debug_assertions)]
+                println!("RRCA");
+            }
+            0x10 => {
+                self.stop();
+
+                #[cfg(debug_assertions)]
+                println!("STOP");
+            }
             0x11 => {
-                let bytes = self.imm_u16();
-                self.ld_regu16(Register::DE, bytes);
+                let b = self.imm_u16();
+                self.ld_regu16(Register::DE, b);
+
+                #[cfg(debug_assertions)]
+                println!("LD DE, {:#06X}", b);
             }
-            0x12 => self.memory.write_byte(self.de.into(), self.af.a()),
-            0x13 => self.inc(Register::DE),
-            0x14 => self.inc(Register::D),
-            0x15 => self.dec(Register::D),
+            0x12 => {
+                self.memory.write_byte(self.de.into(), self.af.a());
+
+                #[cfg(debug_assertions)]
+                println!("LD (DE), A");
+            }
+            0x13 => {
+                self.inc(Register::DE);
+
+                #[cfg(debug_assertions)]
+                println!("INC DE");
+            }
+            0x14 => {
+                self.inc(Register::D);
+
+                #[cfg(debug_assertions)]
+                println!("INC D");
+            }
+            0x15 => {
+                self.dec(Register::D);
+
+                #[cfg(debug_assertions)]
+                println!("DEC D");
+            }
             0x16 => {
-                let byte = self.imm_u8();
-                self.ld_regu8(Register::D, byte);
+                let b = self.imm_u8();
+                self.ld_regu8(Register::D, b);
+
+                #[cfg(debug_assertions)]
+                println!("LD D, {:#04X}", b);
             }
-            0x17 => self.rla(),
+            0x17 => {
+                self.rla();
+
+                #[cfg(debug_assertions)]
+                println!("RLA");
+            }
             0x18 => {
                 let b = self.imm_u8();
                 self.jr(b as i8);
+
+                #[cfg(debug_assertions)]
+                println!("JR {:#04X}", b as i8);
             }
-            0x19 => self.add_u8(Register::HL, self.get_regu8(Register::DE)),
-            0x1A => self.ld_regu8(
-                Register::A,
-                self.memory.get_address(self.get_regu16(Register::DE)),
-            ),
-            0x1B => self.dec(Register::DE),
-            0x1C => self.inc(Register::E),
-            0x1D => self.dec(Register::E),
+            0x19 => {
+                self.add_u16(Register::HL, self.get_regu16(Register::DE));
+
+                #[cfg(debug_assertions)]
+                println!("ADD HL, DE");
+            }
+            0x1A => {
+                self.ld_regu8(
+                    Register::A,
+                    self.memory.get_address(self.get_regu16(Register::DE)),
+                );
+
+                #[cfg(debug_assertions)]
+                println!("LD A, (DE)");
+            }
+            0x1B => {
+                self.dec(Register::DE);
+
+                #[cfg(debug_assertions)]
+                println!("DEC DE");
+            }
+            0x1C => {
+                self.inc(Register::E);
+
+                #[cfg(debug_assertions)]
+                println!("INC E");
+            }
+            0x1D => {
+                self.dec(Register::E);
+
+                #[cfg(debug_assertions)]
+                println!("DEC E");
+            }
             0x1E => {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::E, b);
@@ -187,7 +256,12 @@ impl Cpu {
                 #[cfg(debug_assertions)]
                 println!("LD E {:#06X}", b);
             }
-            0x1F => self.rra(),
+            0x1F => {
+                self.rra();
+
+                #[cfg(debug_assertions)]
+                println!("RRA");
+            }
             0x20 => {
                 let b = self.imm_u8();
                 self.jrc(Condition::NZ, b as i8);
@@ -206,18 +280,47 @@ impl Cpu {
                 self.memory
                     .write_byte(self.get_regu16(Register::HL), self.get_regu8(Register::A));
                 self.hl = GPReg::from(self.get_regu16(Register::HL).wrapping_add(1));
+
+                #[cfg(debug_assertions)]
+                println!("LD (HL+), A");
             }
-            0x23 => self.inc(Register::HL),
-            0x24 => self.inc(Register::H),
-            0x25 => self.dec(Register::H),
+            0x23 => {
+                self.inc(Register::HL);
+
+                #[cfg(debug_assertions)]
+                println!("INC HL");
+            }
+            0x24 => {
+                self.inc(Register::H);
+
+                #[cfg(debug_assertions)]
+                println!("INC H");
+            }
+            0x25 => {
+                self.dec(Register::H);
+
+                #[cfg(debug_assertions)]
+                println!("DEC H");
+            }
             0x26 => {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::H, b);
+
+                #[cfg(debug_assertions)]
+                println!("LD H, {:#04X}", b);
             }
-            0x27 => self.daa(),
+            0x27 => {
+                self.daa();
+
+                #[cfg(debug_assertions)]
+                println!("DAA");
+            }
             0x28 => {
                 let b = self.imm_u8();
                 self.jrc(Condition::Z, b as i8);
+
+                #[cfg(debug_assertions)]
+                println!("JR Z {:#04X}", b);
             }
             0x29 => self.add_u16(Register::HL, self.get_regu16(Register::HL)),
             0x2A => {
@@ -385,8 +488,6 @@ impl Cpu {
             0x85 => self.add_u8(Register::A, self.get_regu8(Register::L)),
             0x86 => self.add_u8(Register::A, self.get_regu8(Register::PHL)),
             0x87 => self.add_u8(Register::A, self.get_regu8(Register::A)),
-            // TODO
-            // Unimplemented adc
             0x88 => self.adc(self.get_regu8(Register::B)),
             0x89 => self.adc(self.get_regu8(Register::C)),
             0x8A => self.adc(self.get_regu8(Register::D)),
@@ -395,8 +496,6 @@ impl Cpu {
             0x8D => self.adc(self.get_regu8(Register::L)),
             0x8E => self.adc(self.get_regu8(Register::PHL)),
             0x8F => self.adc(self.get_regu8(Register::A)),
-            // TODO
-            // Unimplemented sub
             0x90 => self.sub(self.get_regu8(Register::B)),
             0x91 => self.sub(self.get_regu8(Register::C)),
             0x92 => self.sub(self.get_regu8(Register::D)),
@@ -405,8 +504,6 @@ impl Cpu {
             0x95 => self.sub(self.get_regu8(Register::L)),
             0x96 => self.sub(self.get_regu8(Register::PHL)),
             0x97 => self.sub(self.get_regu8(Register::A)),
-            // TODO
-            // Unimplemented sbc
             0x98 => {
                 self.sbc(self.get_regu8(Register::B));
             }
@@ -795,8 +892,6 @@ impl Cpu {
                 let b = self.imm_u16();
                 self.call(b);
             }
-            // TODO
-            // Unimplemented ADC
             0xCE => {
                 let b = self.imm_u8();
                 self.adc(b);
@@ -813,8 +908,6 @@ impl Cpu {
                 self.jp(b);
             }
             0xD5 => self.push(Register::DE),
-            // TODO
-            // Unimplemented SUB
             0xD6 => {
                 let b = self.imm_u8();
                 self.sub(b);
@@ -849,13 +942,10 @@ impl Cpu {
                 self.get_regu8(Register::A),
             ),
             0xE5 => self.push(Register::HL),
-            // TODO
-            // Unimplemented AND
-            // 0xE6 => {
-            //     let b = self.memory.get_address(self.pc);
-            //     self.pc = self.pc.wrapping_add(1);
-            //     self.and(b);
-            // }
+            0xE6 => {
+                let b = self.imm_u8();
+                self.and(b);
+            }
             0xE7 => self.rst(),
             // TODO
             // 0xE8 => {
