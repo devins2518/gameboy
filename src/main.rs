@@ -61,6 +61,7 @@ fn main() {
 
     let mut event_pump = sdl_context.event_pump().unwrap();
     let frame_interval = Duration::new(0, 1000000000u32 / 60);
+    let clock_interval = Duration::new(0, 1000000000u32 / 238);
     'main_loop: loop {
         let now = Instant::now();
 
@@ -84,11 +85,12 @@ fn main() {
                 _ => (),
             }
         }
-        if gb.auto {
+
+        let frame_delta = now.elapsed();
+        if gb.auto && frame_delta < clock_interval {
             gb.clock()
         }
 
-        let frame_delta = now.elapsed();
         if frame_delta < frame_interval {
             ::std::thread::sleep(frame_interval - frame_delta)
         };

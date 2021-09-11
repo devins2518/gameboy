@@ -6,38 +6,6 @@ pub struct Cartridge {
     mapper: Mapper,
 }
 
-#[derive(Clone)]
-enum Mapper {
-    RomOnly,
-    Mbc5,
-    Mbc1,
-    Mbc5Ram,
-    Mbc1Ram,
-    Mbc5RamBattery,
-    Mbc1RamBattery,
-    Mbc5Rumble,
-    Mbc2,
-    Mbc5RumbleRam,
-    Mbc2Battery,
-    Mbc5RumbleRamBattery,
-    RomRam,
-    Mbc6,
-    RomRamBattery,
-    Mbc7SensorRumbleRamBattery,
-    Mmm01,
-    Mmm01Ram,
-    Mmm01RamBattery,
-    Mbc3TimerBattery,
-    Mbc3TimerRamBattery,
-    PocketCamera,
-    Mbc3,
-    BandaiTama5,
-    Mbc3Ram,
-    Huc3,
-    Mbc3RamBattery,
-    Huc1RamBattery,
-}
-
 impl Cartridge {
     pub fn new<P: AsRef<Path>>(path: P) -> Self {
         let data = fs::read(&path).expect(&format!("Could not open {}", path.as_ref().display()));
@@ -77,4 +45,36 @@ impl Cartridge {
 
         Self { data, mapper }
     }
+}
+
+#[derive(Clone)]
+enum Mapper {
+    RomOnly,
+    Mbc5,
+    Mbc1,
+    Mbc5Ram,
+    Mbc1Ram,
+    Mbc5RamBattery,
+    Mbc1RamBattery,
+    Mbc5Rumble,
+    Mbc2,
+    Mbc5RumbleRam,
+    Mbc2Battery,
+    Mbc5RumbleRamBattery,
+    RomRam,
+    Mbc6,
+    RomRamBattery,
+    Mbc7SensorRumbleRamBattery,
+    Mmm01,
+    Mmm01Ram,
+    Mmm01RamBattery,
+    Mbc3TimerBattery,
+    Mbc3TimerRamBattery,
+    PocketCamera,
+    Mbc3,
+    BandaiTama5,
+    Mbc3Ram,
+    Huc3,
+    Mbc3RamBattery,
+    Huc1RamBattery,
 }

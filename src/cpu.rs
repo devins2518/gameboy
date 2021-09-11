@@ -1,4 +1,3 @@
-use env_logger::Env;
 use log::{debug, info};
 use modular_bitfield::prelude::*;
 use std::ops::{Deref, DerefMut};
@@ -15,6 +14,8 @@ pub struct Cpu {
     pc: u16,
     memory: Bus,
     interrupt_enable: InterruptStatus,
+
+    finished_boot: bool,
 }
 
 impl Cpu {
@@ -28,11 +29,26 @@ impl Cpu {
             pc: 0x0000,
             memory: bus,
             interrupt_enable: InterruptStatus::Unset,
+            finished_boot: false,
         }
     }
 
     fn next_instruction(&mut self) -> u8 {
-        let opcode = self.memory.get_address(self.pc);
+        debug!(
+            "Finished boot: {}, PC: {:#06X}",
+            self.finished_boot, self.pc
+        );
+
+        if self.pc == 0xFF {
+            self.finished_boot = true;
+        }
+
+        let opcode = if self.finished_boot {
+            self.memory.get_address(self.pc)
+        } else {
+            self.memory.get_bootrom(self.pc)
+        };
+
         self.pc = self.pc.wrapping_add(1);
         opcode
     }
@@ -111,10 +127,8 @@ impl Cpu {
                 info!("{:#04X} ADD HL, BC", opcode);
             }
             0x0A => {
-                self.ld_regu8(
-                    Register::A,
-                    self.memory.get_address(self.get_regu16(Register::BC)),
-                );
+                let b = self.memory.get_address(self.get_regu16(Register::BC));
+                self.ld_regu8(Register::A, b);
 
                 info!("{:#04X} LD A, (BC)", opcode);
             }
@@ -198,10 +212,8 @@ impl Cpu {
                 info!("{:#04X} ADD HL, DE", opcode);
             }
             0x1A => {
-                self.ld_regu8(
-                    Register::A,
-                    self.memory.get_address(self.get_regu16(Register::DE)),
-                );
+                let b = self.memory.get_address(self.get_regu16(Register::DE));
+                self.ld_regu8(Register::A, b);
 
                 info!("{:#04X} LD A, (DE)", opcode);
             }
@@ -284,10 +296,9 @@ impl Cpu {
             }
             0x29 => self.add_u16(Register::HL, self.get_regu16(Register::HL)),
             0x2A => {
-                self.ld_regu8(
-                    Register::A,
-                    self.memory.get_address(self.get_regu16(Register::HL)),
-                );
+                let b = self.memory.get_address(self.get_regu16(Register::HL));
+                self.ld_regu8(Register::A, b);
+
                 self.hl = GPReg::from(self.get_regu16(Register::HL).wrapping_add(1));
             }
             0x2B => {
@@ -2475,6 +2486,7 @@ impl From<AFReg> for u16 {
 
 #[test]
 fn test_cpu() {
+    use env_logger::Env;
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
 
     let bus = Bus::new(concat!(
