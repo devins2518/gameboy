@@ -12,7 +12,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::Sdl;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 struct GameBoy {
     cpu: Cpu,
@@ -60,7 +60,10 @@ fn main() {
     let mut gb = GameBoy::new(&path, &sdl_context);
 
     let mut event_pump = sdl_context.event_pump().unwrap();
+    let frame_interval = Duration::new(0, 1000000000u32 / 60);
     'main_loop: loop {
+        let now = Instant::now();
+
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
@@ -85,6 +88,9 @@ fn main() {
             gb.clock()
         }
 
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        let frame_delta = now.elapsed();
+        if frame_delta < frame_interval {
+            ::std::thread::sleep(frame_interval - frame_delta)
+        };
     }
 }

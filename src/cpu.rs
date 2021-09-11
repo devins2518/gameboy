@@ -2134,17 +2134,25 @@ impl Cpu {
 
     fn rlca(&mut self) {
         let a = self.af.a();
-        let x = self.af.c() as u8 | a << 7;
-        self.af.set_c(a & 0x80 == 1);
+        let x = a.rotate_left(1);
         self.af.set_a(x);
 
         self.af.set_z(x == 0);
         self.af.set_n(false);
         self.af.set_h(false);
+        self.af.set_c(a & 0x80 == 1);
     }
 
     fn rla(&mut self) {
-        unimplemented!()
+        let a = self.af.a();
+
+        let result = a << 1 | (self.af.c() as u8);
+        self.set_regu8(Register::A, result);
+
+        self.af.set_z(result == 0);
+        self.af.set_n(false);
+        self.af.set_h(false);
+        self.af.set_c((a & 0x80) >> 7 == 1);
     }
 
     fn rrca(&mut self) {
