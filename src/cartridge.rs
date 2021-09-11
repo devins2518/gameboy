@@ -1,3 +1,4 @@
+use log::debug;
 use std::{fs, path::Path};
 
 #[derive(Clone)]
@@ -15,6 +16,8 @@ impl Cartridge {
             0x00 => RomOnly,
             _ => unreachable!(),
         };
+
+        debug!("Cartridge mapper: {:?}", mapper);
 
         Self { data, mapper }
     }
@@ -34,7 +37,7 @@ impl Cartridge {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum Mapper {
     RomOnly,
 }
