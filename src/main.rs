@@ -73,7 +73,6 @@ fn main() {
                     ..
                 } => {
                     gb.auto = !gb.auto;
-                    println!("gb.auto {}", gb.auto);
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::G),

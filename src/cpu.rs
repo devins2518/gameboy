@@ -361,7 +361,7 @@ impl Cpu {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::A, b);
 
-                info!("{:#04X} LD {:?} {:#04X}", opcode, Register::A, b);
+                info!("{:#04X} LD A, {:#04X}", opcode, b);
             }
             0x3F => self.ccf(),
             0x40 => {
@@ -1657,10 +1657,14 @@ impl Cpu {
                     .write_byte(0xFF00 + b as u16, self.get_regu8(Register::A))
             }
             0xE1 => self.pop(Register::HL),
-            0xE2 => self.memory.write_byte(
-                0xFF00 + self.get_regu8(Register::C) as u16,
-                self.get_regu8(Register::A),
-            ),
+            0xE2 => {
+                self.memory.write_byte(
+                    0xFF00 + self.get_regu8(Register::C) as u16,
+                    self.get_regu8(Register::A),
+                );
+
+                info!("{:#04X} LD (0xFF00 + C), A", opcode);
+            }
             0xE5 => self.push(Register::HL),
             0xE6 => {
                 let b = self.imm_u8();
@@ -1724,8 +1728,6 @@ impl Cpu {
 
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
-
-        println!("pc: {:#06X}", self.pc);
 
         match self.interrupt_enable {
             InterruptStatus::StartDisable => {
@@ -2158,7 +2160,15 @@ impl Cpu {
     }
 
     fn rl(&mut self, reg: Register) {
-        unimplemented!()
+        let prev = self.get_regu8(reg);
+
+        let result = prev << 1 | (self.af.c() as u8);
+        self.set_regu8(reg, result);
+
+        self.af.set_z(result == 0);
+        self.af.set_n(false);
+        self.af.set_h(false);
+        self.af.set_c((prev & 0x80) >> 7 == 1);
     }
 
     fn rrc(&mut self, reg: Register) {
@@ -2166,70 +2176,15 @@ impl Cpu {
     }
 
     fn rr(&mut self, reg: Register) {
-        use Register::*;
-        let result = match reg {
-            A => {
-                let a = self.af.a();
-                let x = (self.af.c() as u8) << 7 | a >> 1;
-                self.af.set_c(a & 0x1 == 1);
-                self.af.set_a(x);
-                x
-            }
-            B => {
-                let b = self.bc[0];
-                let x = (self.af.c() as u8) << 7 | b >> 1;
-                self.af.set_c(b & 0x1 == 1);
-                self.bc[0] = x;
-                x
-            }
-            C => {
-                let c = self.bc[1];
-                let x = (self.af.c() as u8) << 7 | c >> 1;
-                self.af.set_c(c & 0x1 == 1);
-                self.bc[1] = x;
-                x
-            }
-            D => {
-                let d = self.de[0];
-                let x = (self.af.c() as u8) << 7 | d >> 1;
-                self.af.set_c(d & 0x1 == 1);
-                self.de[0] = x;
-                x
-            }
-            E => {
-                let e = self.de[1];
-                let x = (self.af.c() as u8) << 7 | e >> 1;
-                self.af.set_c(e & 0x1 == 1);
-                self.de[1] = x;
-                x
-            }
-            H => {
-                let h = self.hl[0];
-                let x = (self.af.c() as u8) << 7 | h >> 1;
-                self.af.set_c(h & 0x1 == 1);
-                self.hl[0] = x;
-                x
-            }
-            L => {
-                let l = self.hl[1];
-                let x = (self.af.c() as u8) << 7 | l >> 1;
-                self.af.set_c(l & 0x1 == 1);
-                self.hl[1] = x;
-                x
-            }
-            PHL => {
-                let p = self.memory.get_address(self.hl.into());
-                let x = (self.af.c() as u8) << 7 | p >> 1;
-                self.af.set_c(p & 0x1 == 1);
-                self.memory.write_byte(self.hl.into(), x);
-                x
-            }
-            _ => unreachable!(),
-        };
+        let prev = self.get_regu8(reg);
+
+        let result = (self.af.c() as u8) << 7 | prev >> 1;
+        self.set_regu8(reg, result);
 
         self.af.set_z(result == 0);
         self.af.set_n(false);
         self.af.set_h(false);
+        self.af.set_c(prev & 0x1 == 1);
     }
 
     fn sla(&mut self, reg: Register) {
