@@ -37,24 +37,10 @@ impl Bus {
 
     pub fn get_address(&self, addr: u16) -> u8 {
         match addr {
-            0x0000..=0x00FF => {
+            0x0000..=0x7FFF => {
                 debug!("Attempt to read from ROM, bank 00: {:#06X}", addr);
 
-                // ROM_START = 0x0000 so it will panic at runtime
-                unimplemented!()
-            }
-            0x0100..=0x3FFF => {
-                debug!("Attempt to read from ROM, bank 00: {:#06X}", addr);
-
-                // ROM_START = 0x0000 so it will panic at runtime
-                // self.rom[addr as usize]
-                unimplemented!()
-            }
-            0x4000..=0x7FFF => {
-                debug!("Attempt to read from ROM, bank 01: {:#06X}", addr);
-
-                // self.rom[addr as usize]
-                unimplemented!()
+                self.cartridge.get_address(addr)
             }
             0x8000..=0x9FFF => {
                 debug!(
@@ -133,24 +119,10 @@ impl Bus {
 
     pub fn write_byte(&mut self, addr: u16, byte: u8) {
         match addr {
-            0x0000..=0x00FF => {
+            0x0000..=0x7FFF => {
                 debug!("Attempt to write to ROM, bank 00. {:#06X}", addr);
 
-                // ROM_START = 0x0000 so it will panic at runtime
-                self.bootrom[addr as usize] = byte;
-            }
-            0x0100..=0x3FFF => {
-                debug!("Attempt to write to ROM, bank 00. Addr: {:#06X}", addr);
-
-                // ROM_START = 0x0000 so it will panic at runtime
-                // self.rom[addr as usize] = byte;
-                unimplemented!()
-            }
-            0x4000..=0x7FFF => {
-                debug!("Attempt to write to ROM, bank 01. Addr: {:#06X}", addr);
-
-                // self.rom[addr as usize] = byte;
-                unimplemented!()
+                self.cartridge.write_address(addr, byte);
             }
             0x8000..=0x9FFF => {
                 debug!("Attempt to write to VRAM. Addr: {:#06X}", addr);
