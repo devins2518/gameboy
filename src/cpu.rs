@@ -582,7 +582,7 @@ impl Cpu {
                 let b = self.imm_u8();
                 self.add_u8(Register::A, b);
             }
-            0xC7 => self.rst(),
+            0xC7 => self.rst(0x0000),
             0xC8 => self.retc(Condition::C),
             0xC9 => self.retc(Condition::Z),
             0xCA => self.ret(),
@@ -1627,7 +1627,7 @@ impl Cpu {
                 let b = self.imm_u8();
                 self.adc(b);
             }
-            0xCF => self.rst(),
+            0xCF => self.rst(0x0008),
             0xD0 => self.retc(Condition::NC),
             0xD1 => self.pop(Register::DE),
             0xD2 => {
@@ -1643,7 +1643,7 @@ impl Cpu {
                 let b = self.imm_u8();
                 self.sub(b);
             }
-            0xD7 => self.rst(),
+            0xD7 => self.rst(0x0010),
             0xD8 => self.retc(Condition::C),
             0xD9 => self.reti(),
             0xDA => {
@@ -1661,7 +1661,7 @@ impl Cpu {
             //     self.pc = self.pc.wrapping_add(1);
             //     self.sbc(Condition::C, addr);
             // }
-            0xDF => self.rst(),
+            0xDF => self.rst(0x0018),
             0xE0 => {
                 let b = self.imm_u8();
                 self.memory
@@ -1681,7 +1681,7 @@ impl Cpu {
                 let b = self.imm_u8();
                 self.and(b);
             }
-            0xE7 => self.rst(),
+            0xE7 => self.rst(0x0020),
             // TODO
             // 0xE8 => {
             //     self.add_u16(Register::SP, self.memory.get_address(self.pc) as i16);
@@ -1697,7 +1697,7 @@ impl Cpu {
                 self.xor(b);
             }
             // TODO
-            0xEF => self.rst(),
+            0xEF => self.rst(0x0028),
             0xF0 => {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::A, self.memory.get_address(0xFF00 + b as u16))
@@ -1716,7 +1716,7 @@ impl Cpu {
                 self.or(b);
             }
             // TODO
-            0xF7 => self.rst(),
+            0xF7 => self.rst(0x0030),
             0xF8 => {
                 let b = self.imm_u8() as i8;
 
@@ -1735,7 +1735,7 @@ impl Cpu {
                 self.cp(b);
             }
             // TODO
-            0xFF => self.rst(),
+            0xFF => self.rst(0x0038),
 
             _ => unimplemented!("Unhandled opcode {:#x}", opcode),
         }
@@ -2358,8 +2358,9 @@ impl Cpu {
         }
     }
 
-    fn rst(&mut self) {
-        unimplemented!()
+    fn rst(&mut self, addr: u16) {
+        self.push(Register::PC);
+        self.pc = addr;
     }
 
     fn ret(&mut self) {
