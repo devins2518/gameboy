@@ -6,6 +6,8 @@ mod utils;
 
 use cpu::Cpu;
 use env_logger::Env;
+use genawaiter::rc::{Co, Gen};
+use log::info;
 use memory::Bus;
 use ppu::Ppu;
 use sdl2::event::Event;
@@ -18,6 +20,7 @@ struct GameBoy {
     cpu: Cpu,
     ppu: Ppu,
     auto: bool,
+    sdl_context: Sdl,
 }
 
 impl GameBoy {
@@ -43,11 +46,47 @@ impl GameBoy {
             cpu,
             ppu,
             auto: false,
+            sdl_context: context.clone(),
         }
     }
 
-    fn clock(&mut self) {
-        self.cpu.clock();
+    async fn clock(&mut self, co: Co<()>) {
+        let mut event_pump = self.sdl_context.event_pump().unwrap();
+        let frame_interval = Duration::new(0, 1000000000u32 / 60);
+        let clock_interval = Duration::new(0, 1000000000u32 / 238);
+        'main_loop: loop {
+            let now = Instant::now();
+            for event in event_pump.poll_iter() {
+                match event {
+                    Event::Quit { .. }
+                    | Event::KeyDown {
+                        keycode: Some(Keycode::Escape),
+                        ..
+                    } => break 'main_loop,
+                    Event::KeyDown {
+                        keycode: Some(Keycode::A),
+                        ..
+                    } => {
+                        self.auto = !self.auto;
+                    }
+                    Event::KeyDown {
+                        keycode: Some(Keycode::G),
+                        ..
+                    } => self.cpu.clock(),
+                    _ => (),
+                }
+            }
+
+            let frame_delta = now.elapsed();
+            if self.auto && frame_delta < clock_interval {
+                self.cpu.clock()
+            }
+
+            if frame_delta < frame_interval {
+                ::std::thread::sleep(frame_interval - frame_delta)
+            };
+            co.yield_(()).await;
+        }
     }
 }
 
@@ -64,40 +103,9 @@ fn main() {
 
     let mut gb = GameBoy::new(&path, &sdl_context);
 
-    let mut event_pump = sdl_context.event_pump().unwrap();
-    let frame_interval = Duration::new(0, 1000000000u32 / 60);
-    let clock_interval = Duration::new(0, 1000000000u32 / 238);
-    'main_loop: loop {
-        let now = Instant::now();
+    let mut gen = Gen::new(|co| gb.clock(co));
 
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit { .. }
-                | Event::KeyDown {
-                    keycode: Some(Keycode::Escape),
-                    ..
-                } => break 'main_loop,
-                Event::KeyDown {
-                    keycode: Some(Keycode::A),
-                    ..
-                } => {
-                    gb.auto = !gb.auto;
-                }
-                Event::KeyDown {
-                    keycode: Some(Keycode::G),
-                    ..
-                } => gb.clock(),
-                _ => (),
-            }
-        }
-
-        let frame_delta = now.elapsed();
-        if gb.auto && frame_delta < clock_interval {
-            gb.clock()
-        }
-
-        if frame_delta < frame_interval {
-            ::std::thread::sleep(frame_interval - frame_delta)
-        };
+    loop {
+        gen.resume();
     }
 }
