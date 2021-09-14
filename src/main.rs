@@ -72,8 +72,9 @@ impl GameBoy {
                         keycode: Some(Keycode::G),
                         ..
                     } => {
-                        self.cpu.clock();
+                        self.cpu.clock(&co).await;
                         self.ppu.clock();
+                        println!("cpu {}, ppu {}", self.cpu.clocks, self.ppu.clocks)
                     }
                     _ => (),
                 }
@@ -81,14 +82,13 @@ impl GameBoy {
 
             let frame_delta = now.elapsed();
             if self.auto && frame_delta < clock_interval {
-                self.cpu.clock();
+                self.cpu.clock(&co).await;
                 self.ppu.clock();
             }
 
             if frame_delta < frame_interval {
                 ::std::thread::sleep(frame_interval - frame_delta)
             };
-            co.yield_(()).await;
         }
     }
 }
