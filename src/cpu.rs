@@ -106,7 +106,7 @@ impl Cpu {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::B, b);
 
-                info!("{:#04X} LD B, {:#06X}", opcode, b);
+                info!("{:#04X} LD B, {:#04X}", opcode, b);
             }
             0x07 => {
                 self.rlca();

@@ -7,7 +7,6 @@ mod utils;
 use cpu::Cpu;
 use env_logger::Env;
 use genawaiter::rc::{Co, Gen};
-use log::info;
 use memory::Bus;
 use ppu::Ppu;
 use sdl2::event::Event;
@@ -24,7 +23,7 @@ struct GameBoy {
 }
 
 impl GameBoy {
-    fn new(path: &str, context: &Sdl) -> Self {
+    fn new(path: &str, context: Sdl) -> Self {
         let bus = Bus::new(&path);
         let cpu = Cpu::new(bus);
 
@@ -46,7 +45,7 @@ impl GameBoy {
             cpu,
             ppu,
             auto: false,
-            sdl_context: context.clone(),
+            sdl_context: context,
         }
     }
 
@@ -72,14 +71,18 @@ impl GameBoy {
                     Event::KeyDown {
                         keycode: Some(Keycode::G),
                         ..
-                    } => self.cpu.clock(),
+                    } => {
+                        self.cpu.clock();
+                        self.ppu.clock();
+                    }
                     _ => (),
                 }
             }
 
             let frame_delta = now.elapsed();
             if self.auto && frame_delta < clock_interval {
-                self.cpu.clock()
+                self.cpu.clock();
+                self.ppu.clock();
             }
 
             if frame_delta < frame_interval {
@@ -101,7 +104,7 @@ fn main() {
     });
     let sdl_context = sdl2::init().unwrap();
 
-    let mut gb = GameBoy::new(&path, &sdl_context);
+    let mut gb = GameBoy::new(&path, sdl_context);
 
     let mut gen = Gen::new(|co| gb.clock(co));
 

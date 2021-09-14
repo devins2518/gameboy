@@ -9,4 +9,6 @@ impl Ppu {
     pub fn new(canvas: Canvas<Window>) -> Self {
         Self { canvas }
     }
+
+    pub fn clock(&mut self) {}
 }
