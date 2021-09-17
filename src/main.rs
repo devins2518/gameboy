@@ -6,7 +6,7 @@ mod utils;
 
 use cpu::Cpu;
 use env_logger::Env;
-use genawaiter::rc::{Co, Gen};
+use log::info;
 use memory::Bus;
 use ppu::Ppu;
 use sdl2::event::Event;
@@ -20,6 +20,8 @@ struct GameBoy {
     ppu: Ppu,
     auto: bool,
     sdl_context: Sdl,
+
+    schedule_clocks: i64,
 }
 
 impl GameBoy {
@@ -46,10 +48,11 @@ impl GameBoy {
             ppu,
             auto: false,
             sdl_context: context,
+            schedule_clocks: 0,
         }
     }
 
-    async fn clock(&mut self, co: Co<()>) {
+    fn clock(&mut self) {
         let mut event_pump = self.sdl_context.event_pump().unwrap();
         let frame_interval = Duration::new(0, 1000000000u32 / 60);
         let clock_interval = Duration::new(0, 1000000000u32 / 238);
@@ -71,25 +74,31 @@ impl GameBoy {
                     Event::KeyDown {
                         keycode: Some(Keycode::G),
                         ..
-                    } => {
-                        self.cpu.clock(&co).await;
-                        self.ppu.clock();
-                        println!("cpu {}, ppu {}", self.cpu.clocks, self.ppu.clocks)
-                    }
+                    } => self.step(),
                     _ => (),
                 }
             }
 
             let frame_delta = now.elapsed();
             if self.auto && frame_delta < clock_interval {
-                self.cpu.clock(&co).await;
-                self.ppu.clock();
+                self.step()
             }
 
             if frame_delta < frame_interval {
                 ::std::thread::sleep(frame_interval - frame_delta)
             };
         }
+    }
+
+    fn step(&mut self) {
+        info!("{}", self.schedule_clocks);
+        self.schedule_clocks += if self.schedule_clocks <= 0 {
+            self.cpu.clock()
+        } else {
+            -self.ppu.clock()
+        };
+
+        println!("cpu {}, ppu {}", self.cpu.clocks, self.ppu.clocks)
     }
 }
 
@@ -106,9 +115,5 @@ fn main() {
 
     let mut gb = GameBoy::new(&path, sdl_context);
 
-    let mut gen = Gen::new(|co| gb.clock(co));
-
-    loop {
-        gen.resume();
-    }
+    gb.clock();
 }

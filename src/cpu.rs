@@ -1,4 +1,3 @@
-use genawaiter::rc::Co;
 use log::{debug, info};
 use modular_bitfield::prelude::*;
 use std::ops::{Deref, DerefMut};
@@ -18,7 +17,7 @@ pub struct Cpu {
 
     finished_boot: bool,
 
-    pub clocks: u64,
+    pub clocks: u32,
 }
 
 impl Cpu {
@@ -58,21 +57,23 @@ impl Cpu {
         opcode
     }
 
-    async fn imm_u8(&mut self, co: &Co<()>) -> u8 {
+    fn imm_u8(&mut self) -> u8 {
         let opcode = self.next_instruction();
-        co.yield_(()).await;
+        self.clocks += 1;
         opcode
     }
 
-    async fn imm_u16(&mut self, co: &Co<()>) -> u16 {
+    fn imm_u16(&mut self) -> u16 {
         let b1 = self.next_instruction();
-        co.yield_(()).await;
+        self.clocks += 1;
         let b2 = self.next_instruction();
-        co.yield_(()).await;
+        self.clocks += 1;
         u16::from_ne_bytes([b1, b2])
     }
 
-    pub async fn clock(&mut self, co: &Co<()>) {
+    pub fn clock(&mut self) -> i64 {
+        let old_clocks = self.clocks;
+
         let opcode = self.next_instruction();
 
         debug!("Matching opcode: {:#X}", opcode);
@@ -84,7 +85,7 @@ impl Cpu {
                 info!("{:#04X} NOP", opcode)
             }
             0x01 => {
-                let byte = self.imm_u16(&co).await;
+                let byte = self.imm_u16();
                 self.ld_regu16(Register::BC, byte);
 
                 info!("{:#04X} LD BC, {:#06X}", opcode, byte);
@@ -110,7 +111,7 @@ impl Cpu {
                 info!("{:#04X} DEC B", opcode);
             }
             0x06 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.ld_regu8(Register::B, b);
 
                 info!("{:#04X} LD B, {:#04X}", opcode, b);
@@ -121,7 +122,7 @@ impl Cpu {
                 info!("{:#04X} RLCA", opcode);
             }
             0x08 => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 let sp = self.sp.to_le_bytes();
                 self.memory.write_byte(b, sp[0]);
                 self.memory.write_byte(b.wrapping_add(1), sp[1]);
@@ -155,7 +156,7 @@ impl Cpu {
                 info!("{:#04X} DEC C", opcode);
             }
             0x0E => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.ld_regu8(Register::C, b);
 
                 info!("{:#04X} LD C, {:#04X}", opcode, b);
@@ -171,7 +172,7 @@ impl Cpu {
                 info!("{:#04X} STOP", opcode);
             }
             0x11 => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.ld_regu16(Register::DE, b);
 
                 info!("{:#04X} LD DE, {:#06X}", opcode, b);
@@ -197,7 +198,7 @@ impl Cpu {
                 info!("{:#04X} DEC D", opcode);
             }
             0x16 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.ld_regu8(Register::D, b);
 
                 info!("{:#04X} LD D, {:#04X}", opcode, b);
@@ -208,7 +209,7 @@ impl Cpu {
                 info!("{:#04X} RLA", opcode);
             }
             0x18 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.jr(b as i8);
 
                 info!("{:#04X} JR {:#04X}", opcode, b);
@@ -240,7 +241,7 @@ impl Cpu {
                 info!("{:#04X} DEC E", opcode);
             }
             0x1E => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.ld_regu8(Register::E, b);
 
                 info!("{:#04X} LD E {:#06X}", opcode, b);
@@ -251,13 +252,13 @@ impl Cpu {
                 info!("{:#04X} RRA", opcode);
             }
             0x20 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.jrc(Condition::NZ, b as i8);
 
                 info!("{:#04X} JR NZ {:#06X}", opcode, b);
             }
             0x21 => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.ld_regu16(Register::HL, b);
 
                 info!("{:#04X} LD HL {:#06X}", opcode, b);
@@ -285,7 +286,7 @@ impl Cpu {
                 info!("{:#04X} DEC H", opcode);
             }
             0x26 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.ld_regu8(Register::H, b);
 
                 info!("{:#04X} LD H, {:#04X}", opcode, b);
@@ -296,7 +297,7 @@ impl Cpu {
                 info!("{:#04X} DAA", opcode);
             }
             0x28 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.jrc(Condition::Z, b as i8);
 
                 info!("{:#04X} JR Z {:#04X}", opcode, b);
@@ -315,18 +316,18 @@ impl Cpu {
             0x2C => self.inc(Register::L),
             0x2D => self.dec(Register::L),
             0x2E => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.ld_regu8(Register::L, b);
             }
             0x2F => self.cpl(),
             0x30 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.jrc(Condition::NC, b as i8);
 
                 info!("{:#04X} JR NC {:#06X}", opcode, b);
             }
             0x31 => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.ld_regu16(Register::SP, b);
 
                 info!("{:#04X} LD {:?} {:#06X}", opcode, Register::SP, b);
@@ -354,12 +355,12 @@ impl Cpu {
                 info!("{:#04X} DEC (HL)", opcode);
             }
             0x36 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.ld_regu8(Register::PHL, b);
             }
             0x37 => self.scf(),
             0x38 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.jrc(Condition::C, b as i8);
             }
             0x39 => self.add_u16(Register::HL, self.get_regu16(Register::SP)),
@@ -376,7 +377,7 @@ impl Cpu {
             0x3C => self.inc(Register::A),
             0x3D => self.dec(Register::A),
             0x3E => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.ld_regu8(Register::A, b);
 
                 info!("{:#04X} LD A, {:#04X}", opcode, b);
@@ -573,20 +574,20 @@ impl Cpu {
             0xC0 => self.retc(Condition::NZ),
             0xC1 => self.pop(Register::BC),
             0xC2 => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.jpc(Condition::NZ, b);
             }
             0xC3 => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.jp(b);
             }
             0xC4 => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.callc(Condition::NZ, b);
             }
             0xC5 => self.push(Register::BC),
             0xC6 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.add_u8(Register::A, b);
             }
             0xC7 => self.rst(0x0000),
@@ -1623,42 +1624,42 @@ impl Cpu {
                 }
             }
             0xCC => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.callc(Condition::Z, b);
             }
             0xCD => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.call(b);
             }
             0xCE => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.adc(b);
             }
             0xCF => self.rst(0x0008),
             0xD0 => self.retc(Condition::NC),
             0xD1 => self.pop(Register::DE),
             0xD2 => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.jpc(Condition::NZ, b);
             }
             0xD4 => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.jp(b);
             }
             0xD5 => self.push(Register::DE),
             0xD6 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.sub(b);
             }
             0xD7 => self.rst(0x0010),
             0xD8 => self.retc(Condition::C),
             0xD9 => self.reti(),
             0xDA => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.jpc(Condition::C, b);
             }
             0xDC => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.callc(Condition::C, b);
             }
             // TODO
@@ -1670,7 +1671,7 @@ impl Cpu {
             // }
             0xDF => self.rst(0x0018),
             0xE0 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.memory
                     .write_byte(0xFF00 + b as u16, self.get_regu8(Register::A))
             }
@@ -1685,7 +1686,7 @@ impl Cpu {
             }
             0xE5 => self.push(Register::HL),
             0xE6 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.and(b);
             }
             0xE7 => self.rst(0x0020),
@@ -1696,17 +1697,17 @@ impl Cpu {
             // }
             0xE9 => self.jp(self.get_regu16(Register::HL)),
             0xEA => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.memory.write_byte(b, self.get_regu8(Register::A));
             }
             0xEE => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.xor(b);
             }
             // TODO
             0xEF => self.rst(0x0028),
             0xF0 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.ld_regu8(Register::A, self.memory.get_address(0xFF00 + b as u16))
             }
             0xF1 => self.pop(Register::AF),
@@ -1719,13 +1720,13 @@ impl Cpu {
             0xF3 => self.di(),
             0xF5 => self.push(Register::AF),
             0xF6 => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.or(b);
             }
             // TODO
             0xF7 => self.rst(0x0030),
             0xF8 => {
-                let b = self.imm_u8(&co).await as i8;
+                let b = self.imm_u8() as i8;
 
                 // https://stackoverflow.com/a/53455823
                 let sp = self.get_regu16(Register::SP).wrapping_add(b as u16);
@@ -1733,12 +1734,12 @@ impl Cpu {
             }
             0xF9 => self.ld_regu16(Register::SP, self.get_regu16(Register::HL)),
             0xFA => {
-                let b = self.imm_u16(&co).await;
+                let b = self.imm_u16();
                 self.ld_regu8(Register::A, self.memory.get_address(b));
             }
             0xFB => self.ei(),
             0xFE => {
-                let b = self.imm_u8(&co).await;
+                let b = self.imm_u8();
                 self.cp(b);
             }
             // TODO
@@ -1756,6 +1757,8 @@ impl Cpu {
             InterruptStatus::PendingEnable => self.interrupt_enable = InterruptStatus::Set,
             _ => {}
         }
+
+        i64::from(self.clocks - old_clocks)
     }
 
     fn get_regu8(&self, reg: Register) -> u8 {
