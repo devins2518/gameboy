@@ -17,6 +17,6 @@ impl Ppu {
 
         self.clocks += 1;
 
-        i64::from(self.clocks - old_clocks)
+        old_clocks as i64 - self.clocks as i64
     }
 }

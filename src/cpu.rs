@@ -1758,7 +1758,7 @@ impl Cpu {
             _ => {}
         }
 
-        i64::from(self.clocks - old_clocks)
+        self.clocks as i64 - old_clocks as i64
     }
 
     fn get_regu8(&self, reg: Register) -> u8 {

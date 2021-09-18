@@ -6,7 +6,7 @@ mod utils;
 
 use cpu::Cpu;
 use env_logger::Env;
-use log::info;
+use log::debug;
 use memory::Bus;
 use ppu::Ppu;
 use sdl2::event::Event;
@@ -52,7 +52,7 @@ impl GameBoy {
         }
     }
 
-    fn clock(&mut self) {
+    fn run(&mut self) {
         let mut event_pump = self.sdl_context.event_pump().unwrap();
         let frame_interval = Duration::new(0, 1000000000u32 / 60);
         let clock_interval = Duration::new(0, 1000000000u32 / 238);
@@ -91,14 +91,15 @@ impl GameBoy {
     }
 
     fn step(&mut self) {
-        info!("{}", self.schedule_clocks);
+        debug!(
+            "\nCPU Clocks: {}\nPPU Clocks: {}\nScheduler Clocks: {}",
+            self.cpu.clocks, self.ppu.clocks, self.schedule_clocks
+        );
         self.schedule_clocks += if self.schedule_clocks <= 0 {
             self.cpu.clock()
         } else {
-            -self.ppu.clock()
+            self.ppu.clock()
         };
-
-        println!("cpu {}, ppu {}", self.cpu.clocks, self.ppu.clocks)
     }
 }
 
@@ -115,5 +116,5 @@ fn main() {
 
     let mut gb = GameBoy::new(&path, sdl_context);
 
-    gb.clock();
+    gb.run();
 }
