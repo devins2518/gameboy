@@ -71,11 +71,39 @@ impl Cpu {
         u16::from_ne_bytes([b1, b2])
     }
 
+    fn isr(&mut self, int_addr: u16) {
+        self.clocks += 2; // 2 noops
+        self.push(Register::PC);
+        self.clocks += 2; // Push PC
+        self.pc = int_addr;
+    }
+
     pub fn clock(&mut self) -> i64 {
         let old_clocks = self.clocks;
 
-        let opcode = self.next_instruction();
+        // Handle interrupts
+        if let InterruptStatus::Set = self.interrupt_enable {
+            let inte = self.memory.get_address(0xFFFF);
+            let intf = self.memory.get_address(0xFF0F) & inte; // we only care about interrupts which are actually enabled
 
+            if intf & 0x1 == 0x1 {
+                self.isr(0x40);
+            }
+            if intf & 0x2 == 0x2 {
+                self.isr(0x48);
+            }
+            if intf & 0x4 == 0x4 {
+                self.isr(0x50);
+            }
+            if intf & 0x8 == 0x8 {
+                self.isr(0x58);
+            }
+            if intf & 0x10 == 0x10 {
+                self.isr(0x60);
+            }
+        }
+
+        let opcode = self.next_instruction();
         debug!("Matching opcode: {:#X}", opcode);
 
         match opcode {
@@ -1947,19 +1975,11 @@ impl Cpu {
     }
 
     fn push(&mut self, reg: Register) {
-        use Register::*;
+        let reg = self.get_regu16(reg);
 
-        let ref reg = match reg {
-            AF => self.af.into_bytes(),
-            BC => self.bc.0,
-            DE => self.de.0,
-            HL => self.hl.0,
-            _ => unreachable!("Attempted to push single byte register onto stack"),
-        };
-
-        self.memory.write_byte(self.sp, reg[0]);
+        self.memory.write_byte(self.sp, (reg & 0x0F) as u8);
         self.sp = self.sp.wrapping_sub(1);
-        self.memory.write_byte(self.sp, reg[1]);
+        self.memory.write_byte(self.sp, (reg & 0xF0) as u8);
         self.sp = self.sp.wrapping_sub(1);
     }
 

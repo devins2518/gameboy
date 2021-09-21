@@ -6,7 +6,7 @@ mod utils;
 
 use cpu::Cpu;
 use env_logger::Env;
-use log::debug;
+use log::{debug, info};
 use memory::Bus;
 use ppu::Ppu;
 use sdl2::event::Event;
@@ -55,7 +55,7 @@ impl GameBoy {
     fn run(&mut self) {
         let mut event_pump = self.sdl_context.event_pump().unwrap();
         let frame_interval = Duration::new(0, 1000000000u32 / 60);
-        let clock_interval = Duration::new(0, 1000000000u32 / 238);
+        let clock_interval = Duration::new(0, 1000);
         'main_loop: loop {
             let now = Instant::now();
             for event in event_pump.poll_iter() {
@@ -80,8 +80,10 @@ impl GameBoy {
             }
 
             let frame_delta = now.elapsed();
-            if self.auto && frame_delta < clock_interval {
-                self.step()
+            if self.auto && frame_delta > clock_interval {
+                self.step();
+                println!("{:?}", frame_delta);
+                ::std::thread::sleep(frame_delta - clock_interval)
             }
 
             if frame_delta < frame_interval {
@@ -96,8 +98,10 @@ impl GameBoy {
             self.cpu.clocks, self.ppu.clocks, self.schedule_clocks
         );
         self.schedule_clocks += if self.schedule_clocks <= 0 {
+            info!("Clocking CPU");
             self.cpu.clock()
         } else {
+            info!("Clocking PPU");
             self.ppu.clock()
         };
     }
