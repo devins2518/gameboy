@@ -6,7 +6,7 @@ use crate::memory::Bus;
 use crate::utils::{Condition, InterruptStatus, Register};
 
 pub struct Cpu {
-    af: AFReg,
+    pub af: AFReg,
     bc: GPReg,
     de: GPReg,
     hl: GPReg,
@@ -72,10 +72,12 @@ impl Cpu {
     }
 
     fn isr(&mut self, int_addr: u16) {
+        self.interrupt_enable = InterruptStatus::Unset;
         self.clocks += 2; // 2 noops
         self.push(Register::PC);
         self.clocks += 2; // Push PC
         self.pc = int_addr;
+        self.clocks += 1; // Set PC
     }
 
     pub fn clock(&mut self) -> i64 {
@@ -2249,69 +2251,23 @@ impl Cpu {
     }
 
     fn bit(&mut self, bit: u8, reg: Register) {
-        use Register::*;
-        let val = match reg {
-            A => self.af.a(),
-            B => self.bc[0],
-            C => self.bc[1],
-            D => self.de[0],
-            E => self.de[1],
-            H => self.hl[0],
-            L => self.hl[1],
-            _ => self.memory.get_address(self.get_regu16(reg)),
-        };
+        let val = self.get_regu8(reg);
 
-        assert!(bit <= 7);
-
-        debug!(
-            "val {:#010b} bit {} val >> bit {:#010b}",
-            val,
-            bit,
-            val >> bit
-        );
         self.af.set_z((val >> bit) == 0);
         self.af.set_n(false);
         self.af.set_h(true);
     }
 
     fn set(&mut self, bit: u8, reg: Register) {
-        assert!(bit <= 7);
         let val = 1 << bit;
 
-        use Register::*;
-        match reg {
-            A => self.af.set_a(self.af.a() | 1 << bit),
-            B => self.bc[0] |= val,
-            C => self.bc[1] |= val,
-            D => self.de[0] |= val,
-            E => self.de[1] |= val,
-            H => self.hl[0] |= val,
-            L => self.hl[1] |= val,
-            _ => {
-                let b = self.memory.get_address(self.get_regu16(reg));
-                self.memory.write_byte(self.get_regu16(reg), b | val);
-            }
-        };
+        self.set_regu8(reg, self.get_regu8(reg) | val);
     }
 
     fn res(&mut self, bit: u8, reg: Register) {
-        assert!(bit <= 7);
         let val = !(1 << bit);
 
-        use Register::*;
-        match reg {
-            A => self.af.set_a(self.af.a() & val),
-            B => self.bc[0] &= val,
-            C => self.bc[1] &= val,
-            D => self.de[0] &= val,
-            E => self.de[1] &= val,
-            H => self.hl[0] &= val,
-            L => self.hl[1] &= val,
-            _ => {
-                let b = self.memory.get_address(self.get_regu16(reg));
-                self.memory.write_byte(self.get_regu16(reg), b & val);
-            }
-        };
+        self.set_regu8(reg, self.get_regu8(reg) & val);
     }
 
     fn jp(&mut self, val: u16) {
@@ -2320,14 +2276,7 @@ impl Cpu {
     }
 
     fn jpc(&mut self, cond: Condition, val: u16) {
-        let cond = match cond {
-            Condition::NZ => !self.af.z(),
-            Condition::Z => self.af.z(),
-            Condition::NC => !self.af.c(),
-            Condition::C => self.af.c(),
-        };
-
-        if cond {
+        if cond.check(&self) {
             self.pc = val;
         }
     }
@@ -2337,54 +2286,21 @@ impl Cpu {
     }
 
     fn jrc(&mut self, cond: Condition, n: i8) {
-        let cond = match cond {
-            Condition::NZ => !self.af.z(),
-            Condition::Z => self.af.z(),
-            Condition::NC => !self.af.c(),
-            Condition::C => self.af.c(),
-        };
-
-        if cond {
+        if cond.check(&self) {
             self.pc = (self.pc as i16).wrapping_add(n as i16) as u16;
         }
     }
 
     fn call(&mut self, addr: u16) {
-        let b1 = self.memory.get_address(self.pc);
-        self.pc = self.pc.wrapping_add(self.pc);
-        let b2 = self.memory.get_address(self.pc);
-        self.pc = self.pc.wrapping_add(self.pc);
-
         // Push PC to stack
-        self.memory.write_byte(self.pc, b1);
-        self.sp = self.sp.wrapping_sub(1);
-        self.memory.write_byte(self.pc, b2);
-        self.sp = self.sp.wrapping_sub(1);
+        self.push(Register::PC);
 
         self.pc = addr;
     }
 
     fn callc(&mut self, cond: Condition, addr: u16) {
-        let cond = match cond {
-            Condition::NZ => self.af.z() == false,
-            Condition::Z => self.af.z() == true,
-            Condition::NC => self.af.c() == false,
-            Condition::C => self.af.c() == true,
-        };
-
-        if cond {
-            let b1 = self.memory.get_address(self.pc);
-            self.pc = self.pc.wrapping_add(self.pc);
-            let b2 = self.memory.get_address(self.pc);
-            self.pc = self.pc.wrapping_add(self.pc);
-
-            // Push PC to stack
-            self.memory.write_byte(self.pc, b1);
-            self.sp = self.sp.wrapping_sub(1);
-            self.memory.write_byte(self.pc, b2);
-            self.sp = self.sp.wrapping_sub(1);
-
-            self.pc = addr;
+        if cond.check(&self) {
+            self.call(addr)
         }
     }
 
@@ -2405,14 +2321,7 @@ impl Cpu {
     }
 
     fn retc(&mut self, cond: Condition) {
-        let cond = match cond {
-            Condition::NZ => self.af.z() == false,
-            Condition::Z => self.af.z() == true,
-            Condition::NC => self.af.c() == false,
-            Condition::C => self.af.c() == true,
-        };
-
-        if cond {
+        if cond.check(&self) {
             let b1 = self.memory.get_address(self.pc);
             self.pc = self.pc.wrapping_add(self.pc);
             let b2 = self.memory.get_address(self.pc);
@@ -2480,14 +2389,14 @@ impl GPReg {
 
 #[bitfield]
 #[derive(Clone, Copy, Debug)]
-struct AFReg {
+pub struct AFReg {
     a: u8,
     #[skip]
     __: B4,
-    c: bool,
+    pub c: bool,
     h: bool,
     n: bool,
-    z: bool,
+    pub z: bool,
 }
 
 impl AFReg {

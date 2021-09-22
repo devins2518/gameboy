@@ -1,8 +1,21 @@
+use crate::cpu::Cpu;
+
 pub enum Condition {
     NZ,
     Z,
     NC,
     C,
+}
+
+impl Condition {
+    pub fn check(&self, cpu: &Cpu) -> bool {
+        match self {
+            Condition::NZ => cpu.af.z() == false,
+            Condition::Z => cpu.af.z() == true,
+            Condition::NC => cpu.af.c() == false,
+            Condition::C => cpu.af.c() == true,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
