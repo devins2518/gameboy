@@ -1,4 +1,4 @@
-use log::{debug, info};
+use log::{debug, trace};
 use modular_bitfield::prelude::*;
 use std::ops::{Deref, DerefMut};
 
@@ -112,44 +112,44 @@ impl Cpu {
             0x00 => {
                 self.nop();
 
-                info!("{:#04X} NOP", opcode)
+                trace!("{:#04X} NOP", opcode)
             }
             0x01 => {
                 let byte = self.imm_u16();
                 self.ld_regu16(Register::BC, byte);
 
-                info!("{:#04X} LD BC, {:#06X}", opcode, byte);
+                trace!("{:#04X} LD BC, {:#06X}", opcode, byte);
             }
             0x02 => {
                 self.memory.write_byte(self.bc.into(), self.af.a());
 
-                info!("{:#04X} LD (BC), A", opcode);
+                trace!("{:#04X} LD (BC), A", opcode);
             }
             0x03 => {
                 self.inc(Register::BC);
 
-                info!("{:#04X} INC BC", opcode);
+                trace!("{:#04X} INC BC", opcode);
             }
             0x04 => {
                 self.inc(Register::B);
 
-                info!("{:#04X} INC B", opcode);
+                trace!("{:#04X} INC B", opcode);
             }
             0x05 => {
                 self.dec(Register::B);
 
-                info!("{:#04X} DEC B", opcode);
+                trace!("{:#04X} DEC B", opcode);
             }
             0x06 => {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::B, b);
 
-                info!("{:#04X} LD B, {:#04X}", opcode, b);
+                trace!("{:#04X} LD B, {:#04X}", opcode, b);
             }
             0x07 => {
                 self.rlca();
 
-                info!("{:#04X} RLCA", opcode);
+                trace!("{:#04X} RLCA", opcode);
             }
             0x08 => {
                 let b = self.imm_u16();
@@ -157,180 +157,180 @@ impl Cpu {
                 self.memory.write_byte(b, sp[0]);
                 self.memory.write_byte(b.wrapping_add(1), sp[1]);
 
-                info!("{:#04X} LD {:#06X}, SP", opcode, b);
+                trace!("{:#04X} LD {:#06X}, SP", opcode, b);
             }
             0x09 => {
                 self.add_u16(Register::HL, self.get_regu16(Register::BC));
 
-                info!("{:#04X} ADD HL, BC", opcode);
+                trace!("{:#04X} ADD HL, BC", opcode);
             }
             0x0A => {
                 let b = self.memory.get_address(self.get_regu16(Register::BC));
                 self.ld_regu8(Register::A, b);
 
-                info!("{:#04X} LD A, (BC)", opcode);
+                trace!("{:#04X} LD A, (BC)", opcode);
             }
             0x0B => {
                 self.dec(Register::BC);
 
-                info!("{:#04X} DEC BC", opcode);
+                trace!("{:#04X} DEC BC", opcode);
             }
             0x0C => {
                 self.inc(Register::C);
 
-                info!("{:#04X} INC C", opcode);
+                trace!("{:#04X} INC C", opcode);
             }
             0x0D => {
                 self.dec(Register::C);
 
-                info!("{:#04X} DEC C", opcode);
+                trace!("{:#04X} DEC C", opcode);
             }
             0x0E => {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::C, b);
 
-                info!("{:#04X} LD C, {:#04X}", opcode, b);
+                trace!("{:#04X} LD C, {:#04X}", opcode, b);
             }
             0x0F => {
                 self.rrca();
 
-                info!("{:#04X} RRCA", opcode);
+                trace!("{:#04X} RRCA", opcode);
             }
             0x10 => {
                 self.stop();
 
-                info!("{:#04X} STOP", opcode);
+                trace!("{:#04X} STOP", opcode);
             }
             0x11 => {
                 let b = self.imm_u16();
                 self.ld_regu16(Register::DE, b);
 
-                info!("{:#04X} LD DE, {:#06X}", opcode, b);
+                trace!("{:#04X} LD DE, {:#06X}", opcode, b);
             }
             0x12 => {
                 self.memory.write_byte(self.de.into(), self.af.a());
 
-                info!("{:#04X} LD (DE), A", opcode);
+                trace!("{:#04X} LD (DE), A", opcode);
             }
             0x13 => {
                 self.inc(Register::DE);
 
-                info!("{:#04X} INC DE", opcode);
+                trace!("{:#04X} INC DE", opcode);
             }
             0x14 => {
                 self.inc(Register::D);
 
-                info!("{:#04X} INC D", opcode);
+                trace!("{:#04X} INC D", opcode);
             }
             0x15 => {
                 self.dec(Register::D);
 
-                info!("{:#04X} DEC D", opcode);
+                trace!("{:#04X} DEC D", opcode);
             }
             0x16 => {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::D, b);
 
-                info!("{:#04X} LD D, {:#04X}", opcode, b);
+                trace!("{:#04X} LD D, {:#04X}", opcode, b);
             }
             0x17 => {
                 self.rla();
 
-                info!("{:#04X} RLA", opcode);
+                trace!("{:#04X} RLA", opcode);
             }
             0x18 => {
                 let b = self.imm_u8();
                 self.jr(b as i8);
 
-                info!("{:#04X} JR {:#04X}", opcode, b);
+                trace!("{:#04X} JR {:#04X}", opcode, b);
             }
             0x19 => {
                 self.add_u16(Register::HL, self.get_regu16(Register::DE));
 
-                info!("{:#04X} ADD HL, DE", opcode);
+                trace!("{:#04X} ADD HL, DE", opcode);
             }
             0x1A => {
                 let b = self.memory.get_address(self.get_regu16(Register::DE));
                 self.ld_regu8(Register::A, b);
 
-                info!("{:#04X} LD A, (DE)", opcode);
+                trace!("{:#04X} LD A, (DE)", opcode);
             }
             0x1B => {
                 self.dec(Register::DE);
 
-                info!("{:#04X} DEC DE", opcode);
+                trace!("{:#04X} DEC DE", opcode);
             }
             0x1C => {
                 self.inc(Register::E);
 
-                info!("{:#04X} INC E", opcode);
+                trace!("{:#04X} INC E", opcode);
             }
             0x1D => {
                 self.dec(Register::E);
 
-                info!("{:#04X} DEC E", opcode);
+                trace!("{:#04X} DEC E", opcode);
             }
             0x1E => {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::E, b);
 
-                info!("{:#04X} LD E {:#06X}", opcode, b);
+                trace!("{:#04X} LD E {:#06X}", opcode, b);
             }
             0x1F => {
                 self.rra();
 
-                info!("{:#04X} RRA", opcode);
+                trace!("{:#04X} RRA", opcode);
             }
             0x20 => {
                 let b = self.imm_u8();
                 self.jrc(Condition::NZ, b as i8);
 
-                info!("{:#04X} JR NZ {:#06X}", opcode, b);
+                trace!("{:#04X} JR NZ {:#06X}", opcode, b);
             }
             0x21 => {
                 let b = self.imm_u16();
                 self.ld_regu16(Register::HL, b);
 
-                info!("{:#04X} LD HL {:#06X}", opcode, b);
+                trace!("{:#04X} LD HL {:#06X}", opcode, b);
             }
             0x22 => {
                 self.memory
                     .write_byte(self.get_regu16(Register::HL), self.get_regu8(Register::A));
                 self.hl = GPReg::from(self.get_regu16(Register::HL).wrapping_add(1));
 
-                info!("{:#04X} LD (HL+), A", opcode);
+                trace!("{:#04X} LD (HL+), A", opcode);
             }
             0x23 => {
                 self.inc(Register::HL);
 
-                info!("{:#04X} INC HL", opcode);
+                trace!("{:#04X} INC HL", opcode);
             }
             0x24 => {
                 self.inc(Register::H);
 
-                info!("{:#04X} INC H", opcode);
+                trace!("{:#04X} INC H", opcode);
             }
             0x25 => {
                 self.dec(Register::H);
 
-                info!("{:#04X} DEC H", opcode);
+                trace!("{:#04X} DEC H", opcode);
             }
             0x26 => {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::H, b);
 
-                info!("{:#04X} LD H, {:#04X}", opcode, b);
+                trace!("{:#04X} LD H, {:#04X}", opcode, b);
             }
             0x27 => {
                 self.daa();
 
-                info!("{:#04X} DAA", opcode);
+                trace!("{:#04X} DAA", opcode);
             }
             0x28 => {
                 let b = self.imm_u8();
                 self.jrc(Condition::Z, b as i8);
 
-                info!("{:#04X} JR Z {:#04X}", opcode, b);
+                trace!("{:#04X} JR Z {:#04X}", opcode, b);
             }
             0x29 => self.add_u16(Register::HL, self.get_regu16(Register::HL)),
             0x2A => {
@@ -354,35 +354,35 @@ impl Cpu {
                 let b = self.imm_u8();
                 self.jrc(Condition::NC, b as i8);
 
-                info!("{:#04X} JR NC {:#06X}", opcode, b);
+                trace!("{:#04X} JR NC {:#06X}", opcode, b);
             }
             0x31 => {
                 let b = self.imm_u16();
                 self.ld_regu16(Register::SP, b);
 
-                info!("{:#04X} LD {:?} {:#06X}", opcode, Register::SP, b);
+                trace!("{:#04X} LD {:?} {:#06X}", opcode, Register::SP, b);
             }
             0x32 => {
                 self.memory
                     .write_byte(self.get_regu16(Register::HL), self.get_regu8(Register::A));
                 self.hl = GPReg::from(self.get_regu16(Register::HL).wrapping_sub(1));
 
-                info!("{:#04X} LD (HL-) A", opcode);
+                trace!("{:#04X} LD (HL-) A", opcode);
             }
             0x33 => {
                 self.inc(Register::SP);
 
-                info!("{:#04X} INC SP", opcode);
+                trace!("{:#04X} INC SP", opcode);
             }
             0x34 => {
                 self.inc(Register::PHL);
 
-                info!("{:#04X} INC (HL)", opcode);
+                trace!("{:#04X} INC (HL)", opcode);
             }
             0x35 => {
                 self.dec(Register::PHL);
 
-                info!("{:#04X} DEC (HL)", opcode);
+                trace!("{:#04X} DEC (HL)", opcode);
             }
             0x36 => {
                 let b = self.imm_u8();
@@ -410,13 +410,13 @@ impl Cpu {
                 let b = self.imm_u8();
                 self.ld_regu8(Register::A, b);
 
-                info!("{:#04X} LD A, {:#04X}", opcode, b);
+                trace!("{:#04X} LD A, {:#04X}", opcode, b);
             }
             0x3F => self.ccf(),
             0x40 => {
                 self.ld_regu8(Register::B, self.get_regu8(Register::B));
 
-                info!("{:#04X} LD {:?} {:?}", opcode, Register::B, Register::B);
+                trace!("{:#04X} LD {:?} {:?}", opcode, Register::B, Register::B);
             }
             0x41 => self.ld_regu8(Register::B, self.get_regu8(Register::C)),
             0x42 => self.ld_regu8(Register::B, self.get_regu8(Register::D)),
@@ -555,35 +555,35 @@ impl Cpu {
             }
             0xA8 => {
                 self.xor(self.get_regu8(Register::B));
-                info!("{:#04X} XOR B", opcode);
+                trace!("{:#04X} XOR B", opcode);
             }
             0xA9 => {
                 self.xor(self.get_regu8(Register::C));
-                info!("{:#04X} XOR C", opcode);
+                trace!("{:#04X} XOR C", opcode);
             }
             0xAA => {
                 self.xor(self.get_regu8(Register::D));
-                info!("{:#04X} XOR D", opcode);
+                trace!("{:#04X} XOR D", opcode);
             }
             0xAB => {
                 self.xor(self.get_regu8(Register::E));
-                info!("{:#04X} XOR E", opcode);
+                trace!("{:#04X} XOR E", opcode);
             }
             0xAC => {
                 self.xor(self.get_regu8(Register::H));
-                info!("{:#04X} XOR H", opcode);
+                trace!("{:#04X} XOR H", opcode);
             }
             0xAD => {
                 self.xor(self.get_regu8(Register::L));
-                info!("{:#04X} XOR L", opcode);
+                trace!("{:#04X} XOR L", opcode);
             }
             0xAE => {
                 self.xor(self.get_regu8(Register::PHL));
-                info!("{:#04X} XOR (HL)", opcode,);
+                trace!("{:#04X} XOR (HL)", opcode,);
             }
             0xAF => {
                 self.xor(self.get_regu8(Register::A));
-                info!("{:#04X} XOR A", opcode);
+                trace!("{:#04X} XOR A", opcode);
             }
             0xB0 => self.or(self.get_regu8(Register::B)),
             0xB1 => self.or(self.get_regu8(Register::C)),
@@ -629,1027 +629,1027 @@ impl Cpu {
                 match opcode {
                     0x00 => {
                         self.rlc(Register::B);
-                        info!("0xCB{:X} RLC B", opcode);
+                        trace!("0xCB{:X} RLC B", opcode);
                     }
                     0x01 => {
                         self.rlc(Register::C);
-                        info!("0xCB{:X} RLC C", opcode);
+                        trace!("0xCB{:X} RLC C", opcode);
                     }
                     0x02 => {
                         self.rlc(Register::D);
-                        info!("0xCB{:X} RLC D", opcode);
+                        trace!("0xCB{:X} RLC D", opcode);
                     }
                     0x03 => {
                         self.rlc(Register::E);
-                        info!("0xCB{:X} RLC E", opcode);
+                        trace!("0xCB{:X} RLC E", opcode);
                     }
                     0x04 => {
                         self.rlc(Register::H);
-                        info!("0xCB{:X} RLC H", opcode);
+                        trace!("0xCB{:X} RLC H", opcode);
                     }
                     0x05 => {
                         self.rlc(Register::L);
-                        info!("0xCB{:X} RLC L", opcode);
+                        trace!("0xCB{:X} RLC L", opcode);
                     }
                     0x06 => {
                         self.rlc(Register::PHL);
-                        info!("0xCB{:X} RLC (HL)", opcode);
+                        trace!("0xCB{:X} RLC (HL)", opcode);
                     }
                     0x07 => {
                         self.rlc(Register::A);
-                        info!("0xCB{:X} RLC A", opcode);
+                        trace!("0xCB{:X} RLC A", opcode);
                     }
                     0x08 => {
                         self.rrc(Register::B);
-                        info!("0xCB{:X} RRC B", opcode);
+                        trace!("0xCB{:X} RRC B", opcode);
                     }
                     0x09 => {
                         self.rrc(Register::C);
-                        info!("0xCB{:X} RRC C", opcode);
+                        trace!("0xCB{:X} RRC C", opcode);
                     }
                     0x0A => {
                         self.rrc(Register::D);
-                        info!("0xCB{:X} RRC D", opcode);
+                        trace!("0xCB{:X} RRC D", opcode);
                     }
                     0x0B => {
                         self.rrc(Register::E);
-                        info!("0xCB{:X} RRC E", opcode);
+                        trace!("0xCB{:X} RRC E", opcode);
                     }
                     0x0C => {
                         self.rrc(Register::H);
-                        info!("0xCB{:X} RRC H", opcode);
+                        trace!("0xCB{:X} RRC H", opcode);
                     }
                     0x0D => {
                         self.rrc(Register::L);
-                        info!("0xCB{:X} RRC L", opcode);
+                        trace!("0xCB{:X} RRC L", opcode);
                     }
                     0x0E => {
                         self.rrc(Register::PHL);
-                        info!("0xCB{:X} RRC (HL)", opcode);
+                        trace!("0xCB{:X} RRC (HL)", opcode);
                     }
                     0x0F => {
                         self.rrc(Register::A);
-                        info!("0xCB{:X} RRC A", opcode);
+                        trace!("0xCB{:X} RRC A", opcode);
                     }
                     0x10 => {
                         self.rl(Register::B);
-                        info!("0xCB{:X} RL B", opcode);
+                        trace!("0xCB{:X} RL B", opcode);
                     }
                     0x11 => {
                         self.rl(Register::C);
-                        info!("0xCB{:X} RL C", opcode);
+                        trace!("0xCB{:X} RL C", opcode);
                     }
                     0x12 => {
                         self.rl(Register::D);
-                        info!("0xCB{:X} RL D", opcode);
+                        trace!("0xCB{:X} RL D", opcode);
                     }
                     0x13 => {
                         self.rl(Register::E);
-                        info!("0xCB{:X} RL E", opcode);
+                        trace!("0xCB{:X} RL E", opcode);
                     }
                     0x14 => {
                         self.rl(Register::H);
-                        info!("0xCB{:X} RL H", opcode);
+                        trace!("0xCB{:X} RL H", opcode);
                     }
                     0x15 => {
                         self.rl(Register::L);
-                        info!("0xCB{:X} RL L", opcode);
+                        trace!("0xCB{:X} RL L", opcode);
                     }
                     0x16 => {
                         self.rl(Register::PHL);
-                        info!("0xCB{:X} RL (HL)", opcode);
+                        trace!("0xCB{:X} RL (HL)", opcode);
                     }
                     0x17 => {
                         self.rl(Register::A);
-                        info!("0xCB{:X} RL A", opcode);
+                        trace!("0xCB{:X} RL A", opcode);
                     }
                     0x18 => {
                         self.rr(Register::B);
-                        info!("0xCB{:X} RR B", opcode);
+                        trace!("0xCB{:X} RR B", opcode);
                     }
                     0x19 => {
                         self.rr(Register::C);
-                        info!("0xCB{:X} RR C", opcode);
+                        trace!("0xCB{:X} RR C", opcode);
                     }
                     0x1A => {
                         self.rr(Register::D);
-                        info!("0xCB{:X} RR D", opcode);
+                        trace!("0xCB{:X} RR D", opcode);
                     }
                     0x1B => {
                         self.rr(Register::E);
-                        info!("0xCB{:X} RR E", opcode);
+                        trace!("0xCB{:X} RR E", opcode);
                     }
                     0x1C => {
                         self.rr(Register::H);
-                        info!("0xCB{:X} RR H", opcode);
+                        trace!("0xCB{:X} RR H", opcode);
                     }
                     0x1D => {
                         self.rr(Register::L);
-                        info!("0xCB{:X} RR L", opcode);
+                        trace!("0xCB{:X} RR L", opcode);
                     }
                     0x1E => {
                         self.rr(Register::PHL);
-                        info!("0xCB{:X} RR (HL)", opcode);
+                        trace!("0xCB{:X} RR (HL)", opcode);
                     }
                     0x1F => {
                         self.rr(Register::A);
-                        info!("0xCB{:X} RR A", opcode);
+                        trace!("0xCB{:X} RR A", opcode);
                     }
                     0x20 => {
                         self.sla(Register::B);
-                        info!("0xCB{:X} SLA B", opcode);
+                        trace!("0xCB{:X} SLA B", opcode);
                     }
                     0x21 => {
                         self.sla(Register::C);
-                        info!("0xCB{:X} SLA C", opcode);
+                        trace!("0xCB{:X} SLA C", opcode);
                     }
                     0x22 => {
                         self.sla(Register::D);
-                        info!("0xCB{:X} SLA D", opcode);
+                        trace!("0xCB{:X} SLA D", opcode);
                     }
                     0x23 => {
                         self.sla(Register::E);
-                        info!("0xCB{:X} SLA E", opcode);
+                        trace!("0xCB{:X} SLA E", opcode);
                     }
                     0x24 => {
                         self.sla(Register::H);
-                        info!("0xCB{:X} SLA H", opcode);
+                        trace!("0xCB{:X} SLA H", opcode);
                     }
                     0x25 => {
                         self.sla(Register::L);
-                        info!("0xCB{:X} SLA L", opcode);
+                        trace!("0xCB{:X} SLA L", opcode);
                     }
                     0x26 => {
                         self.sla(Register::PHL);
-                        info!("0xCB{:X} SLA (HL)", opcode);
+                        trace!("0xCB{:X} SLA (HL)", opcode);
                     }
                     0x27 => {
                         self.sla(Register::A);
-                        info!("0xCB{:X} SLA A", opcode);
+                        trace!("0xCB{:X} SLA A", opcode);
                     }
                     0x28 => {
                         self.sra(Register::B);
-                        info!("0xCB{:X} SRA B", opcode);
+                        trace!("0xCB{:X} SRA B", opcode);
                     }
                     0x29 => {
                         self.sra(Register::C);
-                        info!("0xCB{:X} SRA C", opcode);
+                        trace!("0xCB{:X} SRA C", opcode);
                     }
                     0x2A => {
                         self.sra(Register::D);
-                        info!("0xCB{:X} SRA D", opcode);
+                        trace!("0xCB{:X} SRA D", opcode);
                     }
                     0x2B => {
                         self.sra(Register::E);
-                        info!("0xCB{:X} SRA E", opcode);
+                        trace!("0xCB{:X} SRA E", opcode);
                     }
                     0x2C => {
                         self.sra(Register::H);
-                        info!("0xCB{:X} SRA H", opcode);
+                        trace!("0xCB{:X} SRA H", opcode);
                     }
                     0x2D => {
                         self.sra(Register::L);
-                        info!("0xCB{:X} SRA L", opcode);
+                        trace!("0xCB{:X} SRA L", opcode);
                     }
                     0x2E => {
                         self.sra(Register::PHL);
-                        info!("0xCB{:X} SRA (HL)", opcode);
+                        trace!("0xCB{:X} SRA (HL)", opcode);
                     }
                     0x2F => {
                         self.sra(Register::A);
-                        info!("0xCB{:X} SRA A", opcode);
+                        trace!("0xCB{:X} SRA A", opcode);
                     }
                     0x30 => {
                         self.swap(Register::B);
-                        info!("0xCB{:X} SWAP B", opcode);
+                        trace!("0xCB{:X} SWAP B", opcode);
                     }
                     0x31 => {
                         self.swap(Register::C);
-                        info!("0xCB{:X} SWAP C", opcode);
+                        trace!("0xCB{:X} SWAP C", opcode);
                     }
                     0x32 => {
                         self.swap(Register::D);
-                        info!("0xCB{:X} SWAP D", opcode);
+                        trace!("0xCB{:X} SWAP D", opcode);
                     }
                     0x33 => {
                         self.swap(Register::E);
-                        info!("0xCB{:X} SWAP E", opcode);
+                        trace!("0xCB{:X} SWAP E", opcode);
                     }
                     0x34 => {
                         self.swap(Register::H);
-                        info!("0xCB{:X} SWAP H", opcode);
+                        trace!("0xCB{:X} SWAP H", opcode);
                     }
                     0x35 => {
                         self.swap(Register::L);
-                        info!("0xCB{:X} SWAP L", opcode);
+                        trace!("0xCB{:X} SWAP L", opcode);
                     }
                     0x36 => {
                         self.swap(Register::PHL);
-                        info!("0xCB{:X} SWAP (HL)", opcode);
+                        trace!("0xCB{:X} SWAP (HL)", opcode);
                     }
                     0x37 => {
                         self.swap(Register::A);
-                        info!("0xCB{:X} SWAP A", opcode);
+                        trace!("0xCB{:X} SWAP A", opcode);
                     }
                     0x38 => {
                         self.srl(Register::B);
-                        info!("0xCB{:X} SRL B", opcode);
+                        trace!("0xCB{:X} SRL B", opcode);
                     }
                     0x39 => {
                         self.srl(Register::C);
-                        info!("0xCB{:X} SRL C", opcode);
+                        trace!("0xCB{:X} SRL C", opcode);
                     }
                     0x3A => {
                         self.srl(Register::D);
-                        info!("0xCB{:X} SRL D", opcode);
+                        trace!("0xCB{:X} SRL D", opcode);
                     }
                     0x3B => {
                         self.srl(Register::E);
-                        info!("0xCB{:X} SRL E", opcode);
+                        trace!("0xCB{:X} SRL E", opcode);
                     }
                     0x3C => {
                         self.srl(Register::H);
-                        info!("0xCB{:X} SRL H", opcode);
+                        trace!("0xCB{:X} SRL H", opcode);
                     }
                     0x3D => {
                         self.srl(Register::L);
-                        info!("0xCB{:X} SRL L", opcode);
+                        trace!("0xCB{:X} SRL L", opcode);
                     }
                     0x3E => {
                         self.srl(Register::PHL);
-                        info!("0xCB{:X} SRL (HL)", opcode);
+                        trace!("0xCB{:X} SRL (HL)", opcode);
                     }
                     0x3F => {
                         self.srl(Register::A);
-                        info!("0xCB{:X} SRL A", opcode);
+                        trace!("0xCB{:X} SRL A", opcode);
                     }
                     0x40 => {
                         self.bit(3, Register::B);
-                        info!("0xCB{:X} BIT 0, B", opcode);
+                        trace!("0xCB{:X} BIT 0, B", opcode);
                     }
                     0x41 => {
                         self.bit(3, Register::C);
-                        info!("0xCB{:X} BIT 0, C", opcode);
+                        trace!("0xCB{:X} BIT 0, C", opcode);
                     }
                     0x42 => {
                         self.bit(3, Register::D);
-                        info!("0xCB{:X} BIT 0, D", opcode);
+                        trace!("0xCB{:X} BIT 0, D", opcode);
                     }
                     0x43 => {
                         self.bit(3, Register::E);
-                        info!("0xCB{:X} BIT 0, E", opcode);
+                        trace!("0xCB{:X} BIT 0, E", opcode);
                     }
                     0x44 => {
                         self.bit(3, Register::H);
-                        info!("0xCB{:X} BIT 0, H", opcode);
+                        trace!("0xCB{:X} BIT 0, H", opcode);
                     }
                     0x45 => {
                         self.bit(3, Register::L);
-                        info!("0xCB{:X} BIT 0, L", opcode);
+                        trace!("0xCB{:X} BIT 0, L", opcode);
                     }
                     0x46 => {
                         self.bit(3, Register::PHL);
-                        info!("0xCB{:X} BIT 0, (HL)", opcode);
+                        trace!("0xCB{:X} BIT 0, (HL)", opcode);
                     }
                     0x47 => {
                         self.bit(3, Register::A);
-                        info!("0xCB{:X} BIT 0, A", opcode);
+                        trace!("0xCB{:X} BIT 0, A", opcode);
                     }
                     0x48 => {
                         self.bit(3, Register::B);
-                        info!("0xCB{:X} BIT 1, B", opcode);
+                        trace!("0xCB{:X} BIT 1, B", opcode);
                     }
                     0x49 => {
                         self.bit(3, Register::C);
-                        info!("0xCB{:X} BIT 1, C", opcode);
+                        trace!("0xCB{:X} BIT 1, C", opcode);
                     }
                     0x4A => {
                         self.bit(3, Register::D);
-                        info!("0xCB{:X} BIT 1, D", opcode);
+                        trace!("0xCB{:X} BIT 1, D", opcode);
                     }
                     0x4B => {
                         self.bit(3, Register::E);
-                        info!("0xCB{:X} BIT 1, E", opcode);
+                        trace!("0xCB{:X} BIT 1, E", opcode);
                     }
                     0x4C => {
                         self.bit(3, Register::H);
-                        info!("0xCB{:X} BIT 1, H", opcode);
+                        trace!("0xCB{:X} BIT 1, H", opcode);
                     }
                     0x4D => {
                         self.bit(3, Register::L);
-                        info!("0xCB{:X} BIT 1, L", opcode);
+                        trace!("0xCB{:X} BIT 1, L", opcode);
                     }
                     0x4E => {
                         self.bit(3, Register::PHL);
-                        info!("0xCB{:X} BIT 1, (HL)", opcode);
+                        trace!("0xCB{:X} BIT 1, (HL)", opcode);
                     }
                     0x4F => {
                         self.bit(3, Register::A);
-                        info!("0xCB{:X} BIT 1, A", opcode);
+                        trace!("0xCB{:X} BIT 1, A", opcode);
                     }
                     0x50 => {
                         self.bit(3, Register::B);
-                        info!("0xCB{:X} BIT 2, B", opcode);
+                        trace!("0xCB{:X} BIT 2, B", opcode);
                     }
                     0x51 => {
                         self.bit(3, Register::C);
-                        info!("0xCB{:X} BIT 2, C", opcode);
+                        trace!("0xCB{:X} BIT 2, C", opcode);
                     }
                     0x52 => {
                         self.bit(3, Register::D);
-                        info!("0xCB{:X} BIT 2, D", opcode);
+                        trace!("0xCB{:X} BIT 2, D", opcode);
                     }
                     0x53 => {
                         self.bit(3, Register::E);
-                        info!("0xCB{:X} BIT 2, E", opcode);
+                        trace!("0xCB{:X} BIT 2, E", opcode);
                     }
                     0x54 => {
                         self.bit(3, Register::H);
-                        info!("0xCB{:X} BIT 2, H", opcode);
+                        trace!("0xCB{:X} BIT 2, H", opcode);
                     }
                     0x55 => {
                         self.bit(3, Register::L);
-                        info!("0xCB{:X} BIT 2, L", opcode);
+                        trace!("0xCB{:X} BIT 2, L", opcode);
                     }
                     0x56 => {
                         self.bit(3, Register::PHL);
-                        info!("0xCB{:X} BIT 2, (HL)", opcode);
+                        trace!("0xCB{:X} BIT 2, (HL)", opcode);
                     }
                     0x57 => {
                         self.bit(3, Register::A);
-                        info!("0xCB{:X} BIT 2, A", opcode);
+                        trace!("0xCB{:X} BIT 2, A", opcode);
                     }
                     0x58 => {
                         self.bit(3, Register::B);
-                        info!("0xCB{:X} BIT 3, B", opcode);
+                        trace!("0xCB{:X} BIT 3, B", opcode);
                     }
                     0x59 => {
                         self.bit(3, Register::C);
-                        info!("0xCB{:X} BIT 3, C", opcode);
+                        trace!("0xCB{:X} BIT 3, C", opcode);
                     }
                     0x5A => {
                         self.bit(3, Register::D);
-                        info!("0xCB{:X} BIT 3, D", opcode);
+                        trace!("0xCB{:X} BIT 3, D", opcode);
                     }
                     0x5B => {
                         self.bit(3, Register::E);
-                        info!("0xCB{:X} BIT 3, E", opcode);
+                        trace!("0xCB{:X} BIT 3, E", opcode);
                     }
                     0x5C => {
                         self.bit(3, Register::H);
-                        info!("0xCB{:X} BIT 3, H", opcode);
+                        trace!("0xCB{:X} BIT 3, H", opcode);
                     }
                     0x5D => {
                         self.bit(3, Register::L);
-                        info!("0xCB{:X} BIT 3, L", opcode);
+                        trace!("0xCB{:X} BIT 3, L", opcode);
                     }
                     0x5E => {
                         self.bit(3, Register::PHL);
-                        info!("0xCB{:X} BIT 3, (HL)", opcode);
+                        trace!("0xCB{:X} BIT 3, (HL)", opcode);
                     }
                     0x5F => {
                         self.bit(3, Register::A);
-                        info!("0xCB{:X} BIT 3, A", opcode);
+                        trace!("0xCB{:X} BIT 3, A", opcode);
                     }
                     0x60 => {
                         self.bit(3, Register::B);
-                        info!("0xCB{:X} BIT 4, B", opcode);
+                        trace!("0xCB{:X} BIT 4, B", opcode);
                     }
                     0x61 => {
                         self.bit(3, Register::C);
-                        info!("0xCB{:X} BIT 4, C", opcode);
+                        trace!("0xCB{:X} BIT 4, C", opcode);
                     }
                     0x62 => {
                         self.bit(3, Register::D);
-                        info!("0xCB{:X} BIT 4, D", opcode);
+                        trace!("0xCB{:X} BIT 4, D", opcode);
                     }
                     0x63 => {
                         self.bit(3, Register::E);
-                        info!("0xCB{:X} BIT 4, E", opcode);
+                        trace!("0xCB{:X} BIT 4, E", opcode);
                     }
                     0x64 => {
                         self.bit(3, Register::H);
-                        info!("0xCB{:X} BIT 4, H", opcode);
+                        trace!("0xCB{:X} BIT 4, H", opcode);
                     }
                     0x65 => {
                         self.bit(3, Register::L);
-                        info!("0xCB{:X} BIT 4, L", opcode);
+                        trace!("0xCB{:X} BIT 4, L", opcode);
                     }
                     0x66 => {
                         self.bit(3, Register::PHL);
-                        info!("0xCB{:X} BIT 4, (HL)", opcode);
+                        trace!("0xCB{:X} BIT 4, (HL)", opcode);
                     }
                     0x67 => {
                         self.bit(3, Register::A);
-                        info!("0xCB{:X} BIT 4, A", opcode);
+                        trace!("0xCB{:X} BIT 4, A", opcode);
                     }
                     0x68 => {
                         self.bit(3, Register::B);
-                        info!("0xCB{:X} BIT 5, B", opcode);
+                        trace!("0xCB{:X} BIT 5, B", opcode);
                     }
                     0x69 => {
                         self.bit(3, Register::C);
-                        info!("0xCB{:X} BIT 5, C", opcode);
+                        trace!("0xCB{:X} BIT 5, C", opcode);
                     }
                     0x6A => {
                         self.bit(3, Register::D);
-                        info!("0xCB{:X} BIT 5, D", opcode);
+                        trace!("0xCB{:X} BIT 5, D", opcode);
                     }
                     0x6B => {
                         self.bit(3, Register::E);
-                        info!("0xCB{:X} BIT 5, E", opcode);
+                        trace!("0xCB{:X} BIT 5, E", opcode);
                     }
                     0x6C => {
                         self.bit(3, Register::H);
-                        info!("0xCB{:X} BIT 5, H", opcode);
+                        trace!("0xCB{:X} BIT 5, H", opcode);
                     }
                     0x6D => {
                         self.bit(3, Register::L);
-                        info!("0xCB{:X} BIT 5, L", opcode);
+                        trace!("0xCB{:X} BIT 5, L", opcode);
                     }
                     0x6E => {
                         self.bit(3, Register::PHL);
-                        info!("0xCB{:X} BIT 5, (HL)", opcode);
+                        trace!("0xCB{:X} BIT 5, (HL)", opcode);
                     }
                     0x6F => {
                         self.bit(3, Register::A);
-                        info!("0xCB{:X} BIT 5, A", opcode);
+                        trace!("0xCB{:X} BIT 5, A", opcode);
                     }
                     0x70 => {
                         self.bit(3, Register::B);
-                        info!("0xCB{:X} BIT 6, B", opcode);
+                        trace!("0xCB{:X} BIT 6, B", opcode);
                     }
                     0x71 => {
                         self.bit(3, Register::C);
-                        info!("0xCB{:X} BIT 6, C", opcode);
+                        trace!("0xCB{:X} BIT 6, C", opcode);
                     }
                     0x72 => {
                         self.bit(3, Register::D);
-                        info!("0xCB{:X} BIT 6, D", opcode);
+                        trace!("0xCB{:X} BIT 6, D", opcode);
                     }
                     0x73 => {
                         self.bit(3, Register::E);
-                        info!("0xCB{:X} BIT 6, E", opcode);
+                        trace!("0xCB{:X} BIT 6, E", opcode);
                     }
                     0x74 => {
                         self.bit(3, Register::H);
-                        info!("0xCB{:X} BIT 6, H", opcode);
+                        trace!("0xCB{:X} BIT 6, H", opcode);
                     }
                     0x75 => {
                         self.bit(3, Register::L);
-                        info!("0xCB{:X} BIT 6, L", opcode);
+                        trace!("0xCB{:X} BIT 6, L", opcode);
                     }
                     0x76 => {
                         self.bit(3, Register::PHL);
-                        info!("0xCB{:X} BIT 6, (HL)", opcode);
+                        trace!("0xCB{:X} BIT 6, (HL)", opcode);
                     }
                     0x77 => {
                         self.bit(3, Register::A);
-                        info!("0xCB{:X} BIT 6, A", opcode);
+                        trace!("0xCB{:X} BIT 6, A", opcode);
                     }
                     0x78 => {
                         self.bit(3, Register::B);
-                        info!("0xCB{:X} BIT 7, B", opcode);
+                        trace!("0xCB{:X} BIT 7, B", opcode);
                     }
                     0x79 => {
                         self.bit(3, Register::C);
-                        info!("0xCB{:X} BIT 7, C", opcode);
+                        trace!("0xCB{:X} BIT 7, C", opcode);
                     }
                     0x7A => {
                         self.bit(3, Register::D);
-                        info!("0xCB{:X} BIT 7, D", opcode);
+                        trace!("0xCB{:X} BIT 7, D", opcode);
                     }
                     0x7B => {
                         self.bit(3, Register::E);
-                        info!("0xCB{:X} BIT 7, E", opcode);
+                        trace!("0xCB{:X} BIT 7, E", opcode);
                     }
                     0x7C => {
                         self.bit(3, Register::H);
-                        info!("0xCB{:X} BIT 7, H", opcode);
+                        trace!("0xCB{:X} BIT 7, H", opcode);
                     }
                     0x7D => {
                         self.bit(3, Register::L);
-                        info!("0xCB{:X} BIT 7, L", opcode);
+                        trace!("0xCB{:X} BIT 7, L", opcode);
                     }
                     0x7E => {
                         self.bit(3, Register::PHL);
-                        info!("0xCB{:X} BIT 7, (HL)", opcode);
+                        trace!("0xCB{:X} BIT 7, (HL)", opcode);
                     }
                     0x7F => {
                         self.bit(3, Register::A);
-                        info!("0xCB{:X} BIT 7, A", opcode);
+                        trace!("0xCB{:X} BIT 7, A", opcode);
                     }
                     0x80 => {
                         self.res(3, Register::B);
-                        info!("0xCB{:X} RES 0, B", opcode);
+                        trace!("0xCB{:X} RES 0, B", opcode);
                     }
                     0x81 => {
                         self.res(3, Register::C);
-                        info!("0xCB{:X} RES 0, C", opcode);
+                        trace!("0xCB{:X} RES 0, C", opcode);
                     }
                     0x82 => {
                         self.res(3, Register::D);
-                        info!("0xCB{:X} RES 0, D", opcode);
+                        trace!("0xCB{:X} RES 0, D", opcode);
                     }
                     0x83 => {
                         self.res(3, Register::E);
-                        info!("0xCB{:X} RES 0, E", opcode);
+                        trace!("0xCB{:X} RES 0, E", opcode);
                     }
                     0x84 => {
                         self.res(3, Register::H);
-                        info!("0xCB{:X} RES 0, H", opcode);
+                        trace!("0xCB{:X} RES 0, H", opcode);
                     }
                     0x85 => {
                         self.res(3, Register::L);
-                        info!("0xCB{:X} RES 0, L", opcode);
+                        trace!("0xCB{:X} RES 0, L", opcode);
                     }
                     0x86 => {
                         self.res(3, Register::PHL);
-                        info!("0xCB{:X} RES 0, (HL)", opcode);
+                        trace!("0xCB{:X} RES 0, (HL)", opcode);
                     }
                     0x87 => {
                         self.res(3, Register::A);
-                        info!("0xCB{:X} RES 0, A", opcode);
+                        trace!("0xCB{:X} RES 0, A", opcode);
                     }
                     0x88 => {
                         self.res(3, Register::B);
-                        info!("0xCB{:X} RES 1, B", opcode);
+                        trace!("0xCB{:X} RES 1, B", opcode);
                     }
                     0x89 => {
                         self.res(3, Register::C);
-                        info!("0xCB{:X} RES 1, C", opcode);
+                        trace!("0xCB{:X} RES 1, C", opcode);
                     }
                     0x8A => {
                         self.res(3, Register::D);
-                        info!("0xCB{:X} RES 1, D", opcode);
+                        trace!("0xCB{:X} RES 1, D", opcode);
                     }
                     0x8B => {
                         self.res(3, Register::E);
-                        info!("0xCB{:X} RES 1, E", opcode);
+                        trace!("0xCB{:X} RES 1, E", opcode);
                     }
                     0x8C => {
                         self.res(3, Register::H);
-                        info!("0xCB{:X} RES 1, H", opcode);
+                        trace!("0xCB{:X} RES 1, H", opcode);
                     }
                     0x8D => {
                         self.res(3, Register::L);
-                        info!("0xCB{:X} RES 1, L", opcode);
+                        trace!("0xCB{:X} RES 1, L", opcode);
                     }
                     0x8E => {
                         self.res(3, Register::PHL);
-                        info!("0xCB{:X} RES 1, (HL)", opcode);
+                        trace!("0xCB{:X} RES 1, (HL)", opcode);
                     }
                     0x8F => {
                         self.res(3, Register::A);
-                        info!("0xCB{:X} RES 1, A", opcode);
+                        trace!("0xCB{:X} RES 1, A", opcode);
                     }
                     0x90 => {
                         self.res(3, Register::B);
-                        info!("0xCB{:X} RES 2, B", opcode);
+                        trace!("0xCB{:X} RES 2, B", opcode);
                     }
                     0x91 => {
                         self.res(3, Register::C);
-                        info!("0xCB{:X} RES 2, C", opcode);
+                        trace!("0xCB{:X} RES 2, C", opcode);
                     }
                     0x92 => {
                         self.res(3, Register::D);
-                        info!("0xCB{:X} RES 2, D", opcode);
+                        trace!("0xCB{:X} RES 2, D", opcode);
                     }
                     0x93 => {
                         self.res(3, Register::E);
-                        info!("0xCB{:X} RES 2, E", opcode);
+                        trace!("0xCB{:X} RES 2, E", opcode);
                     }
                     0x94 => {
                         self.res(3, Register::H);
-                        info!("0xCB{:X} RES 2, H", opcode);
+                        trace!("0xCB{:X} RES 2, H", opcode);
                     }
                     0x95 => {
                         self.res(3, Register::L);
-                        info!("0xCB{:X} RES 2, L", opcode);
+                        trace!("0xCB{:X} RES 2, L", opcode);
                     }
                     0x96 => {
                         self.res(3, Register::PHL);
-                        info!("0xCB{:X} RES 2, (HL)", opcode);
+                        trace!("0xCB{:X} RES 2, (HL)", opcode);
                     }
                     0x97 => {
                         self.res(3, Register::A);
-                        info!("0xCB{:X} RES 2, A", opcode);
+                        trace!("0xCB{:X} RES 2, A", opcode);
                     }
                     0x98 => {
                         self.res(3, Register::B);
-                        info!("0xCB{:X} RES 3, B", opcode);
+                        trace!("0xCB{:X} RES 3, B", opcode);
                     }
                     0x99 => {
                         self.res(3, Register::C);
-                        info!("0xCB{:X} RES 3, C", opcode);
+                        trace!("0xCB{:X} RES 3, C", opcode);
                     }
                     0x9A => {
                         self.res(3, Register::D);
-                        info!("0xCB{:X} RES 3, D", opcode);
+                        trace!("0xCB{:X} RES 3, D", opcode);
                     }
                     0x9B => {
                         self.res(3, Register::E);
-                        info!("0xCB{:X} RES 3, E", opcode);
+                        trace!("0xCB{:X} RES 3, E", opcode);
                     }
                     0x9C => {
                         self.res(3, Register::H);
-                        info!("0xCB{:X} RES 3, H", opcode);
+                        trace!("0xCB{:X} RES 3, H", opcode);
                     }
                     0x9D => {
                         self.res(3, Register::L);
-                        info!("0xCB{:X} RES 3, L", opcode);
+                        trace!("0xCB{:X} RES 3, L", opcode);
                     }
                     0x9E => {
                         self.res(3, Register::PHL);
-                        info!("0xCB{:X} RES 3, (HL)", opcode);
+                        trace!("0xCB{:X} RES 3, (HL)", opcode);
                     }
                     0x9F => {
                         self.res(3, Register::A);
-                        info!("0xCB{:X} RES 3, A", opcode);
+                        trace!("0xCB{:X} RES 3, A", opcode);
                     }
                     0xA0 => {
                         self.res(3, Register::B);
-                        info!("0xCB{:X} RES 4, B", opcode);
+                        trace!("0xCB{:X} RES 4, B", opcode);
                     }
                     0xA1 => {
                         self.res(3, Register::C);
-                        info!("0xCB{:X} RES 4, C", opcode);
+                        trace!("0xCB{:X} RES 4, C", opcode);
                     }
                     0xA2 => {
                         self.res(3, Register::D);
-                        info!("0xCB{:X} RES 4, D", opcode);
+                        trace!("0xCB{:X} RES 4, D", opcode);
                     }
                     0xA3 => {
                         self.res(3, Register::E);
-                        info!("0xCB{:X} RES 4, E", opcode);
+                        trace!("0xCB{:X} RES 4, E", opcode);
                     }
                     0xA4 => {
                         self.res(3, Register::H);
-                        info!("0xCB{:X} RES 4, H", opcode);
+                        trace!("0xCB{:X} RES 4, H", opcode);
                     }
                     0xA5 => {
                         self.res(3, Register::L);
-                        info!("0xCB{:X} RES 4, L", opcode);
+                        trace!("0xCB{:X} RES 4, L", opcode);
                     }
                     0xA6 => {
                         self.res(3, Register::PHL);
-                        info!("0xCB{:X} RES 4, (HL)", opcode);
+                        trace!("0xCB{:X} RES 4, (HL)", opcode);
                     }
                     0xA7 => {
                         self.res(3, Register::A);
-                        info!("0xCB{:X} RES 4, A", opcode);
+                        trace!("0xCB{:X} RES 4, A", opcode);
                     }
                     0xA8 => {
                         self.res(3, Register::B);
-                        info!("0xCB{:X} RES 5, B", opcode);
+                        trace!("0xCB{:X} RES 5, B", opcode);
                     }
                     0xA9 => {
                         self.res(3, Register::C);
-                        info!("0xCB{:X} RES 5, C", opcode);
+                        trace!("0xCB{:X} RES 5, C", opcode);
                     }
                     0xAA => {
                         self.res(3, Register::D);
-                        info!("0xCB{:X} RES 5, D", opcode);
+                        trace!("0xCB{:X} RES 5, D", opcode);
                     }
                     0xAB => {
                         self.res(3, Register::E);
-                        info!("0xCB{:X} RES 5, E", opcode);
+                        trace!("0xCB{:X} RES 5, E", opcode);
                     }
                     0xAC => {
                         self.res(3, Register::H);
-                        info!("0xCB{:X} RES 5, H", opcode);
+                        trace!("0xCB{:X} RES 5, H", opcode);
                     }
                     0xAD => {
                         self.res(3, Register::L);
-                        info!("0xCB{:X} RES 5, L", opcode);
+                        trace!("0xCB{:X} RES 5, L", opcode);
                     }
                     0xAE => {
                         self.res(3, Register::PHL);
-                        info!("0xCB{:X} RES 5, (HL)", opcode);
+                        trace!("0xCB{:X} RES 5, (HL)", opcode);
                     }
                     0xAF => {
                         self.res(3, Register::A);
-                        info!("0xCB{:X} RES 5, A", opcode);
+                        trace!("0xCB{:X} RES 5, A", opcode);
                     }
                     0xB0 => {
                         self.res(3, Register::B);
-                        info!("0xCB{:X} RES 6, B", opcode);
+                        trace!("0xCB{:X} RES 6, B", opcode);
                     }
                     0xB1 => {
                         self.res(3, Register::C);
-                        info!("0xCB{:X} RES 6, C", opcode);
+                        trace!("0xCB{:X} RES 6, C", opcode);
                     }
                     0xB2 => {
                         self.res(3, Register::D);
-                        info!("0xCB{:X} RES 6, D", opcode);
+                        trace!("0xCB{:X} RES 6, D", opcode);
                     }
                     0xB3 => {
                         self.res(3, Register::E);
-                        info!("0xCB{:X} RES 6, E", opcode);
+                        trace!("0xCB{:X} RES 6, E", opcode);
                     }
                     0xB4 => {
                         self.res(3, Register::H);
-                        info!("0xCB{:X} RES 6, H", opcode);
+                        trace!("0xCB{:X} RES 6, H", opcode);
                     }
                     0xB5 => {
                         self.res(3, Register::L);
-                        info!("0xCB{:X} RES 6, L", opcode);
+                        trace!("0xCB{:X} RES 6, L", opcode);
                     }
                     0xB6 => {
                         self.res(3, Register::PHL);
-                        info!("0xCB{:X} RES 6, (HL)", opcode);
+                        trace!("0xCB{:X} RES 6, (HL)", opcode);
                     }
                     0xB7 => {
                         self.res(3, Register::A);
-                        info!("0xCB{:X} RES 6, A", opcode);
+                        trace!("0xCB{:X} RES 6, A", opcode);
                     }
                     0xB8 => {
                         self.res(3, Register::B);
-                        info!("0xCB{:X} RES 7, B", opcode);
+                        trace!("0xCB{:X} RES 7, B", opcode);
                     }
                     0xB9 => {
                         self.res(3, Register::C);
-                        info!("0xCB{:X} RES 7, C", opcode);
+                        trace!("0xCB{:X} RES 7, C", opcode);
                     }
                     0xBA => {
                         self.res(3, Register::D);
-                        info!("0xCB{:X} RES 7, D", opcode);
+                        trace!("0xCB{:X} RES 7, D", opcode);
                     }
                     0xBB => {
                         self.res(3, Register::E);
-                        info!("0xCB{:X} RES 7, E", opcode);
+                        trace!("0xCB{:X} RES 7, E", opcode);
                     }
                     0xBC => {
                         self.res(3, Register::H);
-                        info!("0xCB{:X} RES 7, H", opcode);
+                        trace!("0xCB{:X} RES 7, H", opcode);
                     }
                     0xBD => {
                         self.res(3, Register::L);
-                        info!("0xCB{:X} RES 7, L", opcode);
+                        trace!("0xCB{:X} RES 7, L", opcode);
                     }
                     0xBE => {
                         self.res(3, Register::PHL);
-                        info!("0xCB{:X} RES 7, (HL)", opcode);
+                        trace!("0xCB{:X} RES 7, (HL)", opcode);
                     }
                     0xBF => {
                         self.res(3, Register::A);
-                        info!("0xCB{:X} RES 7, A", opcode);
+                        trace!("0xCB{:X} RES 7, A", opcode);
                     }
                     0xC0 => {
                         self.set(3, Register::B);
-                        info!("0xCB{:X} SET 0, B", opcode);
+                        trace!("0xCB{:X} SET 0, B", opcode);
                     }
                     0xC1 => {
                         self.set(3, Register::C);
-                        info!("0xCB{:X} SET 0, C", opcode);
+                        trace!("0xCB{:X} SET 0, C", opcode);
                     }
                     0xC2 => {
                         self.set(3, Register::D);
-                        info!("0xCB{:X} SET 0, D", opcode);
+                        trace!("0xCB{:X} SET 0, D", opcode);
                     }
                     0xC3 => {
                         self.set(3, Register::E);
-                        info!("0xCB{:X} SET 0, E", opcode);
+                        trace!("0xCB{:X} SET 0, E", opcode);
                     }
                     0xC4 => {
                         self.set(3, Register::H);
-                        info!("0xCB{:X} SET 0, H", opcode);
+                        trace!("0xCB{:X} SET 0, H", opcode);
                     }
                     0xC5 => {
                         self.set(3, Register::L);
-                        info!("0xCB{:X} SET 0, L", opcode);
+                        trace!("0xCB{:X} SET 0, L", opcode);
                     }
                     0xC6 => {
                         self.set(3, Register::PHL);
-                        info!("0xCB{:X} SET 0, (HL)", opcode);
+                        trace!("0xCB{:X} SET 0, (HL)", opcode);
                     }
                     0xC7 => {
                         self.set(3, Register::A);
-                        info!("0xCB{:X} SET 0, A", opcode);
+                        trace!("0xCB{:X} SET 0, A", opcode);
                     }
                     0xC8 => {
                         self.set(3, Register::B);
-                        info!("0xCB{:X} SET 1, B", opcode);
+                        trace!("0xCB{:X} SET 1, B", opcode);
                     }
                     0xC9 => {
                         self.set(3, Register::C);
-                        info!("0xCB{:X} SET 1, C", opcode);
+                        trace!("0xCB{:X} SET 1, C", opcode);
                     }
                     0xCA => {
                         self.set(3, Register::D);
-                        info!("0xCB{:X} SET 1, D", opcode);
+                        trace!("0xCB{:X} SET 1, D", opcode);
                     }
                     0xCB => {
                         self.set(3, Register::E);
-                        info!("0xCB{:X} SET 1, E", opcode);
+                        trace!("0xCB{:X} SET 1, E", opcode);
                     }
                     0xCC => {
                         self.set(3, Register::H);
-                        info!("0xCB{:X} SET 1, H", opcode);
+                        trace!("0xCB{:X} SET 1, H", opcode);
                     }
                     0xCD => {
                         self.set(3, Register::L);
-                        info!("0xCB{:X} SET 1, L", opcode);
+                        trace!("0xCB{:X} SET 1, L", opcode);
                     }
                     0xCE => {
                         self.set(3, Register::PHL);
-                        info!("0xCB{:X} SET 1, (HL)", opcode);
+                        trace!("0xCB{:X} SET 1, (HL)", opcode);
                     }
                     0xCF => {
                         self.set(3, Register::A);
-                        info!("0xCB{:X} SET 1, A", opcode);
+                        trace!("0xCB{:X} SET 1, A", opcode);
                     }
                     0xD0 => {
                         self.set(3, Register::B);
-                        info!("0xCB{:X} SET 2, B", opcode);
+                        trace!("0xCB{:X} SET 2, B", opcode);
                     }
                     0xD1 => {
                         self.set(3, Register::C);
-                        info!("0xCB{:X} SET 2, C", opcode);
+                        trace!("0xCB{:X} SET 2, C", opcode);
                     }
                     0xD2 => {
                         self.set(3, Register::D);
-                        info!("0xCB{:X} SET 2, D", opcode);
+                        trace!("0xCB{:X} SET 2, D", opcode);
                     }
                     0xD3 => {
                         self.set(3, Register::E);
-                        info!("0xCB{:X} SET 2, E", opcode);
+                        trace!("0xCB{:X} SET 2, E", opcode);
                     }
                     0xD4 => {
                         self.set(3, Register::H);
-                        info!("0xCB{:X} SET 2, H", opcode);
+                        trace!("0xCB{:X} SET 2, H", opcode);
                     }
                     0xD5 => {
                         self.set(3, Register::L);
-                        info!("0xCB{:X} SET 2, L", opcode);
+                        trace!("0xCB{:X} SET 2, L", opcode);
                     }
                     0xD6 => {
                         self.set(3, Register::PHL);
-                        info!("0xCB{:X} SET 2, (HL)", opcode);
+                        trace!("0xCB{:X} SET 2, (HL)", opcode);
                     }
                     0xD7 => {
                         self.set(3, Register::A);
-                        info!("0xCB{:X} SET 2, A", opcode);
+                        trace!("0xCB{:X} SET 2, A", opcode);
                     }
                     0xD8 => {
                         self.set(3, Register::B);
-                        info!("0xCB{:X} SET 3, B", opcode);
+                        trace!("0xCB{:X} SET 3, B", opcode);
                     }
                     0xD9 => {
                         self.set(3, Register::C);
-                        info!("0xCB{:X} SET 3, C", opcode);
+                        trace!("0xCB{:X} SET 3, C", opcode);
                     }
                     0xDA => {
                         self.set(3, Register::D);
-                        info!("0xCB{:X} SET 3, D", opcode);
+                        trace!("0xCB{:X} SET 3, D", opcode);
                     }
                     0xDB => {
                         self.set(3, Register::E);
-                        info!("0xCB{:X} SET 3, E", opcode);
+                        trace!("0xCB{:X} SET 3, E", opcode);
                     }
                     0xDC => {
                         self.set(3, Register::H);
-                        info!("0xCB{:X} SET 3, H", opcode);
+                        trace!("0xCB{:X} SET 3, H", opcode);
                     }
                     0xDD => {
                         self.set(3, Register::L);
-                        info!("0xCB{:X} SET 3, L", opcode);
+                        trace!("0xCB{:X} SET 3, L", opcode);
                     }
                     0xDE => {
                         self.set(3, Register::PHL);
-                        info!("0xCB{:X} SET 3, (HL)", opcode);
+                        trace!("0xCB{:X} SET 3, (HL)", opcode);
                     }
                     0xDF => {
                         self.set(3, Register::A);
-                        info!("0xCB{:X} SET 3, A", opcode);
+                        trace!("0xCB{:X} SET 3, A", opcode);
                     }
                     0xE0 => {
                         self.set(3, Register::B);
-                        info!("0xCB{:X} SET 4, B", opcode);
+                        trace!("0xCB{:X} SET 4, B", opcode);
                     }
                     0xE1 => {
                         self.set(3, Register::C);
-                        info!("0xCB{:X} SET 4, C", opcode);
+                        trace!("0xCB{:X} SET 4, C", opcode);
                     }
                     0xE2 => {
                         self.set(3, Register::D);
-                        info!("0xCB{:X} SET 4, D", opcode);
+                        trace!("0xCB{:X} SET 4, D", opcode);
                     }
                     0xE3 => {
                         self.set(3, Register::E);
-                        info!("0xCB{:X} SET 4, E", opcode);
+                        trace!("0xCB{:X} SET 4, E", opcode);
                     }
                     0xE4 => {
                         self.set(3, Register::H);
-                        info!("0xCB{:X} SET 4, H", opcode);
+                        trace!("0xCB{:X} SET 4, H", opcode);
                     }
                     0xE5 => {
                         self.set(3, Register::L);
-                        info!("0xCB{:X} SET 4, L", opcode);
+                        trace!("0xCB{:X} SET 4, L", opcode);
                     }
                     0xE6 => {
                         self.set(3, Register::PHL);
-                        info!("0xCB{:X} SET 4, (HL)", opcode);
+                        trace!("0xCB{:X} SET 4, (HL)", opcode);
                     }
                     0xE7 => {
                         self.set(3, Register::A);
-                        info!("0xCB{:X} SET 4, A", opcode);
+                        trace!("0xCB{:X} SET 4, A", opcode);
                     }
                     0xE8 => {
                         self.set(3, Register::B);
-                        info!("0xCB{:X} SET 5, B", opcode);
+                        trace!("0xCB{:X} SET 5, B", opcode);
                     }
                     0xE9 => {
                         self.set(3, Register::C);
-                        info!("0xCB{:X} SET 5, C", opcode);
+                        trace!("0xCB{:X} SET 5, C", opcode);
                     }
                     0xEA => {
                         self.set(3, Register::D);
-                        info!("0xCB{:X} SET 5, D", opcode);
+                        trace!("0xCB{:X} SET 5, D", opcode);
                     }
                     0xEB => {
                         self.set(3, Register::E);
-                        info!("0xCB{:X} SET 5, E", opcode);
+                        trace!("0xCB{:X} SET 5, E", opcode);
                     }
                     0xEC => {
                         self.set(3, Register::H);
-                        info!("0xCB{:X} SET 5, H", opcode);
+                        trace!("0xCB{:X} SET 5, H", opcode);
                     }
                     0xED => {
                         self.set(3, Register::L);
-                        info!("0xCB{:X} SET 5, L", opcode);
+                        trace!("0xCB{:X} SET 5, L", opcode);
                     }
                     0xEE => {
                         self.set(3, Register::PHL);
-                        info!("0xCB{:X} SET 5, (HL)", opcode);
+                        trace!("0xCB{:X} SET 5, (HL)", opcode);
                     }
                     0xEF => {
                         self.set(3, Register::A);
-                        info!("0xCB{:X} SET 5, A", opcode);
+                        trace!("0xCB{:X} SET 5, A", opcode);
                     }
                     0xF0 => {
                         self.set(3, Register::B);
-                        info!("0xCB{:X} SET 6, B", opcode);
+                        trace!("0xCB{:X} SET 6, B", opcode);
                     }
                     0xF1 => {
                         self.set(3, Register::C);
-                        info!("0xCB{:X} SET 6, C", opcode);
+                        trace!("0xCB{:X} SET 6, C", opcode);
                     }
                     0xF2 => {
                         self.set(3, Register::D);
-                        info!("0xCB{:X} SET 6, D", opcode);
+                        trace!("0xCB{:X} SET 6, D", opcode);
                     }
                     0xF3 => {
                         self.set(3, Register::E);
-                        info!("0xCB{:X} SET 6, E", opcode);
+                        trace!("0xCB{:X} SET 6, E", opcode);
                     }
                     0xF4 => {
                         self.set(3, Register::H);
-                        info!("0xCB{:X} SET 6, H", opcode);
+                        trace!("0xCB{:X} SET 6, H", opcode);
                     }
                     0xF5 => {
                         self.set(3, Register::L);
-                        info!("0xCB{:X} SET 6, L", opcode);
+                        trace!("0xCB{:X} SET 6, L", opcode);
                     }
                     0xF6 => {
                         self.set(3, Register::PHL);
-                        info!("0xCB{:X} SET 6, (HL)", opcode);
+                        trace!("0xCB{:X} SET 6, (HL)", opcode);
                     }
                     0xF7 => {
                         self.set(3, Register::A);
-                        info!("0xCB{:X} SET 6, A", opcode);
+                        trace!("0xCB{:X} SET 6, A", opcode);
                     }
                     0xF8 => {
                         self.set(3, Register::B);
-                        info!("0xCB{:X} SET 7, B", opcode);
+                        trace!("0xCB{:X} SET 7, B", opcode);
                     }
                     0xF9 => {
                         self.set(3, Register::C);
-                        info!("0xCB{:X} SET 7, C", opcode);
+                        trace!("0xCB{:X} SET 7, C", opcode);
                     }
                     0xFA => {
                         self.set(3, Register::D);
-                        info!("0xCB{:X} SET 7, D", opcode);
+                        trace!("0xCB{:X} SET 7, D", opcode);
                     }
                     0xFB => {
                         self.set(3, Register::E);
-                        info!("0xCB{:X} SET 7, E", opcode);
+                        trace!("0xCB{:X} SET 7, E", opcode);
                     }
                     0xFC => {
                         self.set(3, Register::H);
-                        info!("0xCB{:X} SET 7, H", opcode);
+                        trace!("0xCB{:X} SET 7, H", opcode);
                     }
                     0xFD => {
                         self.set(3, Register::L);
-                        info!("0xCB{:X} SET 7, L", opcode);
+                        trace!("0xCB{:X} SET 7, L", opcode);
                     }
                     0xFE => {
                         self.set(3, Register::PHL);
-                        info!("0xCB{:X} SET 7, (HL)", opcode);
+                        trace!("0xCB{:X} SET 7, (HL)", opcode);
                     }
                     0xFF => {
                         self.set(3, Register::A);
-                        info!("0xCB{:X} SET 7, A", opcode);
+                        trace!("0xCB{:X} SET 7, A", opcode);
                     }
                 }
             }
@@ -1712,7 +1712,7 @@ impl Cpu {
                     self.get_regu8(Register::A),
                 );
 
-                info!("{:#04X} LD (0xFF00 + C), A", opcode);
+                trace!("{:#04X} LD (0xFF00 + C), A", opcode);
             }
             0xE5 => self.push(Register::HL),
             0xE6 => {
@@ -1829,6 +1829,7 @@ impl Cpu {
             BC | PBC => self.bc.into(),
             DE | PDE => self.de.into(),
             HL | PHL => self.hl.into(),
+            PC => self.pc,
             _ => unreachable!("Attempted to set regu16 into regu8"),
         }
     }
@@ -1843,6 +1844,7 @@ impl Cpu {
             PC => self.pc,
             _ => unreachable!("Attempted to set regu8 into regu16"),
         };
+
         *reg = val;
     }
 
@@ -1986,20 +1988,12 @@ impl Cpu {
     }
 
     fn pop(&mut self, reg: Register) {
-        use Register::*;
-
-        let ref mut reg = match reg {
-            AF => self.af.into_bytes(),
-            BC => self.bc.0,
-            DE => self.de.0,
-            HL => self.hl.0,
-            _ => unreachable!("Attempted to pop single byte register onto stack"),
-        };
-
-        reg[1] = self.memory.get_address(self.sp);
+        let b1 = self.memory.get_address(self.sp);
         self.sp = self.sp.wrapping_add(1);
-        reg[0] = self.memory.get_address(self.sp);
+        let b2 = self.memory.get_address(self.sp);
         self.sp = self.sp.wrapping_add(1);
+
+        self.set_regu16(reg, u16::from_le_bytes([b2, b1]))
     }
 
     fn add_u8(&mut self, reg: Register, n: u8) {
@@ -2310,26 +2304,12 @@ impl Cpu {
     }
 
     fn ret(&mut self) {
-        let b1 = self.memory.get_address(self.pc);
-        self.pc = self.pc.wrapping_add(self.pc);
-        let b2 = self.memory.get_address(self.pc);
-        self.pc = self.pc.wrapping_add(self.pc);
-
-        // Push PC to stack
-        self.pc = u16::from_ne_bytes([b1, b2]);
-        self.sp += 2;
+        self.pop(Register::PC);
     }
 
     fn retc(&mut self, cond: Condition) {
         if cond.check(&self) {
-            let b1 = self.memory.get_address(self.pc);
-            self.pc = self.pc.wrapping_add(self.pc);
-            let b2 = self.memory.get_address(self.pc);
-            self.pc = self.pc.wrapping_add(self.pc);
-
-            // Push PC to stack
-            self.pc = u16::from_ne_bytes([b2, b1]);
-            self.sp = self.sp.wrapping_sub(2);
+            self.ret()
         }
     }
 
