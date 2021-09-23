@@ -48,3 +48,7 @@ pub enum InterruptStatus {
     StartEnable,
     Set,
 }
+
+pub enum Event {
+    Clock,
+}
