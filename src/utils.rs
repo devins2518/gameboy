@@ -49,6 +49,7 @@ pub enum InterruptStatus {
     Set,
 }
 
+#[derive(Clone, Debug)]
 pub enum Event {
     Clock,
 }

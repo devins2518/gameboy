@@ -1,6 +1,8 @@
+use crate::utils::Event;
 use log::{debug, trace};
 use modular_bitfield::prelude::*;
 use std::ops::{Deref, DerefMut};
+use tokio::sync::watch::Receiver;
 
 use crate::memory::Bus;
 use crate::utils::{Condition, InterruptStatus, Register};
@@ -15,13 +17,14 @@ pub struct Cpu {
     memory: Bus,
     interrupt_enable: InterruptStatus,
 
-    finished_boot: bool,
-
     pub clocks: u32,
+
+    finished_boot: bool,
+    rx: Receiver<Event>,
 }
 
 impl Cpu {
-    pub fn new(bus: Bus) -> Self {
+    pub fn new(bus: Bus, rx: Receiver<Event>) -> Self {
         Cpu {
             af: 0.into(),
             bc: 0.into(),
@@ -33,6 +36,13 @@ impl Cpu {
             interrupt_enable: InterruptStatus::Unset,
             finished_boot: false,
             clocks: 0,
+            rx,
+        }
+    }
+
+    pub async fn run(&mut self) {
+        if let Ok(()) = self.rx.changed().await {
+            self.clock()
         }
     }
 
@@ -80,7 +90,7 @@ impl Cpu {
         self.clocks += 1; // Set PC
     }
 
-    pub fn clock(&mut self) -> i64 {
+    pub fn clock(&mut self) {
         let old_clocks = self.clocks;
 
         // Handle interrupts
@@ -1788,7 +1798,7 @@ impl Cpu {
             _ => {}
         }
 
-        self.clocks as i64 - old_clocks as i64
+        // self.clocks as i64 - old_clocks as i64
     }
 
     fn get_regu8(&self, reg: Register) -> u8 {

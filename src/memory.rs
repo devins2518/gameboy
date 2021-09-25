@@ -1,6 +1,8 @@
 use crate::cartridge::Cartridge;
+use crate::utils::Event;
 use log::debug;
 use std::path::Path;
+use tokio::sync::watch::Receiver;
 
 pub const BOOTROM_SIZE: usize = 0x0100;
 pub const VRAM_SIZE: usize = 0x8000;
@@ -24,10 +26,12 @@ pub struct Bus {
     io_reg: [u8; IOREG_SIZE],
     hram: [u8; HRAM_SIZE],
     ie_reg: u8,
+
+    rx: Receiver<Event>,
 }
 
 impl Bus {
-    pub fn new<P: AsRef<Path>>(path: P) -> Self {
+    pub fn new<P: AsRef<Path>>(path: P, rx: Receiver<Event>) -> Self {
         let bootrom: [u8; BOOTROM_SIZE] = [
             0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26,
             0xFF, 0x0E, 0x11, 0x3E, 0x80, 0x32, 0xE2, 0x0C, 0x3E, 0xF3, 0xE2, 0x32, 0x3E, 0x77,
@@ -59,8 +63,18 @@ impl Bus {
             io_reg: [0; IOREG_SIZE],
             hram: [0; HRAM_SIZE],
             ie_reg: 0x0,
+
+            rx,
         }
     }
+
+    pub async fn run(&mut self) {
+        if let Ok(()) = self.rx.changed().await {
+            self.clock()
+        }
+    }
+
+    fn clock(&mut self) {}
 
     pub fn get_bootrom(&self, addr: u16) -> u8 {
         self.bootrom[addr as usize]

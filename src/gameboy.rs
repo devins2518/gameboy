@@ -7,24 +7,29 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::Sdl;
-use std::sync::mpsc;
+use std::future::Future;
+use std::pin::Pin;
+use std::sync::Arc;
+use std::task::Wake;
+use std::thread::Thread;
 use std::time::{Duration, Instant};
+use tokio::sync::watch::{self, Sender};
+use tokio::task::JoinHandle;
 
 pub struct GameBoy {
-    cpu: Cpu,
-    ppu: Ppu,
+    tx: Sender<GBEvent>,
     auto: bool,
     sdl_context: Sdl,
 
     schedule_clocks: i64,
+    bus: JoinHandle<()>,
+    cpu: JoinHandle<()>,
+    ppu: JoinHandle<()>,
 }
 
 impl GameBoy {
     pub fn new(path: &str, context: Sdl) -> Self {
-        let (rx, tx) = mpsc::channel::<GBEvent>();
-
-        let bus = Bus::new(&path);
-        let cpu = Cpu::new(bus);
+        let (tx, rx) = watch::channel::<GBEvent>(GBEvent::Clock);
 
         let video_subsystem = context.video().unwrap();
         let window = video_subsystem
@@ -38,14 +43,29 @@ impl GameBoy {
         canvas.clear();
         canvas.present();
 
-        let ppu = Ppu::new(canvas);
+        let mut bus = Bus::new(&path, rx.clone());
+        let mut cpu = Cpu::new(rx.clone());
+        let mut ppu = Ppu::new(canvas, rx.clone());
+
+        let bus = tokio::task::spawn(async move {
+            bus.run();
+        });
+        let cpu = tokio::task::spawn(async move {
+            cpu.run();
+        });
+        let ppu = tokio::task::spawn(async move {
+            ppu.run();
+        });
 
         Self {
-            cpu,
-            ppu,
+            tx,
             auto: false,
             sdl_context: context,
             schedule_clocks: 0,
+
+            bus,
+            cpu,
+            ppu,
         }
     }
 
@@ -80,26 +100,19 @@ impl GameBoy {
             if self.auto && frame_delta > clock_interval {
                 self.step();
                 println!("{:?}", frame_delta);
-                ::std::thread::sleep(frame_delta - clock_interval)
             }
 
-            if frame_delta < frame_interval {
-                // ::std::thread::sleep(frame_interval - frame_delta)
-            };
+            // if frame_delta < frame_interval {
+            //     ::std::thread::sleep(frame_interval - frame_delta)
+            // };
         }
     }
 
     fn step(&mut self) {
-        debug!(
-            "\nCPU Clocks: {}\nPPU Clocks: {}\nScheduler Clocks: {}",
-            self.cpu.clocks, self.ppu.clocks, self.schedule_clocks
-        );
-        self.schedule_clocks += if self.schedule_clocks <= 0 {
-            trace!("Clocking CPU");
-            self.cpu.clock()
-        } else {
-            trace!("Clocking PPU");
-            self.ppu.clock()
-        };
+        self.tx.send(GBEvent::Clock).unwrap();
     }
+}
+
+impl Wake for GameBoy {
+    fn wake(self: Arc<Self>) {}
 }

@@ -1,23 +1,31 @@
+use crate::utils::Event;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
+use tokio::sync::watch::Receiver;
 
 pub struct Ppu {
-    canvas: Canvas<Window>,
     mode: Mode,
 
     pub clocks: u32,
+    rx: Receiver<Event>,
 }
 
 impl Ppu {
-    pub fn new(canvas: Canvas<Window>) -> Self {
+    pub fn new(_canvas: Canvas<Window>, rx: Receiver<Event>) -> Self {
         Self {
-            canvas,
             mode: Mode::Mode0,
             clocks: 0,
+            rx,
         }
     }
 
-    pub fn clock(&mut self) -> i64 {
+    pub async fn run(&mut self) {
+        if let Ok(()) = self.rx.changed().await {
+            self.clock()
+        }
+    }
+
+    pub fn clock(&mut self) {
         let old_clocks = self.clocks;
 
         match self.mode {
@@ -29,7 +37,7 @@ impl Ppu {
 
         self.clocks += 1;
 
-        old_clocks as i64 - self.clocks as i64
+        // old_clocks as i64 - self.clocks as i64
     }
 
     fn oam_scan(&mut self) {
