@@ -2,7 +2,7 @@ const std = @import("std");
 pub const pkgs = struct {
     pub const SDL = std.build.Pkg{
         .name = "SDL",
-        .path = ".gyro/SDL.zig-MasterQ32-5118ef94e93d35cbf7888cb71472fa1c18fadac7/pkg/src/lib.zig",
+        .path = ".gyro/SDL.zig-MasterQ32-5118ef94e93d35cbf7888cb71472fa1c18fadac7/pkg/Sdk.zig",
     };
 
     pub fn addAllTo(artifact: *std.build.LibExeObjStep) void {
