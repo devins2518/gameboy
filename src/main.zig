@@ -1,5 +1,4 @@
 const std = @import("std");
-const sdl = @import("sdl2");
 const cpu = @import("Cpu.zig");
 
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
