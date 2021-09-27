@@ -5,11 +5,11 @@ pkgs:
     description: A GameBoy emulator written in Zig.
     license: MIT
     source_url: "https://github.com/devins2518/ziggyboy"
-deps:
-  SDL:
-    src:
-      github:
-        user: MasterQ32
-        repo: SDL.zig
-        ref: master
-    root: Sdk.zig
+# deps:
+#   SDL:
+#     src:
+#       github:
+#         user: MasterQ32
+#         repo: SDL.zig
+#         ref: master
+#     root: Sdk.zig
