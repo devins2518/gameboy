@@ -1,10 +1,16 @@
 const std = @import("std");
-const cpu = @import("Cpu.zig");
+const Cpu = @import("Cpu.zig");
+const Bus = @import("Bus.zig");
+const Ppu = @import("Ppu.zig");
 
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 
 pub fn main() anyerror!void {
-    // const path = getPath();
+    _ = getPath();
+
+    var bus = Bus.init();
+    var ppu = Ppu.init();
+    _ = Cpu.init(&bus, &ppu);
 
     arena.deinit();
 }
