@@ -7,6 +7,8 @@ af: packed struct { a: u8 = 0x00, f: packed struct { _: u4 = 0x0, c: u1 = 0, h: 
 bc: packed struct { b: u8 = 0x00, c: u8 = 0x00 } = .{},
 de: packed struct { d: u8 = 0x00, e: u8 = 0x00 } = .{},
 hl: packed struct { h: u8 = 0x00, l: u8 = 0x00 } = .{},
+pc: u16 = 0,
+sp: u16 = 0xFFFE,
 
 bus: *Bus,
 ppu: *Ppu,
@@ -20,20 +22,13 @@ pub fn init(bus: *Bus, ppu: *Ppu) Self {
     };
 }
 
-const Register = enum {
-    A,
-    F,
-    AF,
-    B,
-    C,
-    BC,
-    D,
-    E,
-    DE,
-    H,
-    L,
-    HL,
-};
+fn nextInstruction(self: *Self) u8 {
+    return self.bus.getAddress(self.pc).*;
+}
+
+pub fn clock(self: *Self) void {
+    _ = self.nextInstruction();
+}
 
 test {
     std.testing.refAllDecls(@This());
@@ -42,7 +37,7 @@ test {
 test "cpu registers" {
     const testing = std.testing;
 
-    var bus = Bus.init();
+    var bus = Bus.init(undefined);
     var ppu = Ppu.init();
     var cpu = Self.init(&bus, &ppu);
     cpu.af.f.z = 1;

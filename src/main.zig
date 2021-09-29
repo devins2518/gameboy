@@ -8,9 +8,13 @@ var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 pub fn main() anyerror!void {
     _ = getPath();
 
-    var bus = Bus.init();
+    var bus = Bus.init(undefined);
     var ppu = Ppu.init();
-    _ = Cpu.init(&bus, &ppu);
+    var cpu = Cpu.init(&bus, &ppu);
+
+    while (true) {
+        cpu.clock();
+    }
 
     arena.deinit();
 }
