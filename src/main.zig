@@ -12,8 +12,16 @@ pub fn main() anyerror!void {
     var ppu = Ppu.init();
     var cpu = Cpu.init(&bus, &ppu);
 
+    var state = struct {
+        clocks: u64 = 0,
+        bus: Bus,
+        ppu: Ppu,
+        cpu: Cpu,
+    }{ .bus = bus, .ppu = ppu, .cpu = cpu };
+
     while (true) {
-        cpu.clock();
+        nosuspend cpu.clock();
+        state.clocks += 1;
     }
 
     arena.deinit();
@@ -31,3 +39,12 @@ fn getPath() []const u8 {
 test {
     std.testing.refAllDecls(@This());
 }
+
+// ----- time start
+// |---- init stuff
+// |---- cpu.clock()
+// |---- fetch_opcode();
+// |---- suspend for 1 byte read
+// |
+// |
+// |----
