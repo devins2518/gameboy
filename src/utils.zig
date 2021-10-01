@@ -6,4 +6,4 @@ pub fn debug_addr(comptime header: []const u8, args: anytype) void {
     debug(header ++ format, args);
 }
 
-pub const Registers = enum { AF, BC, DE, HL, A, F, B, C, D, E, H, L, SP, PC, PHL };
+pub const Registers = enum { AF, BC, DE, HL, A, F, B, C, D, E, H, L, SP, PC, PHL, PBC, PDE };
