@@ -1,14 +1,34 @@
 const std = @import("std");
 const debug = @import("utils.zig").debug_addr;
 const Self = @This();
+const Utils = @import("utils.zig");
+const Registers = Utils.Registers;
 const Bus = @import("Bus.zig");
 const Ppu = @import("Ppu.zig");
 
 const regu16 = packed struct {
     a: u8 = 0x00,
     b: u8 = 0x00,
+
+    fn add(self: *regu16, rhs: u16) void {
+        self.* = @bitCast(regu16, @bitCast(u16, self.*) + rhs);
+    }
+    fn sub(self: *regu16, rhs: u16) void {
+        self.* = @bitCast(regu16, @bitCast(u16, self.*) - rhs);
+    }
 };
-af: packed struct { a: u8 = 0x00, f: packed struct { _: u4 = 0x0, c: u1 = 0, h: u1 = 0, n: u1 = 0, z: u1 = 0 } = .{} } = .{},
+const afreg = packed struct {
+    a: u8 = 0x00,
+    f: packed struct { _: u4 = 0x0, c: u1 = 0, h: u1 = 0, n: u1 = 0, z: u1 = 0 } = .{},
+
+    fn add(self: *afreg, rhs: u16) void {
+        self.* = @bitCast(afreg, @bitCast(u16, self.*) + rhs);
+    }
+    fn sub(self: *afreg, rhs: u16) void {
+        self.* = @bitCast(afreg, @bitCast(u16, self.*) - rhs);
+    }
+};
+af: afreg = .{},
 bc: regu16 = .{},
 de: regu16 = .{},
 hl: regu16 = .{},
@@ -54,67 +74,67 @@ pub fn clock(self: *Self) void {
         debug("Matching opcode:", .{opcode});
         switch (opcode) {
             0x00 => self.noop(),
-            0x01 => self.ld_u16("bc", self.imm_u16()),
+            0x01 => self.ld_u16(Registers.BC, self.imm_u16()),
             0x02 => self.ld_p(@bitCast(u16, self.bc), self.af.a),
-            0x03 => self.inc("bc"),
-            0x04 => @panic("unhandled opcode: 0x04"),
-            0x05 => @panic("unhandled opcode: 0x05"),
+            0x03 => self.inc(Registers.BC),
+            0x04 => self.inc(Registers.B),
+            0x05 => self.dec(Registers.B),
             0x06 => @panic("unhandled opcode: 0x06"),
             0x07 => @panic("unhandled opcode: 0x07"),
             0x08 => @panic("unhandled opcode: 0x08"),
             0x09 => @panic("unhandled opcode: 0x09"),
             0x0A => @panic("unhandled opcode: 0x0A"),
             0x0B => @panic("unhandled opcode: 0x0B"),
-            0x0C => @panic("unhandled opcode: 0x0C"),
-            0x0D => @panic("unhandled opcode: 0x0D"),
+            0x0C => self.inc(Registers.C),
+            0x0D => self.dec(Registers.C),
             0x0E => @panic("unhandled opcode: 0x0E"),
             0x0F => @panic("unhandled opcode: 0x0F"),
             0x10 => @panic("unhandled opcode: 0x10"),
             0x11 => @panic("unhandled opcode: 0x11"),
             0x12 => @panic("unhandled opcode: 0x12"),
-            0x13 => @panic("unhandled opcode: 0x13"),
-            0x14 => @panic("unhandled opcode: 0x14"),
-            0x15 => @panic("unhandled opcode: 0x15"),
+            0x13 => self.inc(Registers.DE),
+            0x14 => self.inc(Registers.D),
+            0x15 => self.dec(Registers.D),
             0x16 => @panic("unhandled opcode: 0x16"),
             0x17 => @panic("unhandled opcode: 0x17"),
             0x18 => @panic("unhandled opcode: 0x18"),
             0x19 => @panic("unhandled opcode: 0x19"),
             0x1A => @panic("unhandled opcode: 0x1A"),
             0x1B => @panic("unhandled opcode: 0x1B"),
-            0x1C => @panic("unhandled opcode: 0x1C"),
-            0x1D => @panic("unhandled opcode: 0x1D"),
+            0x1C => self.inc(Registers.E),
+            0x1D => self.dec(Registers.E),
             0x1E => @panic("unhandled opcode: 0x1E"),
             0x1F => @panic("unhandled opcode: 0x1F"),
             0x20 => @panic("unhandled opcode: 0x20"),
             0x21 => @panic("unhandled opcode: 0x21"),
             0x22 => @panic("unhandled opcode: 0x22"),
-            0x23 => @panic("unhandled opcode: 0x23"),
-            0x24 => @panic("unhandled opcode: 0x24"),
-            0x25 => @panic("unhandled opcode: 0x25"),
+            0x23 => self.inc(Registers.HL),
+            0x24 => self.inc(Registers.H),
+            0x25 => self.dec(Registers.H),
             0x26 => @panic("unhandled opcode: 0x26"),
             0x27 => @panic("unhandled opcode: 0x27"),
             0x28 => @panic("unhandled opcode: 0x28"),
             0x29 => @panic("unhandled opcode: 0x29"),
             0x2A => @panic("unhandled opcode: 0x2A"),
             0x2B => @panic("unhandled opcode: 0x2B"),
-            0x2C => @panic("unhandled opcode: 0x2C"),
-            0x2D => @panic("unhandled opcode: 0x2D"),
+            0x2C => self.inc(Registers.L),
+            0x2D => self.dec(Registers.L),
             0x2E => @panic("unhandled opcode: 0x2E"),
             0x2F => @panic("unhandled opcode: 0x2F"),
             0x30 => @panic("unhandled opcode: 0x30"),
             0x31 => @panic("unhandled opcode: 0x31"),
             0x32 => @panic("unhandled opcode: 0x32"),
-            0x33 => @panic("unhandled opcode: 0x33"),
-            0x34 => @panic("unhandled opcode: 0x34"),
-            0x35 => @panic("unhandled opcode: 0x35"),
+            0x33 => self.inc(Registers.SP),
+            0x34 => self.inc(Registers.PHL),
+            0x35 => self.dec(Registers.PHL),
             0x36 => @panic("unhandled opcode: 0x36"),
             0x37 => @panic("unhandled opcode: 0x37"),
             0x38 => @panic("unhandled opcode: 0x38"),
             0x39 => @panic("unhandled opcode: 0x39"),
             0x3A => @panic("unhandled opcode: 0x3A"),
             0x3B => @panic("unhandled opcode: 0x3B"),
-            0x3C => @panic("unhandled opcode: 0x3C"),
-            0x3D => @panic("unhandled opcode: 0x3D"),
+            0x3C => self.inc(Registers.A),
+            0x3D => self.dec(Registers.A),
             0x3E => @panic("unhandled opcode: 0x3E"),
             0x3F => @panic("unhandled opcode: 0x3F"),
             0x40 => @panic("unhandled opcode: 0x40"),
@@ -319,17 +339,75 @@ fn noop(self: *Self) void {
     }
 }
 
-fn ld_u16(self: *Self, comptime field: []const u8, val: u16) void {
-    @field(self, field) = @bitCast(regu16, val);
+fn ld_u16(self: *Self, comptime field: Utils.Registers, val: u16) void {
+    switch (field) {
+        .AF => self.af = @bitCast(regu16, val),
+        .BC => self.bc = @bitCast(regu16, val),
+        .DE => self.de = @bitCast(regu16, val),
+        .HL => self.hl = @bitCast(regu16, val),
+        .PC => self.pc = val,
+        .SP => self.sp = val,
+        else => @compileError("Tried to load u16 into u8 register"),
+    }
+}
+
+fn ld_u8(self: *Self, comptime field: Utils.Registers, val: u8) void {
+    switch (field) {
+        .A => self.af.a = val,
+        .F => self.af.f = val,
+        .B => self.bc.a = val,
+        .C => self.bc.b = val,
+        .D => self.de.a = val,
+        .E => self.de.b = val,
+        .H => self.hl.a = val,
+        .L => self.hl.b = val,
+        .PHL => self.bus.setAddress(@bitCast(u16, self.hl), val),
+        else => @compileError("Tried to load u8 into u16 register"),
+    }
 }
 
 fn ld_p(self: *Self, addr: u16, val: u8) void {
     self.bus.setAddress(addr, val);
 }
 
-// TODO: Ugly
-fn inc(self: *Self, comptime field: []const u8) void {
-    @field(self, field) = @bitCast(regu16, @bitCast(u16, @field(self, field)) + 1);
+fn inc(self: *Self, comptime field: Utils.Registers) void {
+    switch (field) {
+        .AF => self.af.add(1),
+        .BC => self.bc.add(1),
+        .DE => self.de.add(1),
+        .HL => self.hl.add(1),
+        .PHL => self.bus.setAddress(@bitCast(u16, self.hl), self.bus.getAddress(@bitCast(u16, self.hl)).* + 1),
+        .PC => self.pc += 1,
+        .SP => self.sp += 1,
+        .A => self.af.a += 1,
+        .F => self.af.f += 1,
+        .B => self.bc.a += 1,
+        .C => self.bc.b += 1,
+        .D => self.de.a += 1,
+        .E => self.de.b += 1,
+        .H => self.hl.a += 1,
+        .L => self.hl.b += 1,
+    }
+}
+
+fn dec(self: *Self, comptime field: Utils.Registers) void {
+    switch (field) {
+        .AF => self.af.sub(1),
+        .BC => self.bc.sub(1),
+        .DE => self.de.sub(1),
+        .HL => self.hl.sub(1),
+        .PHL => self.bus.setAddress(@bitCast(u16, self.hl), self.bus.getAddress(@bitCast(u16, self.hl)).* - 1),
+        .PC => self.pc -= 1,
+        .SP => self.sp -= 1,
+        .A => self.af.a -= 1,
+        .F => self.af.f -= 1,
+        .B => self.bc.a -= 1,
+        .C => self.bc.b -= 1,
+        .D => self.de.a -= 1,
+        .E => self.de.b -= 1,
+        .H => self.hl.a -= 1,
+        .L => self.hl.b -= 1,
+    }
 }
 
 test "cpu registers" {
