@@ -62,10 +62,6 @@ pub fn getAddress(self: *Self, addr: u16) *u8 {
     };
 }
 
-pub fn setAddress(self: *Self, addr: u16, val: u8) void {
-    self.getAddress(addr).* = val;
-}
-
 test {
     std.testing.refAllDecls(@This());
 }

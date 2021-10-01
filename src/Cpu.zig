@@ -19,7 +19,7 @@ const regu16 = packed struct {
 };
 const afreg = packed struct {
     a: u8 = 0x00,
-    f: packed struct { _: u4 = 0x0, c: u1 = 0, h: u1 = 0, n: u1 = 0, z: u1 = 0 } = .{},
+    f: packed struct { _: u4 = 0x0, c: bool = false, h: bool = false, n: bool = false, z: bool = false } = .{},
 
     fn add(self: *afreg, rhs: u16) void {
         self.* = @bitCast(afreg, @bitCast(u16, self.*) +% rhs);
@@ -85,10 +85,10 @@ pub fn clock(self: *Self) void {
             0x07 => @panic("unhandled opcode: 0x07"),
             0x08 => {
                 const val = self.imm_u16();
-                self.bus.setAddress(val, @truncate(u8, self.sp >> 8));
-                self.bus.setAddress(val + 1, @truncate(u8, self.sp));
+                self.bus.getAddress(val).* = @truncate(u8, self.sp >> 8);
+                self.bus.getAddress(val + 1).* = @truncate(u8, self.sp);
             },
-            0x09 => self.addU16(Registers.HL, @bitCast(u16, self.bc)),
+            0x09 => self.addU16(@bitCast(u16, self.bc)),
             0x0A => self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.bc)).*),
             0x0B => self.dec(Registers.BC),
             0x0C => self.inc(Registers.C),
@@ -104,7 +104,7 @@ pub fn clock(self: *Self) void {
             0x16 => @panic("unhandled opcode: 0x16"),
             0x17 => @panic("unhandled opcode: 0x17"),
             0x18 => @panic("unhandled opcode: 0x18"),
-            0x19 => self.addU16(Registers.HL, @bitCast(u16, self.de)),
+            0x19 => self.addU16(@bitCast(u16, self.de)),
             0x1A => self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.de)).*),
             0x1B => self.dec(Registers.DE),
             0x1C => self.inc(Registers.E),
@@ -113,14 +113,17 @@ pub fn clock(self: *Self) void {
             0x1F => @panic("unhandled opcode: 0x1F"),
             0x20 => @panic("unhandled opcode: 0x20"),
             0x21 => self.ldU16(Registers.HL, self.imm_u16()),
-            0x22 => @panic("unhandled opcode: 0x22"),
+            0x22 => {
+                self.ldU8(Registers.PHL, self.af.a);
+                self.hl.add(1);
+            },
             0x23 => self.inc(Registers.HL),
             0x24 => self.inc(Registers.H),
             0x25 => self.dec(Registers.H),
             0x26 => @panic("unhandled opcode: 0x26"),
             0x27 => @panic("unhandled opcode: 0x27"),
             0x28 => @panic("unhandled opcode: 0x28"),
-            0x29 => self.addU16(Registers.HL, @bitCast(u16, self.hl)),
+            0x29 => self.addU16(@bitCast(u16, self.hl)),
             0x2A => {
                 self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.hl)).*);
                 self.hl.add(1);
@@ -132,14 +135,17 @@ pub fn clock(self: *Self) void {
             0x2F => @panic("unhandled opcode: 0x2F"),
             0x30 => @panic("unhandled opcode: 0x30"),
             0x31 => self.ldU16(Registers.SP, self.imm_u16()),
-            0x32 => @panic("unhandled opcode: 0x32"),
+            0x32 => {
+                self.ldU8(Registers.PHL, self.af.a);
+                self.hl.sub(1);
+            },
             0x33 => self.inc(Registers.SP),
             0x34 => self.inc(Registers.PHL),
             0x35 => self.dec(Registers.PHL),
             0x36 => @panic("unhandled opcode: 0x36"),
             0x37 => @panic("unhandled opcode: 0x37"),
             0x38 => @panic("unhandled opcode: 0x38"),
-            0x39 => self.addU16(Registers.HL, self.sp),
+            0x39 => self.addU16(self.sp),
             0x3A => {
                 self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.hl)).*);
                 self.hl.sub(1);
@@ -197,14 +203,14 @@ pub fn clock(self: *Self) void {
             0x6D => self.ldU8(Registers.L, self.hl.b),
             0x6E => self.ldU8(Registers.L, self.bus.getAddress(@bitCast(u16, self.hl)).*),
             0x6F => self.ldU8(Registers.L, self.af.a),
-            0x70 => self.bus.setAddress(@bitCast(u16, self.hl), self.bc.a),
-            0x71 => self.bus.setAddress(@bitCast(u16, self.hl), self.bc.b),
-            0x72 => self.bus.setAddress(@bitCast(u16, self.hl), self.de.a),
-            0x73 => self.bus.setAddress(@bitCast(u16, self.hl), self.de.b),
-            0x74 => self.bus.setAddress(@bitCast(u16, self.hl), self.hl.a),
-            0x75 => self.bus.setAddress(@bitCast(u16, self.hl), self.hl.b),
+            0x70 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.bc.a,
+            0x71 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.bc.b,
+            0x72 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.de.a,
+            0x73 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.de.b,
+            0x74 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.hl.a,
+            0x75 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.hl.b,
             0x76 => self.halt(),
-            0x77 => self.bus.setAddress(@bitCast(u16, self.hl), self.af.a),
+            0x77 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.af.a,
             0x78 => self.ldU8(Registers.L, self.bc.a),
             0x79 => self.ldU8(Registers.L, self.bc.b),
             0x7A => self.ldU8(Registers.L, self.de.a),
@@ -213,14 +219,14 @@ pub fn clock(self: *Self) void {
             0x7D => self.ldU8(Registers.L, self.hl.b),
             0x7E => self.ldU8(Registers.L, self.bus.getAddress(@bitCast(u16, self.hl)).*),
             0x7F => self.ldU8(Registers.L, self.af.a),
-            0x80 => self.addU8(Registers.A, self.bc.a),
-            0x81 => self.addU8(Registers.A, self.bc.b),
-            0x82 => self.addU8(Registers.A, self.de.a),
-            0x83 => self.addU8(Registers.A, self.de.b),
-            0x84 => self.addU8(Registers.A, self.hl.a),
-            0x85 => self.addU8(Registers.A, self.hl.b),
-            0x86 => self.addU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.hl)).*),
-            0x87 => self.addU8(Registers.A, self.af.a),
+            0x80 => self.addU8(self.bc.a),
+            0x81 => self.addU8(self.bc.b),
+            0x82 => self.addU8(self.de.a),
+            0x83 => self.addU8(self.de.b),
+            0x84 => self.addU8(self.hl.a),
+            0x85 => self.addU8(self.hl.b),
+            0x86 => self.addU8(self.bus.getAddress(@bitCast(u16, self.hl)).*),
+            0x87 => self.addU8(self.af.a),
             0x88 => @panic("unhandled opcode: 0x88"),
             0x89 => @panic("unhandled opcode: 0x89"),
             0x8A => @panic("unhandled opcode: 0x8A"),
@@ -253,22 +259,22 @@ pub fn clock(self: *Self) void {
             0xA5 => self.andReg(self.hl.b),
             0xA6 => self.andReg(self.bus.getAddress(@bitCast(u16, self.hl)).*),
             0xA7 => self.andReg(self.af.a),
-            0xA8 => @panic("unhandled opcode: 0xA8"),
-            0xA9 => @panic("unhandled opcode: 0xA9"),
-            0xAA => @panic("unhandled opcode: 0xAA"),
-            0xAB => @panic("unhandled opcode: 0xAB"),
-            0xAC => @panic("unhandled opcode: 0xAC"),
-            0xAD => @panic("unhandled opcode: 0xAD"),
-            0xAE => @panic("unhandled opcode: 0xAE"),
-            0xAF => @panic("unhandled opcode: 0xAF"),
-            0xB0 => @panic("unhandled opcode: 0xB0"),
-            0xB1 => @panic("unhandled opcode: 0xB1"),
-            0xB2 => @panic("unhandled opcode: 0xB2"),
-            0xB3 => @panic("unhandled opcode: 0xB3"),
-            0xB4 => @panic("unhandled opcode: 0xB4"),
-            0xB5 => @panic("unhandled opcode: 0xB5"),
-            0xB6 => @panic("unhandled opcode: 0xB6"),
-            0xB7 => @panic("unhandled opcode: 0xB7"),
+            0xA8 => self.xor(self.bc.a),
+            0xA9 => self.xor(self.bc.b),
+            0xAA => self.xor(self.de.a),
+            0xAB => self.xor(self.de.b),
+            0xAC => self.xor(self.hl.a),
+            0xAD => self.xor(self.hl.b),
+            0xAE => self.xor(self.bus.getAddress(@bitCast(u16, self.hl)).*),
+            0xAF => self.xor(self.af.a),
+            0xB0 => self.orReg(self.bc.a),
+            0xB1 => self.orReg(self.bc.b),
+            0xB2 => self.orReg(self.de.a),
+            0xB3 => self.orReg(self.de.b),
+            0xB4 => self.orReg(self.hl.a),
+            0xB5 => self.orReg(self.hl.b),
+            0xB6 => self.orReg(self.bus.getAddress(@bitCast(u16, self.hl)).*),
+            0xB7 => self.orReg(self.af.a),
             0xB8 => @panic("unhandled opcode: 0xB8"),
             0xB9 => @panic("unhandled opcode: 0xB9"),
             0xBA => @panic("unhandled opcode: 0xBA"),
@@ -283,7 +289,7 @@ pub fn clock(self: *Self) void {
             0xC3 => @panic("unhandled opcode: 0xC3"),
             0xC4 => @panic("unhandled opcode: 0xC4"),
             0xC5 => @panic("unhandled opcode: 0xC5"),
-            0xC6 => self.addU8(Registers.A, self.imm_u8()),
+            0xC6 => self.addU8(self.imm_u8()),
             0xC7 => @panic("unhandled opcode: 0xC7"),
             0xC8 => @panic("unhandled opcode: 0xC8"),
             0xC9 => @panic("unhandled opcode: 0xC9"),
@@ -299,7 +305,7 @@ pub fn clock(self: *Self) void {
             0xD3 => @panic("unhandled opcode: 0xD3"),
             0xD4 => @panic("unhandled opcode: 0xD4"),
             0xD5 => @panic("unhandled opcode: 0xD5"),
-            0xD6 => self.sub(Registers.A, self.imm_u8()),
+            0xD6 => self.sub(self.imm_u8()),
             0xD7 => @panic("unhandled opcode: 0xD7"),
             0xD8 => @panic("unhandled opcode: 0xD8"),
             0xD9 => @panic("unhandled opcode: 0xD9"),
@@ -317,13 +323,21 @@ pub fn clock(self: *Self) void {
             0xE5 => @panic("unhandled opcode: 0xE5"),
             0xE6 => @panic("unhandled opcode: 0xE6"),
             0xE7 => @panic("unhandled opcode: 0xE7"),
-            0xE8 => self.addU16(Registers.SP, self.sp +% @intCast(u16, self.imm_u8())),
+            0xE8 => {
+                const a = self.sp;
+                const b = self.imm_u8();
+                self.sp +%= b;
+                self.af.f.z = false;
+                self.af.f.n = false;
+                self.halfCarry(@truncate(u8, a), @truncate(u8, b));
+                self.carry(a, b);
+            },
             0xE9 => @panic("unhandled opcode: 0xE9"),
             0xEA => @panic("unhandled opcode: 0xEA"),
             0xEB => @panic("unhandled opcode: 0xEB"),
             0xEC => @panic("unhandled opcode: 0xEC"),
             0xED => @panic("unhandled opcode: 0xED"),
-            0xEE => @panic("unhandled opcode: 0xEE"),
+            0xEE => self.xor(self.imm_u8()),
             0xEF => @panic("unhandled opcode: 0xEF"),
             0xF0 => @panic("unhandled opcode: 0xF0"),
             0xF1 => @panic("unhandled opcode: 0xF1"),
@@ -331,7 +345,7 @@ pub fn clock(self: *Self) void {
             0xF3 => @panic("unhandled opcode: 0xF3"),
             0xF4 => @panic("unhandled opcode: 0xF4"),
             0xF5 => @panic("unhandled opcode: 0xF5"),
-            0xF6 => @panic("unhandled opcode: 0xF6"),
+            0xF6 => self.orReg(self.imm_u8()),
             0xF7 => @panic("unhandled opcode: 0xF7"),
             0xF8 => @panic("unhandled opcode: 0xF8"),
             0xF9 => @panic("unhandled opcode: 0xF9"),
@@ -345,37 +359,31 @@ pub fn clock(self: *Self) void {
     }
 }
 
-fn addU8(self: *Self, comptime field: Registers, val: u8) void {
-    switch (field) {
-        .A => self.af.a +%= val,
-        .F => self.af.f +%= val,
-        .B => self.bc.a +%= val,
-        .C => self.bc.b +%= val,
-        .D => self.de.a +%= val,
-        .E => self.de.b +%= val,
-        .H => self.hl.a +%= val,
-        .L => self.hl.b +%= val,
-        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)).* +%= val,
-        .PBC => self.bus.getAddress(@bitCast(u16, self.bc)).* +%= val,
-        .PDE => self.bus.getAddress(@bitCast(u16, self.de)).* +%= val,
-        else => @compileError("Tried to load u8 into u16 register"),
-    }
+fn addU8(self: *Self, val: u8) void {
+    const old_a = self.af.a;
+    self.af.a +%= val;
+    self.af.f.z = self.af.a == 0;
+    self.af.f.n = false;
+    self.halfCarry(old_a, val);
+    self.carry(old_a, val);
 }
 
 fn andReg(self: *Self, val: u8) void {
     self.af.a &= val;
+    self.af.f.z = self.af.a == 0;
+    self.af.f.n = false;
+    self.af.f.h = true;
+    self.af.f.c = false;
 }
 
-fn addU16(self: *Self, comptime field: Registers, val: u16) void {
-    switch (field) {
-        .AF => self.af.add(val),
-        .BC => self.bc.add(val),
-        .DE => self.de.add(val),
-        .HL => self.hl.add(val),
-        .PC => self.pc +%= val,
-        .SP => self.sp +%= val,
-        else => @compileError("Tried to load u16 into u8 register"),
-    }
+fn addU16(self: *Self, val: u16) void {
+    var hl = @bitCast(u16, self.hl);
+
+    self.af.f.n = false;
+    self.halfCarry(@truncate(u8, hl), @truncate(u8, val));
+    self.carry(hl, val);
+
+    hl +%= val;
 }
 
 fn noop(self: *Self) void {
@@ -406,9 +414,9 @@ fn ldU8(self: *Self, comptime field: Utils.Registers, val: u8) void {
         .E => self.de.b = val,
         .H => self.hl.a = val,
         .L => self.hl.b = val,
-        .PHL => self.bus.setAddress(@bitCast(u16, self.hl), val),
-        .PBC => self.bus.setAddress(@bitCast(u16, self.bc), val),
-        .PDE => self.bus.setAddress(@bitCast(u16, self.de), val),
+        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)).* = val,
+        .PBC => self.bus.getAddress(@bitCast(u16, self.bc)).* = val,
+        .PDE => self.bus.getAddress(@bitCast(u16, self.de)).* = val,
         else => @compileError("Tried to load u8 into u16 register"),
     }
 }
@@ -419,9 +427,9 @@ fn inc(self: *Self, comptime field: Utils.Registers) void {
         .BC => self.bc.add(1),
         .DE => self.de.add(1),
         .HL => self.hl.add(1),
-        .PHL => self.bus.setAddress(@bitCast(u16, self.hl), self.bus.getAddress(@bitCast(u16, self.hl)).* + 1),
-        .PBC => self.bus.setAddress(@bitCast(u16, self.bc), self.bus.getAddress(@bitCast(u16, self.hl)).* + 1),
-        .PDE => self.bus.setAddress(@bitCast(u16, self.de), self.bus.getAddress(@bitCast(u16, self.hl)).* + 1),
+        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)).* += 1,
+        .PBC => self.bus.getAddress(@bitCast(u16, self.bc)).* += 1,
+        .PDE => self.bus.getAddress(@bitCast(u16, self.de)).* += 1,
         .PC => self.pc += 1,
         .SP => self.sp += 1,
         .A => self.af.a += 1,
@@ -441,9 +449,9 @@ fn dec(self: *Self, comptime field: Utils.Registers) void {
         .BC => self.bc.sub(1),
         .DE => self.de.sub(1),
         .HL => self.hl.sub(1),
-        .PHL => self.bus.setAddress(@bitCast(u16, self.hl), self.bus.getAddress(@bitCast(u16, self.hl)).* - 1),
-        .PBC => self.bus.setAddress(@bitCast(u16, self.bc), self.bus.getAddress(@bitCast(u16, self.hl)).* - 1),
-        .PDE => self.bus.setAddress(@bitCast(u16, self.de), self.bus.getAddress(@bitCast(u16, self.hl)).* - 1),
+        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)).* -= 1,
+        .PBC => self.bus.getAddress(@bitCast(u16, self.bc)).* -= 1,
+        .PDE => self.bus.getAddress(@bitCast(u16, self.de)).* -= 1,
         .PC => self.pc -= 1,
         .SP => self.sp -= 1,
         .A => self.af.a -= 1,
@@ -461,8 +469,24 @@ fn halt(self: *Self) void {
     self.halted = true;
 }
 
+fn orReg(self: *Self, val: u8) void {
+    self.af.a |= val;
+}
+
 fn sub(self: *Self, val: u8) void {
     self.af.a -%= val;
+}
+
+fn xor(self: *Self, val: u8) void {
+    self.af.a ^= val;
+}
+
+fn halfCarry(self: *Self, a: u8, b: u8) void {
+    self.af.f.h = (((a & 0xf) + (b & 0xf)) & 0x10) == 0x10;
+}
+
+fn carry(self: *Self, a: u16, b: u16) void {
+    self.af.f.c = (((a & 0xf0) + (b & 0xf0)) & 0x100) == 0x100;
 }
 
 test "cpu registers" {
