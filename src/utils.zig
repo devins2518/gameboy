@@ -1,8 +1,8 @@
 const std = @import("std");
 const debug = std.log.debug;
 
-pub fn debug_addr(comptime header: []const u8, args: anytype) void {
-    const format = " 0x{x:0>4}";
+pub fn debugAddr(comptime header: []const u8, args: anytype) void {
+    const format = " 0x{x:0>2}";
     debug(header ++ format, args);
 }
 
