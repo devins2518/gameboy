@@ -305,62 +305,62 @@ pub fn clock(self: *Self) void {
                     0x05 => self.rlc(Registers.L),
                     0x06 => self.rlc(Registers.PHL),
                     0x07 => self.rlc(Registers.A),
-                    0x08 => @panic("unhandled opcode: 0xCB08"),
-                    0x09 => @panic("unhandled opcode: 0xCB09"),
-                    0x0A => @panic("unhandled opcode: 0xCB0A"),
-                    0x0B => @panic("unhandled opcode: 0xCB0B"),
-                    0x0C => @panic("unhandled opcode: 0xCB0C"),
-                    0x0D => @panic("unhandled opcode: 0xCB0D"),
-                    0x0E => @panic("unhandled opcode: 0xCB0E"),
-                    0x0F => @panic("unhandled opcode: 0xCB0F"),
-                    0x10 => @panic("unhandled opcode: 0xCB10"),
-                    0x11 => @panic("unhandled opcode: 0xCB11"),
-                    0x12 => @panic("unhandled opcode: 0xCB12"),
-                    0x13 => @panic("unhandled opcode: 0xCB13"),
-                    0x14 => @panic("unhandled opcode: 0xCB14"),
-                    0x15 => @panic("unhandled opcode: 0xCB15"),
-                    0x16 => @panic("unhandled opcode: 0xCB16"),
-                    0x17 => @panic("unhandled opcode: 0xCB17"),
-                    0x18 => @panic("unhandled opcode: 0xCB18"),
-                    0x19 => @panic("unhandled opcode: 0xCB19"),
-                    0x1A => @panic("unhandled opcode: 0xCB1A"),
-                    0x1B => @panic("unhandled opcode: 0xCB1B"),
-                    0x1C => @panic("unhandled opcode: 0xCB1C"),
-                    0x1D => @panic("unhandled opcode: 0xCB1D"),
-                    0x1E => @panic("unhandled opcode: 0xCB1E"),
-                    0x1F => @panic("unhandled opcode: 0xCB1F"),
-                    0x20 => @panic("unhandled opcode: 0xCB20"),
-                    0x21 => @panic("unhandled opcode: 0xCB21"),
-                    0x22 => @panic("unhandled opcode: 0xCB22"),
-                    0x23 => @panic("unhandled opcode: 0xCB23"),
-                    0x24 => @panic("unhandled opcode: 0xCB24"),
-                    0x25 => @panic("unhandled opcode: 0xCB25"),
-                    0x26 => @panic("unhandled opcode: 0xCB26"),
-                    0x27 => @panic("unhandled opcode: 0xCB27"),
-                    0x28 => @panic("unhandled opcode: 0xCB28"),
-                    0x29 => @panic("unhandled opcode: 0xCB29"),
-                    0x2A => @panic("unhandled opcode: 0xCB2A"),
-                    0x2B => @panic("unhandled opcode: 0xCB2B"),
-                    0x2C => @panic("unhandled opcode: 0xCB2C"),
-                    0x2D => @panic("unhandled opcode: 0xCB2D"),
-                    0x2E => @panic("unhandled opcode: 0xCB2E"),
-                    0x2F => @panic("unhandled opcode: 0xCB2F"),
-                    0x30 => @panic("unhandled opcode: 0xCB30"),
-                    0x31 => @panic("unhandled opcode: 0xCB31"),
-                    0x32 => @panic("unhandled opcode: 0xCB32"),
-                    0x33 => @panic("unhandled opcode: 0xCB33"),
-                    0x34 => @panic("unhandled opcode: 0xCB34"),
-                    0x35 => @panic("unhandled opcode: 0xCB35"),
-                    0x36 => @panic("unhandled opcode: 0xCB36"),
-                    0x37 => @panic("unhandled opcode: 0xCB37"),
-                    0x38 => @panic("unhandled opcode: 0xCB38"),
-                    0x39 => @panic("unhandled opcode: 0xCB39"),
-                    0x3A => @panic("unhandled opcode: 0xCB3A"),
-                    0x3B => @panic("unhandled opcode: 0xCB3B"),
-                    0x3C => @panic("unhandled opcode: 0xCB3C"),
-                    0x3D => @panic("unhandled opcode: 0xCB3D"),
-                    0x3E => @panic("unhandled opcode: 0xCB3E"),
-                    0x3F => @panic("unhandled opcode: 0xCB3F"),
+                    0x08 => self.rrc(Registers.B),
+                    0x09 => self.rrc(Registers.C),
+                    0x0A => self.rrc(Registers.D),
+                    0x0B => self.rrc(Registers.E),
+                    0x0C => self.rrc(Registers.H),
+                    0x0D => self.rrc(Registers.L),
+                    0x0E => self.rrc(Registers.PHL),
+                    0x0F => self.rrc(Registers.A),
+                    0x10 => self.rl(Registers.B),
+                    0x11 => self.rl(Registers.C),
+                    0x12 => self.rl(Registers.D),
+                    0x13 => self.rl(Registers.E),
+                    0x14 => self.rl(Registers.H),
+                    0x15 => self.rl(Registers.L),
+                    0x16 => self.rl(Registers.PHL),
+                    0x17 => self.rl(Registers.A),
+                    0x18 => self.rr(Registers.B),
+                    0x19 => self.rr(Registers.C),
+                    0x1A => self.rr(Registers.D),
+                    0x1B => self.rr(Registers.E),
+                    0x1C => self.rr(Registers.H),
+                    0x1D => self.rr(Registers.L),
+                    0x1E => self.rr(Registers.PHL),
+                    0x1F => self.rr(Registers.A),
+                    0x20 => self.sla(Registers.B),
+                    0x21 => self.sla(Registers.C),
+                    0x22 => self.sla(Registers.D),
+                    0x23 => self.sla(Registers.E),
+                    0x24 => self.sla(Registers.H),
+                    0x25 => self.sla(Registers.L),
+                    0x26 => self.sla(Registers.PHL),
+                    0x27 => self.sla(Registers.A),
+                    0x28 => self.sra(Registers.B),
+                    0x29 => self.sra(Registers.C),
+                    0x2A => self.sra(Registers.D),
+                    0x2B => self.sra(Registers.E),
+                    0x2C => self.sra(Registers.H),
+                    0x2D => self.sra(Registers.L),
+                    0x2E => self.sra(Registers.PHL),
+                    0x2F => self.sra(Registers.A),
+                    0x30 => self.swap(Registers.B),
+                    0x31 => self.swap(Registers.C),
+                    0x32 => self.swap(Registers.D),
+                    0x33 => self.swap(Registers.E),
+                    0x34 => self.swap(Registers.H),
+                    0x35 => self.swap(Registers.L),
+                    0x36 => self.swap(Registers.PHL),
+                    0x37 => self.swap(Registers.A),
+                    0x38 => self.srl(Registers.B),
+                    0x39 => self.srl(Registers.C),
+                    0x3A => self.srl(Registers.D),
+                    0x3B => self.srl(Registers.E),
+                    0x3C => self.srl(Registers.H),
+                    0x3D => self.srl(Registers.L),
+                    0x3E => self.srl(Registers.PHL),
+                    0x3F => self.srl(Registers.A),
                     0x40 => self.bit(0, Registers.B),
                     0x41 => self.bit(0, Registers.C),
                     0x42 => self.bit(0, Registers.D),
@@ -647,17 +647,7 @@ fn addU16(self: *Self, val: u16) void {
 }
 
 fn bit(self: *Self, comptime b: u8, comptime field: Registers) void {
-    const r = switch (field) {
-        .A => &self.af.a,
-        .B => &self.bc.a,
-        .C => &self.bc.b,
-        .D => &self.de.a,
-        .E => &self.de.b,
-        .H => &self.hl.a,
-        .L => &self.hl.b,
-        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)),
-        else => @compileError("Invalid reg"),
-    };
+    const r = self.getReg(field);
     self.af.f.z = ((r.* >> b) & 0x01) == 0;
     self.af.f.n = false;
     self.af.f.h = true;
@@ -797,20 +787,7 @@ fn ldU16(self: *Self, comptime field: Utils.Registers, val: u16) void {
 }
 
 fn ldU8(self: *Self, comptime field: Utils.Registers, val: u8) void {
-    switch (field) {
-        .A => self.af.a = val,
-        .F => self.af.f = val,
-        .B => self.bc.a = val,
-        .C => self.bc.b = val,
-        .D => self.de.a = val,
-        .E => self.de.b = val,
-        .H => self.hl.a = val,
-        .L => self.hl.b = val,
-        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)).* = val,
-        .PBC => self.bus.getAddress(@bitCast(u16, self.bc)).* = val,
-        .PDE => self.bus.getAddress(@bitCast(u16, self.de)).* = val,
-        else => @compileError("Tried to load u8 into u16 register"),
-    }
+    self.getReg(field).* = val;
 }
 
 fn noop(_: *Self) void {}
@@ -824,33 +801,22 @@ fn orReg(self: *Self, val: u8) void {
 }
 
 fn res(self: *Self, comptime b: u8, comptime field: Registers) void {
-    const r = switch (field) {
-        .A => &self.af.a,
-        .B => &self.bc.a,
-        .C => &self.bc.b,
-        .D => &self.de.a,
-        .E => &self.de.b,
-        .H => &self.hl.a,
-        .L => &self.hl.b,
-        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)),
-        else => @compileError("Invalid reg"),
-    };
-
+    const r = self.getReg(field);
     r.* |= ~@intCast(u8, 1 << b);
 }
 
+fn rl(self: *Self, comptime field: Registers) void {
+    const reg = self.getReg(field);
+    const c = @boolToInt(self.af.f.c);
+    self.af.f.c = (reg.* >> 7 == 1);
+    self.af.f.n = false;
+    self.af.f.h = false;
+    reg.* = reg.* << 1 | c;
+    self.af.f.z = reg.* == 0;
+}
+
 fn rlc(self: *Self, comptime field: Registers) void {
-    const reg = switch (field) {
-        .A => &self.af.a,
-        .B => &self.bc.a,
-        .C => &self.bc.b,
-        .D => &self.de.a,
-        .E => &self.de.b,
-        .H => &self.hl.a,
-        .L => &self.hl.b,
-        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)),
-        else => @compileError("Invalid reg"),
-    };
+    const reg = self.getReg(field);
     self.af.f.c = (reg.* >> 7 == 1);
     self.af.f.n = false;
     self.af.f.h = false;
@@ -858,20 +824,54 @@ fn rlc(self: *Self, comptime field: Registers) void {
     self.af.f.z = reg.* == 0;
 }
 
-fn set(self: *Self, comptime b: u8, comptime field: Registers) void {
-    const r = switch (field) {
-        .A => &self.af.a,
-        .B => &self.bc.a,
-        .C => &self.bc.b,
-        .D => &self.de.a,
-        .E => &self.de.b,
-        .H => &self.hl.a,
-        .L => &self.hl.b,
-        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)),
-        else => @compileError("Invalid reg"),
-    };
+fn rr(self: *Self, comptime field: Registers) void {
+    const reg = self.getReg(field);
+    const c = @boolToInt(self.af.f.c);
+    self.af.f.c = (reg.* & 0x01 == 1);
+    self.af.f.n = false;
+    self.af.f.h = false;
+    reg.* = @as(u8, c) << 7 | reg.* >> 1;
+    self.af.f.z = reg.* == 0;
+}
 
-    r.* |= (1 << b);
+fn rrc(self: *Self, comptime field: Registers) void {
+    const reg = self.getReg(field);
+    self.af.f.c = (reg.* & 0x01 == 1);
+    self.af.f.n = false;
+    self.af.f.h = false;
+    reg.* = std.math.rotr(u8, 1, reg.*);
+    self.af.f.z = reg.* == 0;
+}
+
+fn set(self: *Self, comptime b: u8, comptime field: Registers) void {
+    self.getReg(field).* |= (1 << b);
+}
+
+fn sla(self: *Self, comptime field: Registers) void {
+    const r = self.getReg(field);
+    self.af.f.c = (r.* >> 7) == 1;
+    self.af.f.n = false;
+    self.af.f.h = false;
+    r.* <<= 1;
+    self.af.f.z = r.* == 0;
+}
+
+fn sra(self: *Self, comptime field: Registers) void {
+    const r = self.getReg(field);
+    self.af.f.c = (r.* & 0x01) == 1;
+    self.af.f.n = false;
+    self.af.f.h = false;
+    r.* = (r.* >> 1) | (r.* & 0x80);
+    self.af.f.z = r.* == 0;
+}
+
+fn srl(self: *Self, comptime field: Registers) void {
+    const r = self.getReg(field);
+    self.af.f.c = (r.* & 0x01) == 1;
+    self.af.f.n = false;
+    self.af.f.h = false;
+    r.* = r.* >> 1;
+    self.af.f.z = r.* == 0;
 }
 
 fn sub(self: *Self, val: u8) void {
@@ -881,6 +881,15 @@ fn sub(self: *Self, val: u8) void {
     self.carry(self.af.a, val);
 
     self.af.a -%= val;
+}
+
+fn swap(self: *Self, comptime field: Registers) void {
+    const r = self.getReg(field);
+    r.* = (r.* & 0x0F) << 4 | (r.* & 0xF0) >> 4;
+    self.af.f.c = false;
+    self.af.f.n = false;
+    self.af.f.h = false;
+    self.af.f.z = r.* == 0;
 }
 
 fn xor(self: *Self, val: u8) void {
@@ -897,6 +906,22 @@ fn halfCarry(self: *Self, a: u8, b: u8) void {
 
 fn carry(self: *Self, a: u16, b: u16) void {
     self.af.f.c = (((a & 0xf0) + (b & 0xf0)) & 0x100) == 0x100;
+}
+
+inline fn getReg(self: *Self, comptime field: Registers) *u8 {
+    return switch (field) {
+        .A => &self.af.a,
+        .B => &self.bc.a,
+        .C => &self.bc.b,
+        .D => &self.de.a,
+        .E => &self.de.b,
+        .H => &self.hl.a,
+        .L => &self.hl.b,
+        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)),
+        .PBC => self.bus.getAddress(@bitCast(u16, self.bc)),
+        .PDE => self.bus.getAddress(@bitCast(u16, self.de)),
+        else => @compileError("Invalid reg"),
+    };
 }
 
 test "cpu registers" {
