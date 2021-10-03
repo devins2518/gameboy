@@ -297,14 +297,14 @@ pub fn clock(self: *Self) void {
             0xCB => {
                 const nopcode = self.nextInstruction();
                 switch (nopcode) {
-                    0x00 => @panic("unhandled opcode: 0xCB00"),
-                    0x01 => @panic("unhandled opcode: 0xCB01"),
-                    0x02 => @panic("unhandled opcode: 0xCB02"),
-                    0x03 => @panic("unhandled opcode: 0xCB03"),
-                    0x04 => @panic("unhandled opcode: 0xCB04"),
-                    0x05 => @panic("unhandled opcode: 0xCB05"),
-                    0x06 => @panic("unhandled opcode: 0xCB06"),
-                    0x07 => @panic("unhandled opcode: 0xCB07"),
+                    0x00 => self.rlc(Registers.B),
+                    0x01 => self.rlc(Registers.C),
+                    0x02 => self.rlc(Registers.D),
+                    0x03 => self.rlc(Registers.E),
+                    0x04 => self.rlc(Registers.H),
+                    0x05 => self.rlc(Registers.L),
+                    0x06 => self.rlc(Registers.PHL),
+                    0x07 => self.rlc(Registers.A),
                     0x08 => @panic("unhandled opcode: 0xCB08"),
                     0x09 => @panic("unhandled opcode: 0xCB09"),
                     0x0A => @panic("unhandled opcode: 0xCB0A"),
@@ -837,6 +837,25 @@ fn res(self: *Self, comptime b: u8, comptime field: Registers) void {
     };
 
     r.* |= ~@intCast(u8, 1 << b);
+}
+
+fn rlc(self: *Self, comptime field: Registers) void {
+    const reg = switch (field) {
+        .A => &self.af.a,
+        .B => &self.bc.a,
+        .C => &self.bc.b,
+        .D => &self.de.a,
+        .E => &self.de.b,
+        .H => &self.hl.a,
+        .L => &self.hl.b,
+        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)),
+        else => unreachable,
+    };
+    self.af.f.c = (reg.* >> 7 == 1);
+    self.af.f.n = false;
+    self.af.f.h = false;
+    reg.* = std.math.rotl(u8, 1, reg.*);
+    self.af.f.z = reg.* == 0;
 }
 
 fn set(self: *Self, comptime b: u8, comptime field: Registers) void {
