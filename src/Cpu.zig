@@ -656,7 +656,7 @@ fn bit(self: *Self, comptime b: u8, comptime field: Registers) void {
         .H => &self.hl.a,
         .L => &self.hl.b,
         .PHL => self.bus.getAddress(@bitCast(u16, self.hl)),
-        else => unreachable,
+        else => @compileError("Invalid reg"),
     };
     self.af.f.z = ((r.* >> b) & 0x01) == 0;
     self.af.f.n = false;
@@ -711,7 +711,7 @@ fn dec(self: *Self, comptime field: Utils.Registers) void {
                         val.* -%= 1;
                         break :blk val.*;
                     },
-                    else => unreachable,
+                    else => @compileError("Invalid reg"),
                 }
             };
 
@@ -774,7 +774,7 @@ fn inc(self: *Self, comptime field: Utils.Registers) void {
                         val.* +%= 1;
                         break :blk val.*;
                     },
-                    else => unreachable,
+                    else => @compileError("Invalid reg"),
                 }
             };
             self.af.f.z = r == 0;
@@ -833,7 +833,7 @@ fn res(self: *Self, comptime b: u8, comptime field: Registers) void {
         .H => &self.hl.a,
         .L => &self.hl.b,
         .PHL => self.bus.getAddress(@bitCast(u16, self.hl)),
-        else => unreachable,
+        else => @compileError("Invalid reg"),
     };
 
     r.* |= ~@intCast(u8, 1 << b);
@@ -849,7 +849,7 @@ fn rlc(self: *Self, comptime field: Registers) void {
         .H => &self.hl.a,
         .L => &self.hl.b,
         .PHL => self.bus.getAddress(@bitCast(u16, self.hl)),
-        else => unreachable,
+        else => @compileError("Invalid reg"),
     };
     self.af.f.c = (reg.* >> 7 == 1);
     self.af.f.n = false;
@@ -868,7 +868,7 @@ fn set(self: *Self, comptime b: u8, comptime field: Registers) void {
         .H => &self.hl.a,
         .L => &self.hl.b,
         .PHL => self.bus.getAddress(@bitCast(u16, self.hl)),
-        else => unreachable,
+        else => @compileError("Invalid reg"),
     };
 
     r.* |= (1 << b);
