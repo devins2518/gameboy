@@ -315,7 +315,7 @@ pub fn clock(self: *Self) void {
             0xDD => @panic("unhandled opcode: 0xDD"),
             0xDE => @panic("unhandled opcode: 0xDE"),
             0xDF => @panic("unhandled opcode: 0xDF"),
-            0xE0 => @panic("unhandled opcode: 0xE0"),
+            0xE0 => self.bus.getAddress(0xFF00 + @as(u16, self.imm_u8())).* = self.af.a,
             0xE1 => @panic("unhandled opcode: 0xE1"),
             0xE2 => @panic("unhandled opcode: 0xE2"),
             0xE3 => @panic("unhandled opcode: 0xE3"),
@@ -339,7 +339,7 @@ pub fn clock(self: *Self) void {
             0xED => @panic("unhandled opcode: 0xED"),
             0xEE => self.xor(self.imm_u8()),
             0xEF => @panic("unhandled opcode: 0xEF"),
-            0xF0 => @panic("unhandled opcode: 0xF0"),
+            0xF0 => self.ldU8(Registers.A, self.bus.getAddress(0xFF00 + @as(u16, self.imm_u8())).*),
             0xF1 => @panic("unhandled opcode: 0xF1"),
             0xF2 => @panic("unhandled opcode: 0xF2"),
             0xF3 => @panic("unhandled opcode: 0xF3"),
@@ -386,11 +386,7 @@ fn addU16(self: *Self, val: u16) void {
     hl +%= val;
 }
 
-fn noop(self: *Self) void {
-    suspend {
-        self.current_frame = @frame();
-    }
-}
+fn noop(_: *Self) void {}
 
 fn ldU16(self: *Self, comptime field: Utils.Registers, val: u16) void {
     switch (field) {
@@ -427,19 +423,55 @@ fn inc(self: *Self, comptime field: Utils.Registers) void {
         .BC => self.bc.add(1),
         .DE => self.de.add(1),
         .HL => self.hl.add(1),
-        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)).* += 1,
-        .PBC => self.bus.getAddress(@bitCast(u16, self.bc)).* += 1,
-        .PDE => self.bus.getAddress(@bitCast(u16, self.de)).* += 1,
-        .PC => self.pc += 1,
-        .SP => self.sp += 1,
-        .A => self.af.a += 1,
-        .F => self.af.f += 1,
-        .B => self.bc.a += 1,
-        .C => self.bc.b += 1,
-        .D => self.de.a += 1,
-        .E => self.de.b += 1,
-        .H => self.hl.a += 1,
-        .L => self.hl.b += 1,
+        .PC => self.pc +%= 1,
+        .SP => self.sp +%= 1,
+        else => {
+            const res = blk: {
+                switch (field) {
+                    .A => {
+                        self.af.a +%= 1;
+                        break :blk self.af.a;
+                    },
+                    .F => {
+                        self.af.f +%= 1;
+                        break :blk self.af.f;
+                    },
+                    .B => {
+                        self.bc.a +%= 1;
+                        break :blk self.bc.a;
+                    },
+                    .C => {
+                        self.bc.b +%= 1;
+                        break :blk self.bc.b;
+                    },
+                    .D => {
+                        self.de.a +%= 1;
+                        break :blk self.de.a;
+                    },
+                    .E => {
+                        self.de.b +%= 1;
+                        break :blk self.de.b;
+                    },
+                    .H => {
+                        self.hl.a +%= 1;
+                        break :blk self.hl.a;
+                    },
+                    .L => {
+                        self.hl.b +%= 1;
+                        break :blk self.hl.b;
+                    },
+                    .PHL => {
+                        const val = self.bus.getAddress(@bitCast(u16, self.hl));
+                        val.* +%= 1;
+                        break :blk val.*;
+                    },
+                    else => unreachable,
+                }
+            };
+            self.af.f.z = res == 0;
+            self.af.f.n = false;
+            self.halfCarry(res -% 1, 1);
+        },
     }
 }
 
@@ -449,19 +481,56 @@ fn dec(self: *Self, comptime field: Utils.Registers) void {
         .BC => self.bc.sub(1),
         .DE => self.de.sub(1),
         .HL => self.hl.sub(1),
-        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)).* -= 1,
-        .PBC => self.bus.getAddress(@bitCast(u16, self.bc)).* -= 1,
-        .PDE => self.bus.getAddress(@bitCast(u16, self.de)).* -= 1,
-        .PC => self.pc -= 1,
-        .SP => self.sp -= 1,
-        .A => self.af.a -= 1,
-        .F => self.af.f -= 1,
-        .B => self.bc.a -= 1,
-        .C => self.bc.b -= 1,
-        .D => self.de.a -= 1,
-        .E => self.de.b -= 1,
-        .H => self.hl.a -= 1,
-        .L => self.hl.b -= 1,
+        .PC => self.pc -%= 1,
+        .SP => self.sp -%= 1,
+        else => {
+            const res = blk: {
+                switch (field) {
+                    .A => {
+                        self.af.a -%= 1;
+                        break :blk self.af.a;
+                    },
+                    .F => {
+                        self.af.f -%= 1;
+                        break :blk self.af.f;
+                    },
+                    .B => {
+                        self.bc.a -%= 1;
+                        break :blk self.bc.a;
+                    },
+                    .C => {
+                        self.bc.b -%= 1;
+                        break :blk self.bc.b;
+                    },
+                    .D => {
+                        self.de.a -%= 1;
+                        break :blk self.de.a;
+                    },
+                    .E => {
+                        self.de.b -%= 1;
+                        break :blk self.de.b;
+                    },
+                    .H => {
+                        self.hl.a -%= 1;
+                        break :blk self.hl.a;
+                    },
+                    .L => {
+                        self.hl.b -%= 1;
+                        break :blk self.hl.b;
+                    },
+                    .PHL => {
+                        const val = self.bus.getAddress(@bitCast(u16, self.hl));
+                        val.* -%= 1;
+                        break :blk val.*;
+                    },
+                    else => unreachable,
+                }
+            };
+
+            self.af.f.z = res == 0;
+            self.af.f.n = true;
+            self.halfCarry(res +% 1, 1);
+        },
     }
 }
 
@@ -471,14 +540,27 @@ fn halt(self: *Self) void {
 
 fn orReg(self: *Self, val: u8) void {
     self.af.a |= val;
+    self.af.f.z = self.af.a == 0;
+    self.af.f.n = false;
+    self.af.f.h = false;
+    self.af.f.c = false;
 }
 
 fn sub(self: *Self, val: u8) void {
+    self.af.f.z = self.af.a == 0;
+    self.af.f.n = true;
+    self.halfCarry(self.af.a, val);
+    self.carry(self.af.a, val);
+
     self.af.a -%= val;
 }
 
 fn xor(self: *Self, val: u8) void {
     self.af.a ^= val;
+    self.af.f.z = self.af.a == 0;
+    self.af.f.n = false;
+    self.af.f.h = false;
+    self.af.f.c = false;
 }
 
 fn halfCarry(self: *Self, a: u8, b: u8) void {
