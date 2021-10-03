@@ -3,7 +3,19 @@ const mem = std.mem;
 const Cartridge = @import("Cartridge.zig");
 const Self = @This();
 
-bootrom: [0x0100]u8 = .{
+const BOOTROM_SIZE: usize = 0x0100;
+const VRAM_SIZE: usize = 0x8000;
+const VRAM_START: usize = 0x8000;
+const RAM_SIZE: usize = 0x8000;
+const RAM_START: usize = 0xC000;
+const SAT_SIZE: usize = 0xA0;
+const SAT_START: usize = 0xFE00;
+const IOREG_SIZE: usize = 0x80;
+const IOREG_START: usize = 0xFF00;
+const HRAM_SIZE: usize = 0x80;
+const HRAM_START: usize = 0xFF80;
+
+bootrom: [BOOTROM_SIZE]u8 = .{
     0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26,
     0xFF, 0x0E, 0x11, 0x3E, 0x80, 0x32, 0xE2, 0x0C, 0x3E, 0xF3, 0xE2, 0x32, 0x3E, 0x77,
     0x77, 0x3E, 0xFC, 0xE0, 0x47, 0x11, 0x04, 0x01, 0x21, 0x10, 0x80, 0x1A, 0xCD, 0x95,
@@ -25,11 +37,11 @@ bootrom: [0x0100]u8 = .{
     0x3E, 0x01, 0xE0, 0x50,
 },
 cart: *Cartridge,
-vram: [0x8000]u8 = mem.zeroes([0x8000]u8),
-ram: [0x8000]u8 = mem.zeroes([0x8000]u8),
-sat: [0xA0]u8 = mem.zeroes([0xA0]u8),
-io_reg: [0x80]u8 = mem.zeroes([0x80]u8),
-hram: [0x80]u8 = mem.zeroes([0x80]u8),
+vram: [VRAM_SIZE]u8 = mem.zeroes([VRAM_SIZE]u8),
+ram: [RAM_SIZE]u8 = mem.zeroes([RAM_SIZE]u8),
+sat: [SAT_SIZE]u8 = mem.zeroes([SAT_SIZE]u8),
+io_reg: [IOREG_SIZE]u8 = mem.zeroes([IOREG_SIZE]u8),
+hram: [HRAM_SIZE]u8 = mem.zeroes([HRAM_SIZE]u8),
 ie_reg: u8 = 0,
 
 _finished_boot: bool = false,
@@ -47,17 +59,17 @@ pub fn getAddress(self: *Self, addr: u16) *u8 {
                 @panic("unimplemented cart");
         },
         0x0101...0x7FFF => @panic("unimplemented cart"),
-        0x8000...0x9FFF => &self.vram[addr],
+        0x8000...0x9FFF => &self.vram[@mod(addr, VRAM_START)],
         0xA000...0xBFFF => @panic("attempted to read from cartridge"),
-        0xC000...0xDFFF => &self.ram[addr],
-        0xE000...0xFDFF => &self.ram[(addr - 0x2000)],
-        0xFE00...0xFE9F => &self.sat[addr],
+        0xC000...0xDFFF => &self.ram[@mod(addr, RAM_START)],
+        0xE000...0xFDFF => &self.ram[@mod((addr - 0x2000), RAM_START)],
+        0xFE00...0xFE9F => &self.sat[@mod(addr, SAT_START)],
         0xFEA0...0xFEFF => {
             var zero: u8 = 0x00;
             return &zero;
         },
-        0xFF00...0xFF7F => &self.io_reg[addr],
-        0xFF80...0xFFFE => &self.hram[addr],
+        0xFF00...0xFF7F => &self.io_reg[@mod(addr, IOREG_START)],
+        0xFF80...0xFFFE => &self.hram[@mod(addr, HRAM_START)],
         0xFFFF => &self.ie_reg,
     };
 }
