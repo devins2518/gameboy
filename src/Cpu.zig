@@ -294,7 +294,267 @@ pub fn clock(self: *Self) void {
             0xC8 => @panic("unhandled opcode: 0xC8"),
             0xC9 => @panic("unhandled opcode: 0xC9"),
             0xCA => @panic("unhandled opcode: 0xCA"),
-            0xCB => @panic("unhandled opcode: 0xCB"),
+            0xCB => {
+                const nopcode = self.nextInstruction();
+                switch (nopcode) {
+                    0x00 => @panic("unhandled opcode: 0xCB00"),
+                    0x01 => @panic("unhandled opcode: 0xCB01"),
+                    0x02 => @panic("unhandled opcode: 0xCB02"),
+                    0x03 => @panic("unhandled opcode: 0xCB03"),
+                    0x04 => @panic("unhandled opcode: 0xCB04"),
+                    0x05 => @panic("unhandled opcode: 0xCB05"),
+                    0x06 => @panic("unhandled opcode: 0xCB06"),
+                    0x07 => @panic("unhandled opcode: 0xCB07"),
+                    0x08 => @panic("unhandled opcode: 0xCB08"),
+                    0x09 => @panic("unhandled opcode: 0xCB09"),
+                    0x0A => @panic("unhandled opcode: 0xCB0A"),
+                    0x0B => @panic("unhandled opcode: 0xCB0B"),
+                    0x0C => @panic("unhandled opcode: 0xCB0C"),
+                    0x0D => @panic("unhandled opcode: 0xCB0D"),
+                    0x0E => @panic("unhandled opcode: 0xCB0E"),
+                    0x0F => @panic("unhandled opcode: 0xCB0F"),
+                    0x10 => @panic("unhandled opcode: 0xCB10"),
+                    0x11 => @panic("unhandled opcode: 0xCB11"),
+                    0x12 => @panic("unhandled opcode: 0xCB12"),
+                    0x13 => @panic("unhandled opcode: 0xCB13"),
+                    0x14 => @panic("unhandled opcode: 0xCB14"),
+                    0x15 => @panic("unhandled opcode: 0xCB15"),
+                    0x16 => @panic("unhandled opcode: 0xCB16"),
+                    0x17 => @panic("unhandled opcode: 0xCB17"),
+                    0x18 => @panic("unhandled opcode: 0xCB18"),
+                    0x19 => @panic("unhandled opcode: 0xCB19"),
+                    0x1A => @panic("unhandled opcode: 0xCB1A"),
+                    0x1B => @panic("unhandled opcode: 0xCB1B"),
+                    0x1C => @panic("unhandled opcode: 0xCB1C"),
+                    0x1D => @panic("unhandled opcode: 0xCB1D"),
+                    0x1E => @panic("unhandled opcode: 0xCB1E"),
+                    0x1F => @panic("unhandled opcode: 0xCB1F"),
+                    0x20 => @panic("unhandled opcode: 0xCB20"),
+                    0x21 => @panic("unhandled opcode: 0xCB21"),
+                    0x22 => @panic("unhandled opcode: 0xCB22"),
+                    0x23 => @panic("unhandled opcode: 0xCB23"),
+                    0x24 => @panic("unhandled opcode: 0xCB24"),
+                    0x25 => @panic("unhandled opcode: 0xCB25"),
+                    0x26 => @panic("unhandled opcode: 0xCB26"),
+                    0x27 => @panic("unhandled opcode: 0xCB27"),
+                    0x28 => @panic("unhandled opcode: 0xCB28"),
+                    0x29 => @panic("unhandled opcode: 0xCB29"),
+                    0x2A => @panic("unhandled opcode: 0xCB2A"),
+                    0x2B => @panic("unhandled opcode: 0xCB2B"),
+                    0x2C => @panic("unhandled opcode: 0xCB2C"),
+                    0x2D => @panic("unhandled opcode: 0xCB2D"),
+                    0x2E => @panic("unhandled opcode: 0xCB2E"),
+                    0x2F => @panic("unhandled opcode: 0xCB2F"),
+                    0x30 => @panic("unhandled opcode: 0xCB30"),
+                    0x31 => @panic("unhandled opcode: 0xCB31"),
+                    0x32 => @panic("unhandled opcode: 0xCB32"),
+                    0x33 => @panic("unhandled opcode: 0xCB33"),
+                    0x34 => @panic("unhandled opcode: 0xCB34"),
+                    0x35 => @panic("unhandled opcode: 0xCB35"),
+                    0x36 => @panic("unhandled opcode: 0xCB36"),
+                    0x37 => @panic("unhandled opcode: 0xCB37"),
+                    0x38 => @panic("unhandled opcode: 0xCB38"),
+                    0x39 => @panic("unhandled opcode: 0xCB39"),
+                    0x3A => @panic("unhandled opcode: 0xCB3A"),
+                    0x3B => @panic("unhandled opcode: 0xCB3B"),
+                    0x3C => @panic("unhandled opcode: 0xCB3C"),
+                    0x3D => @panic("unhandled opcode: 0xCB3D"),
+                    0x3E => @panic("unhandled opcode: 0xCB3E"),
+                    0x3F => @panic("unhandled opcode: 0xCB3F"),
+                    0x40 => @panic("unhandled opcode: 0xCB40"),
+                    0x41 => @panic("unhandled opcode: 0xCB41"),
+                    0x42 => @panic("unhandled opcode: 0xCB42"),
+                    0x43 => @panic("unhandled opcode: 0xCB43"),
+                    0x44 => @panic("unhandled opcode: 0xCB44"),
+                    0x45 => @panic("unhandled opcode: 0xCB45"),
+                    0x46 => @panic("unhandled opcode: 0xCB46"),
+                    0x47 => @panic("unhandled opcode: 0xCB47"),
+                    0x48 => @panic("unhandled opcode: 0xCB48"),
+                    0x49 => @panic("unhandled opcode: 0xCB49"),
+                    0x4A => @panic("unhandled opcode: 0xCB4A"),
+                    0x4B => @panic("unhandled opcode: 0xCB4B"),
+                    0x4C => @panic("unhandled opcode: 0xCB4C"),
+                    0x4D => @panic("unhandled opcode: 0xCB4D"),
+                    0x4E => @panic("unhandled opcode: 0xCB4E"),
+                    0x4F => @panic("unhandled opcode: 0xCB4F"),
+                    0x50 => @panic("unhandled opcode: 0xCB50"),
+                    0x51 => @panic("unhandled opcode: 0xCB51"),
+                    0x52 => @panic("unhandled opcode: 0xCB52"),
+                    0x53 => @panic("unhandled opcode: 0xCB53"),
+                    0x54 => @panic("unhandled opcode: 0xCB54"),
+                    0x55 => @panic("unhandled opcode: 0xCB55"),
+                    0x56 => @panic("unhandled opcode: 0xCB56"),
+                    0x57 => @panic("unhandled opcode: 0xCB57"),
+                    0x58 => @panic("unhandled opcode: 0xCB58"),
+                    0x59 => @panic("unhandled opcode: 0xCB59"),
+                    0x5A => @panic("unhandled opcode: 0xCB5A"),
+                    0x5B => @panic("unhandled opcode: 0xCB5B"),
+                    0x5C => @panic("unhandled opcode: 0xCB5C"),
+                    0x5D => @panic("unhandled opcode: 0xCB5D"),
+                    0x5E => @panic("unhandled opcode: 0xCB5E"),
+                    0x5F => @panic("unhandled opcode: 0xCB5F"),
+                    0x60 => @panic("unhandled opcode: 0xCB60"),
+                    0x61 => @panic("unhandled opcode: 0xCB61"),
+                    0x62 => @panic("unhandled opcode: 0xCB62"),
+                    0x63 => @panic("unhandled opcode: 0xCB63"),
+                    0x64 => @panic("unhandled opcode: 0xCB64"),
+                    0x65 => @panic("unhandled opcode: 0xCB65"),
+                    0x66 => @panic("unhandled opcode: 0xCB66"),
+                    0x67 => @panic("unhandled opcode: 0xCB67"),
+                    0x68 => @panic("unhandled opcode: 0xCB68"),
+                    0x69 => @panic("unhandled opcode: 0xCB69"),
+                    0x6A => @panic("unhandled opcode: 0xCB6A"),
+                    0x6B => @panic("unhandled opcode: 0xCB6B"),
+                    0x6C => @panic("unhandled opcode: 0xCB6C"),
+                    0x6D => @panic("unhandled opcode: 0xCB6D"),
+                    0x6E => @panic("unhandled opcode: 0xCB6E"),
+                    0x6F => @panic("unhandled opcode: 0xCB6F"),
+                    0x70 => @panic("unhandled opcode: 0xCB70"),
+                    0x71 => @panic("unhandled opcode: 0xCB71"),
+                    0x72 => @panic("unhandled opcode: 0xCB72"),
+                    0x73 => @panic("unhandled opcode: 0xCB73"),
+                    0x74 => @panic("unhandled opcode: 0xCB74"),
+                    0x75 => @panic("unhandled opcode: 0xCB75"),
+                    0x76 => @panic("unhandled opcode: 0xCB76"),
+                    0x77 => @panic("unhandled opcode: 0xCB77"),
+                    0x78 => @panic("unhandled opcode: 0xCB78"),
+                    0x79 => @panic("unhandled opcode: 0xCB79"),
+                    0x7A => @panic("unhandled opcode: 0xCB7A"),
+                    0x7B => @panic("unhandled opcode: 0xCB7B"),
+                    0x7C => @panic("unhandled opcode: 0xCB7C"),
+                    0x7D => @panic("unhandled opcode: 0xCB7D"),
+                    0x7E => @panic("unhandled opcode: 0xCB7E"),
+                    0x7F => @panic("unhandled opcode: 0xCB7F"),
+                    0x80 => @panic("unhandled opcode: 0xCB80"),
+                    0x81 => @panic("unhandled opcode: 0xCB81"),
+                    0x82 => @panic("unhandled opcode: 0xCB82"),
+                    0x83 => @panic("unhandled opcode: 0xCB83"),
+                    0x84 => @panic("unhandled opcode: 0xCB84"),
+                    0x85 => @panic("unhandled opcode: 0xCB85"),
+                    0x86 => @panic("unhandled opcode: 0xCB86"),
+                    0x87 => @panic("unhandled opcode: 0xCB87"),
+                    0x88 => @panic("unhandled opcode: 0xCB88"),
+                    0x89 => @panic("unhandled opcode: 0xCB89"),
+                    0x8A => @panic("unhandled opcode: 0xCB8A"),
+                    0x8B => @panic("unhandled opcode: 0xCB8B"),
+                    0x8C => @panic("unhandled opcode: 0xCB8C"),
+                    0x8D => @panic("unhandled opcode: 0xCB8D"),
+                    0x8E => @panic("unhandled opcode: 0xCB8E"),
+                    0x8F => @panic("unhandled opcode: 0xCB8F"),
+                    0x90 => @panic("unhandled opcode: 0xCB90"),
+                    0x91 => @panic("unhandled opcode: 0xCB91"),
+                    0x92 => @panic("unhandled opcode: 0xCB92"),
+                    0x93 => @panic("unhandled opcode: 0xCB93"),
+                    0x94 => @panic("unhandled opcode: 0xCB94"),
+                    0x95 => @panic("unhandled opcode: 0xCB95"),
+                    0x96 => @panic("unhandled opcode: 0xCB96"),
+                    0x97 => @panic("unhandled opcode: 0xCB97"),
+                    0x98 => @panic("unhandled opcode: 0xCB98"),
+                    0x99 => @panic("unhandled opcode: 0xCB99"),
+                    0x9A => @panic("unhandled opcode: 0xCB9A"),
+                    0x9B => @panic("unhandled opcode: 0xCB9B"),
+                    0x9C => @panic("unhandled opcode: 0xCB9C"),
+                    0x9D => @panic("unhandled opcode: 0xCB9D"),
+                    0x9E => @panic("unhandled opcode: 0xCB9E"),
+                    0x9F => @panic("unhandled opcode: 0xCB9F"),
+                    0xA0 => @panic("unhandled opcode: 0xCBA0"),
+                    0xA1 => @panic("unhandled opcode: 0xCBA1"),
+                    0xA2 => @panic("unhandled opcode: 0xCBA2"),
+                    0xA3 => @panic("unhandled opcode: 0xCBA3"),
+                    0xA4 => @panic("unhandled opcode: 0xCBA4"),
+                    0xA5 => @panic("unhandled opcode: 0xCBA5"),
+                    0xA6 => @panic("unhandled opcode: 0xCBA6"),
+                    0xA7 => @panic("unhandled opcode: 0xCBA7"),
+                    0xA8 => @panic("unhandled opcode: 0xCBA8"),
+                    0xA9 => @panic("unhandled opcode: 0xCBA9"),
+                    0xAA => @panic("unhandled opcode: 0xCBAA"),
+                    0xAB => @panic("unhandled opcode: 0xCBAB"),
+                    0xAC => @panic("unhandled opcode: 0xCBAC"),
+                    0xAD => @panic("unhandled opcode: 0xCBAD"),
+                    0xAE => @panic("unhandled opcode: 0xCBAE"),
+                    0xAF => @panic("unhandled opcode: 0xCBAF"),
+                    0xB0 => @panic("unhandled opcode: 0xCBB0"),
+                    0xB1 => @panic("unhandled opcode: 0xCBB1"),
+                    0xB2 => @panic("unhandled opcode: 0xCBB2"),
+                    0xB3 => @panic("unhandled opcode: 0xCBB3"),
+                    0xB4 => @panic("unhandled opcode: 0xCBB4"),
+                    0xB5 => @panic("unhandled opcode: 0xCBB5"),
+                    0xB6 => @panic("unhandled opcode: 0xCBB6"),
+                    0xB7 => @panic("unhandled opcode: 0xCBB7"),
+                    0xB8 => @panic("unhandled opcode: 0xCBB8"),
+                    0xB9 => @panic("unhandled opcode: 0xCBB9"),
+                    0xBA => @panic("unhandled opcode: 0xCBBA"),
+                    0xBB => @panic("unhandled opcode: 0xCBBB"),
+                    0xBC => @panic("unhandled opcode: 0xCBBC"),
+                    0xBD => @panic("unhandled opcode: 0xCBBD"),
+                    0xBE => @panic("unhandled opcode: 0xCBBE"),
+                    0xBF => @panic("unhandled opcode: 0xCBBF"),
+                    0xC0 => @panic("unhandled opcode: 0xCBC0"),
+                    0xC1 => @panic("unhandled opcode: 0xCBC1"),
+                    0xC2 => @panic("unhandled opcode: 0xCBC2"),
+                    0xC3 => @panic("unhandled opcode: 0xCBC3"),
+                    0xC4 => @panic("unhandled opcode: 0xCBC4"),
+                    0xC5 => @panic("unhandled opcode: 0xCBC5"),
+                    0xC6 => @panic("unhandled opcode: 0xCBC6"),
+                    0xC7 => @panic("unhandled opcode: 0xCBC7"),
+                    0xC8 => @panic("unhandled opcode: 0xCBC8"),
+                    0xC9 => @panic("unhandled opcode: 0xCBC9"),
+                    0xCA => @panic("unhandled opcode: 0xCBCA"),
+                    0xCB => @panic("unhandled opcode: 0xCBCB"),
+                    0xCC => @panic("unhandled opcode: 0xCBCC"),
+                    0xCD => @panic("unhandled opcode: 0xCBCD"),
+                    0xCE => @panic("unhandled opcode: 0xCBCE"),
+                    0xCF => @panic("unhandled opcode: 0xCBCF"),
+                    0xD0 => @panic("unhandled opcode: 0xCBD0"),
+                    0xD1 => @panic("unhandled opcode: 0xCBD1"),
+                    0xD2 => @panic("unhandled opcode: 0xCBD2"),
+                    0xD3 => @panic("unhandled opcode: 0xCBD3"),
+                    0xD4 => @panic("unhandled opcode: 0xCBD4"),
+                    0xD5 => @panic("unhandled opcode: 0xCBD5"),
+                    0xD6 => @panic("unhandled opcode: 0xCBD6"),
+                    0xD7 => @panic("unhandled opcode: 0xCBD7"),
+                    0xD8 => @panic("unhandled opcode: 0xCBD8"),
+                    0xD9 => @panic("unhandled opcode: 0xCBD9"),
+                    0xDA => @panic("unhandled opcode: 0xCBDA"),
+                    0xDB => @panic("unhandled opcode: 0xCBDB"),
+                    0xDC => @panic("unhandled opcode: 0xCBDC"),
+                    0xDD => @panic("unhandled opcode: 0xCBDD"),
+                    0xDE => @panic("unhandled opcode: 0xCBDE"),
+                    0xDF => @panic("unhandled opcode: 0xCBDF"),
+                    0xE0 => @panic("unhandled opcode: 0xCBE0"),
+                    0xE1 => @panic("unhandled opcode: 0xCBE1"),
+                    0xE2 => @panic("unhandled opcode: 0xCBE2"),
+                    0xE3 => @panic("unhandled opcode: 0xCBE3"),
+                    0xE4 => @panic("unhandled opcode: 0xCBE4"),
+                    0xE5 => @panic("unhandled opcode: 0xCBE5"),
+                    0xE6 => @panic("unhandled opcode: 0xCBE6"),
+                    0xE7 => @panic("unhandled opcode: 0xCBE7"),
+                    0xE8 => @panic("unhandled opcode: 0xCBE8"),
+                    0xE9 => @panic("unhandled opcode: 0xCBE9"),
+                    0xEA => @panic("unhandled opcode: 0xCBEA"),
+                    0xEB => @panic("unhandled opcode: 0xCBEB"),
+                    0xEC => @panic("unhandled opcode: 0xCBEC"),
+                    0xED => @panic("unhandled opcode: 0xCBED"),
+                    0xEE => @panic("unhandled opcode: 0xCBEE"),
+                    0xEF => @panic("unhandled opcode: 0xCBEF"),
+                    0xF0 => @panic("unhandled opcode: 0xCBF0"),
+                    0xF1 => @panic("unhandled opcode: 0xCBF1"),
+                    0xF2 => @panic("unhandled opcode: 0xCBF2"),
+                    0xF3 => @panic("unhandled opcode: 0xCBF3"),
+                    0xF4 => @panic("unhandled opcode: 0xCBF4"),
+                    0xF5 => @panic("unhandled opcode: 0xCBF5"),
+                    0xF6 => @panic("unhandled opcode: 0xCBF6"),
+                    0xF7 => @panic("unhandled opcode: 0xCBF7"),
+                    0xF8 => @panic("unhandled opcode: 0xCBF8"),
+                    0xF9 => @panic("unhandled opcode: 0xCBF9"),
+                    0xFA => @panic("unhandled opcode: 0xCBFA"),
+                    0xFB => @panic("unhandled opcode: 0xCBFB"),
+                    0xFC => @panic("unhandled opcode: 0xCBFC"),
+                    0xFD => @panic("unhandled opcode: 0xCBFD"),
+                    0xFE => @panic("unhandled opcode: 0xCBFE"),
+                    0xFF => @panic("unhandled opcode: 0xCBFF"),
+                }
+            },
             0xCC => @panic("unhandled opcode: 0xCC"),
             0xCD => @panic("unhandled opcode: 0xCD"),
             0xCE => @panic("unhandled opcode: 0xCE"),
@@ -386,95 +646,6 @@ fn addU16(self: *Self, val: u16) void {
     hl +%= val;
 }
 
-fn noop(_: *Self) void {}
-
-fn ldU16(self: *Self, comptime field: Utils.Registers, val: u16) void {
-    switch (field) {
-        .AF => self.af = @bitCast(regu16, val),
-        .BC => self.bc = @bitCast(regu16, val),
-        .DE => self.de = @bitCast(regu16, val),
-        .HL => self.hl = @bitCast(regu16, val),
-        .PC => self.pc = val,
-        .SP => self.sp = val,
-        else => @compileError("Tried to load u16 into u8 register"),
-    }
-}
-
-fn ldU8(self: *Self, comptime field: Utils.Registers, val: u8) void {
-    switch (field) {
-        .A => self.af.a = val,
-        .F => self.af.f = val,
-        .B => self.bc.a = val,
-        .C => self.bc.b = val,
-        .D => self.de.a = val,
-        .E => self.de.b = val,
-        .H => self.hl.a = val,
-        .L => self.hl.b = val,
-        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)).* = val,
-        .PBC => self.bus.getAddress(@bitCast(u16, self.bc)).* = val,
-        .PDE => self.bus.getAddress(@bitCast(u16, self.de)).* = val,
-        else => @compileError("Tried to load u8 into u16 register"),
-    }
-}
-
-fn inc(self: *Self, comptime field: Utils.Registers) void {
-    switch (field) {
-        .AF => self.af.add(1),
-        .BC => self.bc.add(1),
-        .DE => self.de.add(1),
-        .HL => self.hl.add(1),
-        .PC => self.pc +%= 1,
-        .SP => self.sp +%= 1,
-        else => {
-            const res = blk: {
-                switch (field) {
-                    .A => {
-                        self.af.a +%= 1;
-                        break :blk self.af.a;
-                    },
-                    .F => {
-                        self.af.f +%= 1;
-                        break :blk self.af.f;
-                    },
-                    .B => {
-                        self.bc.a +%= 1;
-                        break :blk self.bc.a;
-                    },
-                    .C => {
-                        self.bc.b +%= 1;
-                        break :blk self.bc.b;
-                    },
-                    .D => {
-                        self.de.a +%= 1;
-                        break :blk self.de.a;
-                    },
-                    .E => {
-                        self.de.b +%= 1;
-                        break :blk self.de.b;
-                    },
-                    .H => {
-                        self.hl.a +%= 1;
-                        break :blk self.hl.a;
-                    },
-                    .L => {
-                        self.hl.b +%= 1;
-                        break :blk self.hl.b;
-                    },
-                    .PHL => {
-                        const val = self.bus.getAddress(@bitCast(u16, self.hl));
-                        val.* +%= 1;
-                        break :blk val.*;
-                    },
-                    else => unreachable,
-                }
-            };
-            self.af.f.z = res == 0;
-            self.af.f.n = false;
-            self.halfCarry(res -% 1, 1);
-        },
-    }
-}
-
 fn dec(self: *Self, comptime field: Utils.Registers) void {
     switch (field) {
         .AF => self.af.sub(1),
@@ -537,6 +708,95 @@ fn dec(self: *Self, comptime field: Utils.Registers) void {
 fn halt(self: *Self) void {
     self.halted = true;
 }
+
+fn inc(self: *Self, comptime field: Utils.Registers) void {
+    switch (field) {
+        .AF => self.af.add(1),
+        .BC => self.bc.add(1),
+        .DE => self.de.add(1),
+        .HL => self.hl.add(1),
+        .PC => self.pc +%= 1,
+        .SP => self.sp +%= 1,
+        else => {
+            const res = blk: {
+                switch (field) {
+                    .A => {
+                        self.af.a +%= 1;
+                        break :blk self.af.a;
+                    },
+                    .F => {
+                        self.af.f +%= 1;
+                        break :blk self.af.f;
+                    },
+                    .B => {
+                        self.bc.a +%= 1;
+                        break :blk self.bc.a;
+                    },
+                    .C => {
+                        self.bc.b +%= 1;
+                        break :blk self.bc.b;
+                    },
+                    .D => {
+                        self.de.a +%= 1;
+                        break :blk self.de.a;
+                    },
+                    .E => {
+                        self.de.b +%= 1;
+                        break :blk self.de.b;
+                    },
+                    .H => {
+                        self.hl.a +%= 1;
+                        break :blk self.hl.a;
+                    },
+                    .L => {
+                        self.hl.b +%= 1;
+                        break :blk self.hl.b;
+                    },
+                    .PHL => {
+                        const val = self.bus.getAddress(@bitCast(u16, self.hl));
+                        val.* +%= 1;
+                        break :blk val.*;
+                    },
+                    else => unreachable,
+                }
+            };
+            self.af.f.z = res == 0;
+            self.af.f.n = false;
+            self.halfCarry(res -% 1, 1);
+        },
+    }
+}
+
+fn ldU16(self: *Self, comptime field: Utils.Registers, val: u16) void {
+    switch (field) {
+        .AF => self.af = @bitCast(regu16, val),
+        .BC => self.bc = @bitCast(regu16, val),
+        .DE => self.de = @bitCast(regu16, val),
+        .HL => self.hl = @bitCast(regu16, val),
+        .PC => self.pc = val,
+        .SP => self.sp = val,
+        else => @compileError("Tried to load u16 into u8 register"),
+    }
+}
+
+fn ldU8(self: *Self, comptime field: Utils.Registers, val: u8) void {
+    switch (field) {
+        .A => self.af.a = val,
+        .F => self.af.f = val,
+        .B => self.bc.a = val,
+        .C => self.bc.b = val,
+        .D => self.de.a = val,
+        .E => self.de.b = val,
+        .H => self.hl.a = val,
+        .L => self.hl.b = val,
+        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)).* = val,
+        .PBC => self.bus.getAddress(@bitCast(u16, self.bc)).* = val,
+        .PDE => self.bus.getAddress(@bitCast(u16, self.de)).* = val,
+        else => @compileError("Tried to load u8 into u16 register"),
+    }
+}
+
+fn noop(_: *Self) void {}
 
 fn orReg(self: *Self, val: u8) void {
     self.af.a |= val;
