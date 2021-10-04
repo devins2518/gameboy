@@ -97,13 +97,13 @@ pub fn clock(self: *Self) void {
             0x0F => self.rrca(),
             0x10 => @panic("unhandled opcode: 0x10"),
             0x11 => self.ldU16(Registers.DE, self.imm_u16()),
-            0x12 => @panic("unhandled opcode: 0x12"),
+            0x12 => self.ldU8(Registers.PDE, self.af.a),
             0x13 => self.inc(Registers.DE),
             0x14 => self.inc(Registers.D),
             0x15 => self.dec(Registers.D),
             0x16 => self.ldU8(Registers.D, self.imm_u8()),
             0x17 => self.rla(),
-            0x18 => @panic("unhandled opcode: 0x18"),
+            0x18 => self.jr(null),
             0x19 => self.addU16(@bitCast(u16, self.de)),
             0x1A => self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.de)).*),
             0x1B => self.dec(Registers.DE),
@@ -111,7 +111,7 @@ pub fn clock(self: *Self) void {
             0x1D => self.dec(Registers.E),
             0x1E => self.ldU8(Registers.E, self.imm_u8()),
             0x1F => self.rra(),
-            0x20 => @panic("unhandled opcode: 0x20"),
+            0x20 => self.jr(.NZ),
             0x21 => self.ldU16(Registers.HL, self.imm_u16()),
             0x22 => {
                 self.ldU8(Registers.PHL, self.af.a);
@@ -120,9 +120,9 @@ pub fn clock(self: *Self) void {
             0x23 => self.inc(Registers.HL),
             0x24 => self.inc(Registers.H),
             0x25 => self.dec(Registers.H),
-            0x26 => @panic("unhandled opcode: 0x26"),
+            0x26 => self.ldU8(Registers.H, self.imm_u8()),
             0x27 => @panic("unhandled opcode: 0x27"),
-            0x28 => @panic("unhandled opcode: 0x28"),
+            0x28 => self.jr(.Z),
             0x29 => self.addU16(@bitCast(u16, self.hl)),
             0x2A => {
                 self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.hl)).*);
@@ -133,7 +133,7 @@ pub fn clock(self: *Self) void {
             0x2D => self.dec(Registers.L),
             0x2E => self.ldU8(Registers.L, self.imm_u8()),
             0x2F => @panic("unhandled opcode: 0x2F"),
-            0x30 => @panic("unhandled opcode: 0x30"),
+            0x30 => self.jr(.NC),
             0x31 => self.ldU16(Registers.SP, self.imm_u16()),
             0x32 => {
                 self.ldU8(Registers.PHL, self.af.a);
@@ -142,9 +142,9 @@ pub fn clock(self: *Self) void {
             0x33 => self.inc(Registers.SP),
             0x34 => self.inc(Registers.PHL),
             0x35 => self.dec(Registers.PHL),
-            0x36 => @panic("unhandled opcode: 0x36"),
+            0x36 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.imm_u8(),
             0x37 => @panic("unhandled opcode: 0x37"),
-            0x38 => @panic("unhandled opcode: 0x38"),
+            0x38 => self.jr(.C),
             0x39 => self.addU16(self.sp),
             0x3A => {
                 self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.hl)).*);
@@ -562,7 +562,6 @@ pub fn clock(self: *Self) void {
             0xD0 => @panic("unhandled opcode: 0xD0"),
             0xD1 => @panic("unhandled opcode: 0xD1"),
             0xD2 => self.jp(self.imm_u16(), .NC),
-            0xD3 => @panic("unhandled opcode: 0xD3"),
             0xD4 => @panic("unhandled opcode: 0xD4"),
             0xD5 => @panic("unhandled opcode: 0xD5"),
             0xD6 => self.sub(self.imm_u8()),
@@ -570,16 +569,12 @@ pub fn clock(self: *Self) void {
             0xD8 => @panic("unhandled opcode: 0xD8"),
             0xD9 => @panic("unhandled opcode: 0xD9"),
             0xDA => self.jp(self.imm_u16(), .C),
-            0xDB => @panic("unhandled opcode: 0xDB"),
             0xDC => @panic("unhandled opcode: 0xDC"),
-            0xDD => @panic("unhandled opcode: 0xDD"),
             0xDE => @panic("unhandled opcode: 0xDE"),
             0xDF => @panic("unhandled opcode: 0xDF"),
             0xE0 => self.bus.getAddress(0xFF00 + @as(u16, self.imm_u8())).* = self.af.a,
             0xE1 => @panic("unhandled opcode: 0xE1"),
             0xE2 => @panic("unhandled opcode: 0xE2"),
-            0xE3 => @panic("unhandled opcode: 0xE3"),
-            0xE4 => @panic("unhandled opcode: 0xE4"),
             0xE5 => @panic("unhandled opcode: 0xE5"),
             0xE6 => @panic("unhandled opcode: 0xE6"),
             0xE7 => @panic("unhandled opcode: 0xE7"),
@@ -594,16 +589,12 @@ pub fn clock(self: *Self) void {
             },
             0xE9 => self.jp(@bitCast(u16, self.hl), null),
             0xEA => @panic("unhandled opcode: 0xEA"),
-            0xEB => @panic("unhandled opcode: 0xEB"),
-            0xEC => @panic("unhandled opcode: 0xEC"),
-            0xED => @panic("unhandled opcode: 0xED"),
             0xEE => self.xor(self.imm_u8()),
             0xEF => @panic("unhandled opcode: 0xEF"),
             0xF0 => self.ldU8(Registers.A, self.bus.getAddress(0xFF00 + @as(u16, self.imm_u8())).*),
             0xF1 => @panic("unhandled opcode: 0xF1"),
             0xF2 => @panic("unhandled opcode: 0xF2"),
             0xF3 => self.di(),
-            0xF4 => @panic("unhandled opcode: 0xF4"),
             0xF5 => @panic("unhandled opcode: 0xF5"),
             0xF6 => self.orReg(self.imm_u8()),
             0xF7 => @panic("unhandled opcode: 0xF7"),
@@ -611,10 +602,9 @@ pub fn clock(self: *Self) void {
             0xF9 => @panic("unhandled opcode: 0xF9"),
             0xFA => @panic("unhandled opcode: 0xFA"),
             0xFB => @panic("unhandled opcode: 0xFB"),
-            0xFC => @panic("unhandled opcode: 0xFC"),
-            0xFD => @panic("unhandled opcode: 0xFD"),
             0xFE => @panic("unhandled opcode: 0xFE"),
             0xFF => @panic("unhandled opcode: 0xFF"),
+            else => unreachable,
         }
 
         self.interrupts_enabled = switch (self.interrupts_enabled) {
@@ -791,6 +781,17 @@ fn inc(self: *Self, comptime field: Utils.Registers) void {
 }
 
 fn jp(self: *Self, addr: u16, opt: ?Utils.Optional) void {
+    if (opt) |o| {
+        if (self.check(o)) {
+            self.pc = addr;
+        }
+    } else {
+        self.pc = addr;
+    }
+}
+
+fn jr(self: *Self, opt: ?Utils.Optional) void {
+    const addr = @bitCast(u16, @bitCast(i16, self.pc) +% @intCast(i16, self.imm_u8()));
     if (opt) |o| {
         if (self.check(o)) {
             self.pc = addr;
