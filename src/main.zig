@@ -2,15 +2,22 @@ const std = @import("std");
 const Cpu = @import("Cpu.zig");
 const Bus = @import("Bus.zig");
 const Ppu = @import("Ppu.zig");
+const Cartridge = @import("Cartridge.zig");
 
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+const blargg = getPath();
 
 pub fn main() anyerror!void {
-    const path = getPath();
-    defer arena.allocator.free(path);
-    std.log.info("{s}", .{path});
+    var args = std.process.args();
+    _ = args.skip();
+    const path = if (args.next(arena.child_allocator)) |file|
+        file catch blargg
+    else
+        blargg;
 
-    var bus = Bus.init(undefined);
+    std.log.info("{s}", .{path});
+    var cart = Cartridge.init(path);
+    var bus = Bus.init(&cart);
     var ppu = Ppu.init();
     var cpu = Cpu.init(&bus, &ppu);
 
@@ -29,24 +36,12 @@ pub fn main() anyerror!void {
     arena.deinit();
 }
 
-fn getPath() []const u8 {
-    const dirname = std.fs.path.dirname;
-    const join = std.fs.path.join;
-    const root = @src().file;
+pub fn getPath() []const u8 {
+    comptime {
+        const root = @src().file;
 
-    var args = std.process.args();
-
-    // Skip name
-    _ = args.skip();
-    const path = blk: {
-        if (args.next(arena.child_allocator)) |file| {
-            const path = file catch root;
-            break :blk path;
-        } else {
-            break :blk root;
-        }
-    };
-    return join(arena.child_allocator, &.{ dirname(dirname(path).?).?, "/roms/blargg/cpu_instrs/cpu_instrs.gb" }) catch root;
+        return root ++ "/roms/blargg/cpu_instrs/cpu_instrs.gb";
+    }
 }
 
 test {

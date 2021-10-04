@@ -5,7 +5,7 @@ pub fn build(b: *std.build.Builder) void {
 
     const mode = b.standardReleaseOptions();
 
-    const exe = b.addExecutable("rustyboy", "src/main.zig");
+    const exe = b.addExecutable("ziggyboy", "src/main.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.install();
