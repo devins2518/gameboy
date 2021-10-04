@@ -53,12 +53,13 @@ pub fn init(cart: *Cartridge) Self {
 pub fn getAddress(self: *Self, addr: u16) *u8 {
     return switch (addr) {
         0x0000...0x100 => {
+            if (addr == 0xFF) self._finished_boot = true;
             return if (!self._finished_boot)
                 &self.bootrom[addr]
             else
-                @panic("unimplemented cart");
+                self.cart.getAddr(addr);
         },
-        0x0101...0x7FFF => @panic("unimplemented cart"),
+        0x0101...0x7FFF => self.cart.getAddr(addr),
         0x8000...0x9FFF => &self.vram[@mod(addr, VRAM_START)],
         0xA000...0xBFFF => @panic("attempted to read from cartridge"),
         0xC000...0xDFFF => &self.ram[@mod(addr, RAM_START)],

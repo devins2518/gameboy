@@ -7,7 +7,7 @@ const Cartridge = @import("Cartridge.zig");
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 const blargg = getPath();
 
-pub fn main() anyerror!void {
+pub fn main() void {
     var args = std.process.args();
     _ = args.skip();
     const path = if (args.next(arena.child_allocator)) |file|
@@ -16,7 +16,7 @@ pub fn main() anyerror!void {
         blargg;
 
     std.log.info("{s}", .{path});
-    var cart = Cartridge.init(path);
+    var cart = Cartridge.init(path) catch unreachable;
     var bus = Bus.init(&cart);
     var ppu = Ppu.init();
     var cpu = Cpu.init(&bus, &ppu);
@@ -38,9 +38,10 @@ pub fn main() anyerror!void {
 
 pub fn getPath() []const u8 {
     comptime {
+        const dn = std.fs.path.dirname;
         const root = @src().file;
 
-        return root ++ "/roms/blargg/cpu_instrs/cpu_instrs.gb";
+        return dn(dn(root).?).? ++ "/roms/blargg/cpu_instrs/cpu_instrs.gb";
     }
 }
 
