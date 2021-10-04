@@ -82,7 +82,7 @@ pub fn clock(self: *Self) void {
             0x04 => self.inc(Registers.B),
             0x05 => self.dec(Registers.B),
             0x06 => self.ldU8(Registers.B, self.imm_u8()),
-            0x07 => @panic("unhandled opcode: 0x07"),
+            0x07 => self.rlca(),
             0x08 => {
                 const val = self.imm_u16();
                 self.bus.getAddress(val).* = @truncate(u8, self.sp >> 8);
@@ -94,15 +94,15 @@ pub fn clock(self: *Self) void {
             0x0C => self.inc(Registers.C),
             0x0D => self.dec(Registers.C),
             0x0E => self.ldU8(Registers.C, self.imm_u8()),
-            0x0F => @panic("unhandled opcode: 0x0F"),
+            0x0F => self.rrca(),
             0x10 => @panic("unhandled opcode: 0x10"),
             0x11 => self.ldU16(Registers.DE, self.imm_u16()),
             0x12 => @panic("unhandled opcode: 0x12"),
             0x13 => self.inc(Registers.DE),
             0x14 => self.inc(Registers.D),
             0x15 => self.dec(Registers.D),
-            0x16 => @panic("unhandled opcode: 0x16"),
-            0x17 => @panic("unhandled opcode: 0x17"),
+            0x16 => self.ldU8(Registers.D, self.imm_u8()),
+            0x17 => self.rla(),
             0x18 => @panic("unhandled opcode: 0x18"),
             0x19 => self.addU16(@bitCast(u16, self.de)),
             0x1A => self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.de)).*),
@@ -110,7 +110,7 @@ pub fn clock(self: *Self) void {
             0x1C => self.inc(Registers.E),
             0x1D => self.dec(Registers.E),
             0x1E => self.ldU8(Registers.E, self.imm_u8()),
-            0x1F => @panic("unhandled opcode: 0x1F"),
+            0x1F => self.rra(),
             0x20 => @panic("unhandled opcode: 0x20"),
             0x21 => self.ldU16(Registers.HL, self.imm_u16()),
             0x22 => {
@@ -285,15 +285,15 @@ pub fn clock(self: *Self) void {
             0xBF => @panic("unhandled opcode: 0xBF"),
             0xC0 => @panic("unhandled opcode: 0xC0"),
             0xC1 => @panic("unhandled opcode: 0xC1"),
-            0xC2 => @panic("unhandled opcode: 0xC2"),
-            0xC3 => @panic("unhandled opcode: 0xC3"),
+            0xC2 => self.jp(self.imm_u16(), .NZ),
+            0xC3 => self.jp(self.imm_u16(), null),
             0xC4 => @panic("unhandled opcode: 0xC4"),
             0xC5 => @panic("unhandled opcode: 0xC5"),
             0xC6 => self.addU8(self.imm_u8()),
             0xC7 => @panic("unhandled opcode: 0xC7"),
             0xC8 => @panic("unhandled opcode: 0xC8"),
             0xC9 => @panic("unhandled opcode: 0xC9"),
-            0xCA => @panic("unhandled opcode: 0xCA"),
+            0xCA => self.jp(self.imm_u16(), .Z),
             0xCB => {
                 const nopcode = self.nextInstruction();
                 switch (nopcode) {
@@ -561,7 +561,7 @@ pub fn clock(self: *Self) void {
             0xCF => @panic("unhandled opcode: 0xCF"),
             0xD0 => @panic("unhandled opcode: 0xD0"),
             0xD1 => @panic("unhandled opcode: 0xD1"),
-            0xD2 => @panic("unhandled opcode: 0xD2"),
+            0xD2 => self.jp(self.imm_u16(), .NC),
             0xD3 => @panic("unhandled opcode: 0xD3"),
             0xD4 => @panic("unhandled opcode: 0xD4"),
             0xD5 => @panic("unhandled opcode: 0xD5"),
@@ -569,7 +569,7 @@ pub fn clock(self: *Self) void {
             0xD7 => @panic("unhandled opcode: 0xD7"),
             0xD8 => @panic("unhandled opcode: 0xD8"),
             0xD9 => @panic("unhandled opcode: 0xD9"),
-            0xDA => @panic("unhandled opcode: 0xDA"),
+            0xDA => self.jp(self.imm_u16(), .C),
             0xDB => @panic("unhandled opcode: 0xDB"),
             0xDC => @panic("unhandled opcode: 0xDC"),
             0xDD => @panic("unhandled opcode: 0xDD"),
@@ -592,7 +592,7 @@ pub fn clock(self: *Self) void {
                 self.halfCarry(@truncate(u8, a), @truncate(u8, b));
                 self.carry(a, b);
             },
-            0xE9 => @panic("unhandled opcode: 0xE9"),
+            0xE9 => self.jp(@bitCast(u16, self.hl), null),
             0xEA => @panic("unhandled opcode: 0xEA"),
             0xEB => @panic("unhandled opcode: 0xEB"),
             0xEC => @panic("unhandled opcode: 0xEC"),
@@ -602,12 +602,12 @@ pub fn clock(self: *Self) void {
             0xF0 => self.ldU8(Registers.A, self.bus.getAddress(0xFF00 + @as(u16, self.imm_u8())).*),
             0xF1 => @panic("unhandled opcode: 0xF1"),
             0xF2 => @panic("unhandled opcode: 0xF2"),
-            0xF3 => @panic("unhandled opcode: 0xF3"),
+            0xF3 => self.di(),
             0xF4 => @panic("unhandled opcode: 0xF4"),
             0xF5 => @panic("unhandled opcode: 0xF5"),
             0xF6 => self.orReg(self.imm_u8()),
             0xF7 => @panic("unhandled opcode: 0xF7"),
-            0xF8 => @panic("unhandled opcode: 0xF8"),
+            0xF8 => self.ei(),
             0xF9 => @panic("unhandled opcode: 0xF9"),
             0xFA => @panic("unhandled opcode: 0xFA"),
             0xFB => @panic("unhandled opcode: 0xFB"),
@@ -616,6 +616,14 @@ pub fn clock(self: *Self) void {
             0xFE => @panic("unhandled opcode: 0xFE"),
             0xFF => @panic("unhandled opcode: 0xFF"),
         }
+
+        self.interrupts_enabled = switch (self.interrupts_enabled) {
+            .UnsetStart => .UnsetPending,
+            .SetStart => .SetPending,
+            .UnsetPending => .Unset,
+            .SetPending => .Set,
+            else => self.interrupts_enabled,
+        };
     }
 }
 
@@ -651,6 +659,10 @@ fn bit(self: *Self, comptime b: u8, comptime field: Registers) void {
     self.af.f.z = ((r.* >> b) & 0x01) == 0;
     self.af.f.n = false;
     self.af.f.h = true;
+}
+
+fn di(self: *Self) void {
+    self.interrupts_enabled = .UnsetStart;
 }
 
 fn dec(self: *Self, comptime field: Utils.Registers) void {
@@ -710,6 +722,10 @@ fn dec(self: *Self, comptime field: Utils.Registers) void {
             self.halfCarry(r +% 1, 1);
         },
     }
+}
+
+fn ei(self: *Self) void {
+    self.interrupts_enabled = .SetStart;
 }
 
 fn halt(self: *Self) void {
@@ -774,6 +790,16 @@ fn inc(self: *Self, comptime field: Utils.Registers) void {
     }
 }
 
+fn jp(self: *Self, addr: u16, opt: ?Utils.Optional) void {
+    if (opt) |o| {
+        if (self.check(o)) {
+            self.pc = addr;
+        }
+    } else {
+        self.pc = addr;
+    }
+}
+
 fn ldU16(self: *Self, comptime field: Utils.Registers, val: u16) void {
     switch (field) {
         .AF => self.af = @bitCast(regu16, val),
@@ -815,8 +841,27 @@ fn rl(self: *Self, comptime field: Registers) void {
     self.af.f.z = reg.* == 0;
 }
 
+fn rla(self: *Self) void {
+    const reg = &self.af.a;
+    const c = @boolToInt(self.af.f.c);
+    self.af.f.c = (reg.* >> 7 == 1);
+    self.af.f.n = false;
+    self.af.f.h = false;
+    reg.* = reg.* << 1 | c;
+    self.af.f.z = reg.* == 0;
+}
+
 fn rlc(self: *Self, comptime field: Registers) void {
     const reg = self.getReg(field);
+    self.af.f.c = (reg.* >> 7 == 1);
+    self.af.f.n = false;
+    self.af.f.h = false;
+    reg.* = std.math.rotl(u8, 1, reg.*);
+    self.af.f.z = reg.* == 0;
+}
+
+fn rlca(self: *Self) void {
+    const reg = &self.af.a;
     self.af.f.c = (reg.* >> 7 == 1);
     self.af.f.n = false;
     self.af.f.h = false;
@@ -834,8 +879,27 @@ fn rr(self: *Self, comptime field: Registers) void {
     self.af.f.z = reg.* == 0;
 }
 
+fn rra(self: *Self) void {
+    const reg = &self.af.a;
+    const c = @boolToInt(self.af.f.c);
+    self.af.f.c = (reg.* & 0x01 == 1);
+    self.af.f.n = false;
+    self.af.f.h = false;
+    reg.* = @as(u8, c) << 7 | reg.* >> 1;
+    self.af.f.z = reg.* == 0;
+}
+
 fn rrc(self: *Self, comptime field: Registers) void {
     const reg = self.getReg(field);
+    self.af.f.c = (reg.* & 0x01 == 1);
+    self.af.f.n = false;
+    self.af.f.h = false;
+    reg.* = std.math.rotr(u8, 1, reg.*);
+    self.af.f.z = reg.* == 0;
+}
+
+fn rrca(self: *Self) void {
+    const reg = &self.af.a;
     self.af.f.c = (reg.* & 0x01 == 1);
     self.af.f.n = false;
     self.af.f.h = false;
@@ -908,6 +972,15 @@ fn carry(self: *Self, a: u16, b: u16) void {
     self.af.f.c = (((a & 0xf0) + (b & 0xf0)) & 0x100) == 0x100;
 }
 
+fn check(self: *Self, opt: Utils.Optional) bool {
+    return switch (opt) {
+        .C => self.af.f.c,
+        .NC => !self.af.f.c,
+        .Z => self.af.f.z,
+        .NZ => !self.af.f.z,
+    };
+}
+
 inline fn getReg(self: *Self, comptime field: Registers) *u8 {
     return switch (field) {
         .A => &self.af.a,
@@ -930,7 +1003,7 @@ test "cpu registers" {
     var bus = Bus.init(undefined);
     var ppu = Ppu.init();
     var cpu = Self.init(&bus, &ppu);
-    cpu.af.f.z = 1;
+    cpu.af.f.z = true;
 
     const val: u8 = 0b10000000;
     try testing.expectEqual(val, @bitCast(u8, cpu.af.f));

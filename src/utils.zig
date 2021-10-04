@@ -7,3 +7,5 @@ pub fn debugAddr(comptime header: []const u8, args: anytype) void {
 }
 
 pub const Registers = enum { AF, BC, DE, HL, A, F, B, C, D, E, H, L, SP, PC, PHL, PBC, PDE };
+
+pub const Optional = enum { C, NC, Z, NZ };
