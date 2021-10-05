@@ -16,7 +16,8 @@ pub fn main() void {
         blargg;
 
     std.log.info("{s}", .{path});
-    var cart = Cartridge.init(path) catch unreachable;
+    var cart = Cartridge.init(path, arena.child_allocator) catch unreachable;
+    defer cart.deinit();
     var bus = Bus.init(&cart);
     var ppu = Ppu.init();
     var cpu = Cpu.init(&bus, &ppu);
