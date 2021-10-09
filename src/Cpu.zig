@@ -802,10 +802,10 @@ fn jp(self: *Self, addr: u16, comptime opt: ?Optional) void {
 }
 
 fn jr(self: *Self, comptime opt: ?Optional) void {
-    const addr = @bitCast(u16, @bitCast(i16, self.pc) +% @intCast(i16, self.imm_u8()));
     if (opt) |o| if (self.check(o))
         return;
 
+    const addr = @bitCast(u16, @bitCast(i16, self.pc) +% @intCast(i16, self.imm_u8()));
     self.pc = addr;
 }
 

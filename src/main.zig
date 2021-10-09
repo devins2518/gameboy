@@ -4,11 +4,12 @@ const Bus = @import("Bus.zig");
 const Ppu = @import("Ppu.zig");
 const Cartridge = @import("Cartridge.zig");
 const SDL = @import("sdl2");
+const sdl_native = SDL.c;
 
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 const blargg = getPath();
 
-pub fn main() void {
+pub fn main() !void {
     var args = std.process.args();
     _ = args.skip();
     const path = if (args.next(arena.child_allocator)) |file|
@@ -36,42 +37,49 @@ pub fn main() void {
         }
     }{ .bus = bus, .ppu = ppu, .cpu = cpu };
 
-    if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO | SDL.SDL_INIT_EVENTS | SDL.SDL_INIT_AUDIO) < 0)
-        sdlPanic();
-    defer SDL.SDL_Quit();
+    try SDL.init(.{
+        .video = true,
+        .events = true,
+        .audio = true,
+    });
+    defer SDL.quit();
 
-    var window = SDL.SDL_CreateWindow(
-        "ziggyboy",
-        SDL.SDL_WINDOWPOS_CENTERED,
-        SDL.SDL_WINDOWPOS_CENTERED,
+    var window = try SDL.createWindow(
+        "Ziggyboy",
+        .{ .centered = {} },
+        .{ .centered = {} },
         640,
         480,
-        SDL.SDL_WINDOW_SHOWN,
-    ) orelse sdlPanic();
-    defer _ = SDL.SDL_DestroyWindow(window);
+        .{ .shown = true },
+    );
+    defer window.destroy();
 
-    var renderer = SDL.SDL_CreateRenderer(window, -1, SDL.SDL_RENDERER_ACCELERATED) orelse sdlPanic();
-    defer _ = SDL.SDL_DestroyRenderer(renderer);
+    var renderer = try SDL.createRenderer(window, null, .{ .accelerated = true });
+    defer renderer.destroy();
 
     mainLoop: while (true) {
-        var ev: SDL.SDL_Event = undefined;
-        while (SDL.SDL_PollEvent(&ev) != 0) {
-            if ((ev.type == SDL.SDL_QUIT) or (ev.key.keysym.scancode == SDL.SDL_SCANCODE_ESCAPE))
-                break :mainLoop;
-            if (ev.key.keysym.scancode == SDL.SDL_SCANCODE_A)
-                state.auto = true;
-            if (ev.key.keysym.scancode == SDL.SDL_SCANCODE_G)
-                state.step();
+        while (SDL.pollEvent()) |ev| {
+            switch (ev) {
+                .quit => break :mainLoop,
+                .key_down => {
+                    switch (ev.key_down.keysym.scancode) {
+                        sdl_native.SDL_SCANCODE_A => state.auto = true,
+                        sdl_native.SDL_SCANCODE_G => state.step(),
+                        else => {},
+                    }
+                },
+                else => {},
+            }
         }
 
-        _ = SDL.SDL_SetRenderDrawColor(renderer, 0xF7, 0xA4, 0x1D, 0xFF);
-        _ = SDL.SDL_RenderClear(renderer);
+        try renderer.setColorRGB(0xF7, 0xA4, 0x1D);
+        try renderer.clear();
 
         // if self.auto && frame_delta > clock_interval {
         if (state.auto)
             state.step();
 
-        SDL.SDL_RenderPresent(renderer);
+        renderer.present();
     }
 
     arena.deinit();

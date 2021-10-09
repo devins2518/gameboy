@@ -12,7 +12,7 @@ pub fn build(b: *std.build.Builder) void {
     exe.setTarget(target);
     exe.setBuildMode(mode);
     sdk.link(exe, .static);
-    exe.addPackage(sdk.getNativePackage("sdl2"));
+    exe.addPackage(sdk.getWrapperPackage("sdl2"));
     exe.install();
 
     const run_cmd = exe.run();
