@@ -32,7 +32,7 @@ pub fn main() !void {
         cpu: Cpu,
 
         fn step(self: *@This()) void {
-            nosuspend self.cpu.clock();
+            self.cpu.clock();
             self.clocks += 1;
         }
     }{ .bus = bus, .ppu = ppu, .cpu = cpu };
