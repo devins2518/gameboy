@@ -1,11 +1,15 @@
 const std = @import("std");
 const debug = @import("utils.zig").debugAddr;
-const Self = @This();
 const utils = @import("utils.zig");
+const File = std.fs.File;
+const WriteError = std.os.WriteError;
+const Bufw = std.io.BufferedWriter(4096, std.io.Writer(File, WriteError, File.write));
 const Registers = utils.Registers;
 const Optional = utils.Optional;
+const Argument = utils.Argument;
 const Bus = @import("Bus.zig");
 const Ppu = @import("Ppu.zig");
+const Self = @This();
 
 const regu16 = packed struct {
     a: u8 = 0x00,
@@ -43,10 +47,13 @@ interrupts_enabled: enum { Set, SetPending, SetStart, UnsetStart, UnsetPending, 
 
 halted: bool = false,
 
-pub fn init(bus: *Bus, ppu: *Ppu) Self {
+_writer: *Bufw,
+
+pub fn init(bus: *Bus, ppu: *Ppu, _w: *Bufw) Self {
     return .{
         .bus = bus,
         .ppu = ppu,
+        ._writer = _w,
     };
 }
 
@@ -66,18 +73,115 @@ fn immU16(self: *Self) u16 {
     return @bitCast(u16, [2]u8{ b2, b1 });
 }
 
-pub fn clock(self: *Self) void {
+pub fn clock(self: *Self) !void {
     const opcode = self.nextInstruction();
 
     debug("Matching opcode:", .{opcode});
     switch (opcode) {
         0x00 => self.noop(),
-        0x01 => self.ldU16(Registers.BC, self.immU16()),
-        0x02 => self.ldU8(Registers.PBC, self.af.a),
+        0x0A => self.ldU8(Registers.A, Argument.pbc),
+        0x1A => self.ldU8(Registers.A, Argument.pde),
+        0x2A => self.ldU8(Registers.A, Argument.phlp),
+        0x3A => self.ldU8(Registers.A, Argument.phlm),
+        0x3E => self.ldU8(Registers.A, Argument.immU8),
+        0x78 => self.ldU8(Registers.A, Argument.b),
+        0x79 => self.ldU8(Registers.A, Argument.c),
+        0x7A => self.ldU8(Registers.A, Argument.d),
+        0x7B => self.ldU8(Registers.A, Argument.e),
+        0x7C => self.ldU8(Registers.A, Argument.h),
+        0x7D => self.ldU8(Registers.A, Argument.l),
+        0x7E => self.ldU8(Registers.A, Argument.phl),
+        0x7F => self.ldU8(Registers.A, Argument.a),
+        0xF0 => self.ldU8(Registers.A, Argument{ .p = 0xFF00 + @as(u16, self.immU8()) }),
+        0x06 => self.ldU8(Registers.B, Argument.immU8),
+        0x40 => self.ldU8(Registers.B, Argument.b),
+        0x41 => self.ldU8(Registers.B, Argument.c),
+        0x42 => self.ldU8(Registers.B, Argument.d),
+        0x43 => self.ldU8(Registers.B, Argument.e),
+        0x44 => self.ldU8(Registers.B, Argument.h),
+        0x45 => self.ldU8(Registers.B, Argument.l),
+        0x46 => self.ldU8(Registers.B, Argument.phl),
+        0x47 => self.ldU8(Registers.B, Argument.a),
+        0x0E => self.ldU8(Registers.C, Argument.immU8),
+        0x48 => self.ldU8(Registers.C, Argument.b),
+        0x49 => self.ldU8(Registers.C, Argument.c),
+        0x4A => self.ldU8(Registers.C, Argument.d),
+        0x4B => self.ldU8(Registers.C, Argument.e),
+        0x4C => self.ldU8(Registers.C, Argument.h),
+        0x4D => self.ldU8(Registers.C, Argument.l),
+        0x4E => self.ldU8(Registers.C, Argument.phl),
+        0x4F => self.ldU8(Registers.C, Argument.a),
+        0x16 => self.ldU8(Registers.D, Argument.immU8),
+        0x50 => self.ldU8(Registers.D, Argument.b),
+        0x51 => self.ldU8(Registers.D, Argument.c),
+        0x52 => self.ldU8(Registers.D, Argument.d),
+        0x53 => self.ldU8(Registers.D, Argument.e),
+        0x54 => self.ldU8(Registers.D, Argument.h),
+        0x55 => self.ldU8(Registers.D, Argument.l),
+        0x56 => self.ldU8(Registers.D, Argument.phl),
+        0x57 => self.ldU8(Registers.D, Argument.a),
+        0x1E => self.ldU8(Registers.E, Argument.immU8),
+        0x58 => self.ldU8(Registers.E, Argument.b),
+        0x59 => self.ldU8(Registers.E, Argument.c),
+        0x5A => self.ldU8(Registers.E, Argument.d),
+        0x5B => self.ldU8(Registers.E, Argument.e),
+        0x5C => self.ldU8(Registers.E, Argument.h),
+        0x5D => self.ldU8(Registers.E, Argument.l),
+        0x5E => self.ldU8(Registers.E, Argument.phl),
+        0x5F => self.ldU8(Registers.E, Argument.a),
+        0x26 => self.ldU8(Registers.H, Argument.immU8),
+        0x60 => self.ldU8(Registers.H, Argument.b),
+        0x61 => self.ldU8(Registers.H, Argument.c),
+        0x62 => self.ldU8(Registers.H, Argument.d),
+        0x63 => self.ldU8(Registers.H, Argument.e),
+        0x64 => self.ldU8(Registers.H, Argument.h),
+        0x65 => self.ldU8(Registers.H, Argument.l),
+        0x66 => self.ldU8(Registers.H, Argument.phl),
+        0x67 => self.ldU8(Registers.H, Argument.a),
+        0x2E => self.ldU8(Registers.L, Argument.immU8),
+        0x68 => self.ldU8(Registers.L, Argument.b),
+        0x69 => self.ldU8(Registers.L, Argument.c),
+        0x6A => self.ldU8(Registers.L, Argument.d),
+        0x6B => self.ldU8(Registers.L, Argument.e),
+        0x6C => self.ldU8(Registers.L, Argument.h),
+        0x6D => self.ldU8(Registers.L, Argument.l),
+        0x6E => self.ldU8(Registers.L, Argument.phl),
+        0x6F => self.ldU8(Registers.L, Argument.a),
+        0x02 => self.ldU8(Registers.PBC, Argument.a),
+        0x12 => self.ldU8(Registers.PDE, Argument.a),
+        0x70 => self.ldU8(Registers.PHL, Argument.b),
+        0x71 => self.ldU8(Registers.PHL, Argument.c),
+        0x72 => self.ldU8(Registers.PHL, Argument.d),
+        0x73 => self.ldU8(Registers.PHL, Argument.e),
+        0x74 => self.ldU8(Registers.PHL, Argument.h),
+        0x75 => self.ldU8(Registers.PHL, Argument.l),
+        0x77 => self.ldU8(Registers.PHL, Argument.a),
+        0x22 => {
+            self.ldU8(Registers.PHL, Argument.a);
+            self.hl.add(1);
+        },
+        0x32 => {
+            self.ldU8(Registers.PHL, Argument.a);
+            self.hl.sub(1);
+        },
+        0x01 => self.ldU16(Registers.BC, Argument.immU16),
+        0x11 => self.ldU16(Registers.DE, Argument.immU16),
+        0x21 => self.ldU16(Registers.HL, Argument.immU16),
+        0x31 => self.ldU16(Registers.SP, Argument.immU16),
+        0xE0 => self.bus.getAddress(0xFF00 + @as(u16, self.immU8())).* = self.af.a,
         0x03 => self.inc(Registers.BC),
         0x04 => self.inc(Registers.B),
+        0x0C => self.inc(Registers.C),
+        0x13 => self.inc(Registers.DE),
+        0x14 => self.inc(Registers.D),
+        0x1C => self.inc(Registers.E),
+        0x23 => self.inc(Registers.HL),
+        0x24 => self.inc(Registers.H),
+        0x2C => self.inc(Registers.L),
+        0x33 => self.inc(Registers.SP),
+        0x34 => self.inc(Registers.PHL),
+        0x3C => self.inc(Registers.A),
         0x05 => self.dec(Registers.B),
-        0x06 => self.ldU8(Registers.B, self.immU8()),
         0x07 => self.rlca(),
         0x08 => {
             const val = self.immU16();
@@ -85,136 +189,35 @@ pub fn clock(self: *Self) void {
             self.bus.getAddress(val + 1).* = @truncate(u8, self.sp);
         },
         0x09 => self.addU16(@bitCast(u16, self.bc)),
-        0x0A => self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.bc)).*),
         0x0B => self.dec(Registers.BC),
-        0x0C => self.inc(Registers.C),
         0x0D => self.dec(Registers.C),
-        0x0E => self.ldU8(Registers.C, self.immU8()),
         0x0F => self.rrca(),
         0x10 => @panic("unhandled opcode: 0x10"),
-        0x11 => self.ldU16(Registers.DE, self.immU16()),
-        0x12 => self.ldU8(Registers.PDE, self.af.a),
-        0x13 => self.inc(Registers.DE),
-        0x14 => self.inc(Registers.D),
         0x15 => self.dec(Registers.D),
-        0x16 => self.ldU8(Registers.D, self.immU8()),
         0x17 => self.rla(),
         0x18 => self.jr(null),
         0x19 => self.addU16(@bitCast(u16, self.de)),
-        0x1A => self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.de)).*),
         0x1B => self.dec(Registers.DE),
-        0x1C => self.inc(Registers.E),
         0x1D => self.dec(Registers.E),
-        0x1E => self.ldU8(Registers.E, self.immU8()),
         0x1F => self.rra(),
         0x20 => self.jr(.NZ),
-        0x21 => self.ldU16(Registers.HL, self.immU16()),
-        0x22 => {
-            self.ldU8(Registers.PHL, self.af.a);
-            self.hl.add(1);
-        },
-        0x23 => self.inc(Registers.HL),
-        0x24 => self.inc(Registers.H),
         0x25 => self.dec(Registers.H),
-        0x26 => self.ldU8(Registers.H, self.immU8()),
         0x27 => @panic("unhandled opcode: 0x27"),
         0x28 => self.jr(.Z),
         0x29 => self.addU16(@bitCast(u16, self.hl)),
-        0x2A => {
-            self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.hl)).*);
-            self.hl.add(1);
-        },
         0x2B => self.dec(Registers.HL),
-        0x2C => self.inc(Registers.L),
         0x2D => self.dec(Registers.L),
-        0x2E => self.ldU8(Registers.L, self.immU8()),
         0x2F => @panic("unhandled opcode: 0x2F"),
         0x30 => self.jr(.NC),
-        0x31 => self.ldU16(Registers.SP, self.immU16()),
-        0x32 => {
-            self.ldU8(Registers.PHL, self.af.a);
-            self.hl.sub(1);
-        },
-        0x33 => self.inc(Registers.SP),
-        0x34 => self.inc(Registers.PHL),
         0x35 => self.dec(Registers.PHL),
         0x36 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.immU8(),
         0x37 => @panic("unhandled opcode: 0x37"),
         0x38 => self.jr(.C),
         0x39 => self.addU16(self.sp),
-        0x3A => {
-            self.ldU8(Registers.A, self.bus.getAddress(@bitCast(u16, self.hl)).*);
-            self.hl.sub(1);
-        },
         0x3B => self.dec(Registers.SP),
-        0x3C => self.inc(Registers.A),
         0x3D => self.dec(Registers.A),
-        0x3E => self.ldU8(Registers.A, self.immU8()),
         0x3F => @panic("unhandled opcode: 0x3F"),
-        0x40 => self.ldU8(Registers.B, self.bc.a),
-        0x41 => self.ldU8(Registers.B, self.bc.b),
-        0x42 => self.ldU8(Registers.B, self.de.a),
-        0x43 => self.ldU8(Registers.B, self.de.b),
-        0x44 => self.ldU8(Registers.B, self.hl.a),
-        0x45 => self.ldU8(Registers.B, self.hl.b),
-        0x46 => self.ldU8(Registers.B, self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0x47 => self.ldU8(Registers.B, self.af.a),
-        0x48 => self.ldU8(Registers.C, self.bc.a),
-        0x49 => self.ldU8(Registers.C, self.bc.b),
-        0x4A => self.ldU8(Registers.C, self.de.a),
-        0x4B => self.ldU8(Registers.C, self.de.b),
-        0x4C => self.ldU8(Registers.C, self.hl.a),
-        0x4D => self.ldU8(Registers.C, self.hl.b),
-        0x4E => self.ldU8(Registers.C, self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0x4F => self.ldU8(Registers.C, self.af.a),
-        0x50 => self.ldU8(Registers.D, self.bc.a),
-        0x51 => self.ldU8(Registers.D, self.bc.b),
-        0x52 => self.ldU8(Registers.D, self.de.a),
-        0x53 => self.ldU8(Registers.D, self.de.b),
-        0x54 => self.ldU8(Registers.D, self.hl.a),
-        0x55 => self.ldU8(Registers.D, self.hl.b),
-        0x56 => self.ldU8(Registers.D, self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0x57 => self.ldU8(Registers.D, self.af.a),
-        0x58 => self.ldU8(Registers.E, self.bc.a),
-        0x59 => self.ldU8(Registers.E, self.bc.b),
-        0x5A => self.ldU8(Registers.E, self.de.a),
-        0x5B => self.ldU8(Registers.E, self.de.b),
-        0x5C => self.ldU8(Registers.E, self.hl.a),
-        0x5D => self.ldU8(Registers.E, self.hl.b),
-        0x5E => self.ldU8(Registers.E, self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0x5F => self.ldU8(Registers.E, self.af.a),
-        0x60 => self.ldU8(Registers.H, self.bc.a),
-        0x61 => self.ldU8(Registers.H, self.bc.b),
-        0x62 => self.ldU8(Registers.H, self.de.a),
-        0x63 => self.ldU8(Registers.H, self.de.b),
-        0x64 => self.ldU8(Registers.H, self.hl.a),
-        0x65 => self.ldU8(Registers.H, self.hl.b),
-        0x66 => self.ldU8(Registers.H, self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0x67 => self.ldU8(Registers.H, self.af.a),
-        0x68 => self.ldU8(Registers.L, self.bc.a),
-        0x69 => self.ldU8(Registers.L, self.bc.b),
-        0x6A => self.ldU8(Registers.L, self.de.a),
-        0x6B => self.ldU8(Registers.L, self.de.b),
-        0x6C => self.ldU8(Registers.L, self.hl.a),
-        0x6D => self.ldU8(Registers.L, self.hl.b),
-        0x6E => self.ldU8(Registers.L, self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0x6F => self.ldU8(Registers.L, self.af.a),
-        0x70 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.bc.a,
-        0x71 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.bc.b,
-        0x72 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.de.a,
-        0x73 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.de.b,
-        0x74 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.hl.a,
-        0x75 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.hl.b,
         0x76 => self.halt(),
-        0x77 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.af.a,
-        0x78 => self.ldU8(Registers.L, self.bc.a),
-        0x79 => self.ldU8(Registers.L, self.bc.b),
-        0x7A => self.ldU8(Registers.L, self.de.a),
-        0x7B => self.ldU8(Registers.L, self.de.b),
-        0x7C => self.ldU8(Registers.L, self.hl.a),
-        0x7D => self.ldU8(Registers.L, self.hl.b),
-        0x7E => self.ldU8(Registers.L, self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0x7F => self.ldU8(Registers.L, self.af.a),
         0x80 => self.addU8(self.bc.a),
         0x81 => self.addU8(self.bc.b),
         0x82 => self.addU8(self.de.a),
@@ -568,7 +571,6 @@ pub fn clock(self: *Self) void {
         0xDC => self.call(.C),
         0xDE => @panic("unhandled opcode: 0xDE"),
         0xDF => @panic("unhandled opcode: 0xDF"),
-        0xE0 => self.bus.getAddress(0xFF00 + @as(u16, self.immU8())).* = self.af.a,
         0xE1 => @panic("unhandled opcode: 0xE1"),
         0xE2 => self.bus.getAddress(0xFF00 + @as(u16, self.bc.b)).* = self.af.a,
         0xE5 => @panic("unhandled opcode: 0xE5"),
@@ -587,7 +589,6 @@ pub fn clock(self: *Self) void {
         0xEA => @panic("unhandled opcode: 0xEA"),
         0xEE => self.xor(self.immU8()),
         0xEF => @panic("unhandled opcode: 0xEF"),
-        0xF0 => self.ldU8(Registers.A, self.bus.getAddress(0xFF00 + @as(u16, self.immU8())).*),
         0xF1 => @panic("unhandled opcode: 0xF1"),
         0xF2 => @panic("unhandled opcode: 0xF2"),
         0xF3 => self.di(),
@@ -610,6 +611,9 @@ pub fn clock(self: *Self) void {
         .SetPending => .Set,
         else => self.interrupts_enabled,
     };
+
+    self.write("\n");
+    self.flush();
 }
 
 fn addU8(self: *Self, val: u8) void {
@@ -640,7 +644,7 @@ fn addU16(self: *Self, val: u16) void {
 }
 
 fn bit(self: *Self, comptime b: u8, comptime field: Registers) void {
-    const r = self.getReg(field);
+    const r = self.getRegU8(field);
     self.af.f.z = ((r.* >> b) & 0x01) == 0;
     self.af.f.n = false;
     self.af.f.h = true;
@@ -803,7 +807,10 @@ fn jr(self: *Self, comptime opt: ?Optional) void {
     self.pc = addr;
 }
 
-fn ldU16(self: *Self, comptime field: Registers, val: u16) void {
+fn ldU16(self: *Self, comptime field: Registers, arg: Argument) void {
+    self.write("LD ");
+    self.printRegU16(field);
+    const val = self.getArgU16(arg);
     switch (field) {
         .AF => self.af = @bitCast(regu16, val),
         .BC => self.bc = @bitCast(regu16, val),
@@ -815,8 +822,9 @@ fn ldU16(self: *Self, comptime field: Registers, val: u16) void {
     }
 }
 
-fn ldU8(self: *Self, comptime field: Registers, val: u8) void {
-    self.getReg(field).* = val;
+fn ldU8(self: *Self, comptime field: Registers, arg: Argument) void {
+    self.write("LD ");
+    self.getRegU8(field).* = self.getArgU8(arg);
 }
 
 fn noop(_: *Self) void {}
@@ -830,12 +838,12 @@ fn orReg(self: *Self, val: u8) void {
 }
 
 fn res(self: *Self, comptime b: u8, comptime field: Registers) void {
-    const r = self.getReg(field);
+    const r = self.getRegU8(field);
     r.* |= ~@intCast(u8, 1 << b);
 }
 
 fn rl(self: *Self, comptime field: Registers) void {
-    const reg = self.getReg(field);
+    const reg = self.getRegU8(field);
     const c = @boolToInt(self.af.f.c);
     self.af.f.c = (reg.* >> 7 == 1);
     self.af.f.n = false;
@@ -855,7 +863,7 @@ fn rla(self: *Self) void {
 }
 
 fn rlc(self: *Self, comptime field: Registers) void {
-    const reg = self.getReg(field);
+    const reg = self.getRegU8(field);
     self.af.f.c = (reg.* >> 7 == 1);
     self.af.f.n = false;
     self.af.f.h = false;
@@ -873,7 +881,7 @@ fn rlca(self: *Self) void {
 }
 
 fn rr(self: *Self, comptime field: Registers) void {
-    const reg = self.getReg(field);
+    const reg = self.getRegU8(field);
     const c = @boolToInt(self.af.f.c);
     self.af.f.c = (reg.* & 0x01 == 1);
     self.af.f.n = false;
@@ -893,7 +901,7 @@ fn rra(self: *Self) void {
 }
 
 fn rrc(self: *Self, comptime field: Registers) void {
-    const reg = self.getReg(field);
+    const reg = self.getRegU8(field);
     self.af.f.c = (reg.* & 0x01 == 1);
     self.af.f.n = false;
     self.af.f.h = false;
@@ -911,11 +919,11 @@ fn rrca(self: *Self) void {
 }
 
 fn set(self: *Self, comptime b: u8, comptime field: Registers) void {
-    self.getReg(field).* |= (1 << b);
+    self.getRegU8(field).* |= (1 << b);
 }
 
 fn sla(self: *Self, comptime field: Registers) void {
-    const r = self.getReg(field);
+    const r = self.getRegU8(field);
     self.af.f.c = (r.* >> 7) == 1;
     self.af.f.n = false;
     self.af.f.h = false;
@@ -924,7 +932,7 @@ fn sla(self: *Self, comptime field: Registers) void {
 }
 
 fn sra(self: *Self, comptime field: Registers) void {
-    const r = self.getReg(field);
+    const r = self.getRegU8(field);
     self.af.f.c = (r.* & 0x01) == 1;
     self.af.f.n = false;
     self.af.f.h = false;
@@ -933,7 +941,7 @@ fn sra(self: *Self, comptime field: Registers) void {
 }
 
 fn srl(self: *Self, comptime field: Registers) void {
-    const r = self.getReg(field);
+    const r = self.getRegU8(field);
     self.af.f.c = (r.* & 0x01) == 1;
     self.af.f.n = false;
     self.af.f.h = false;
@@ -951,7 +959,7 @@ fn sub(self: *Self, val: u8) void {
 }
 
 fn swap(self: *Self, comptime field: Registers) void {
-    const r = self.getReg(field);
+    const r = self.getRegU8(field);
     r.* = (r.* & 0x0F) << 4 | (r.* & 0xF0) >> 4;
     self.af.f.c = false;
     self.af.f.n = false;
@@ -984,28 +992,189 @@ fn check(self: *Self, comptime opt: Optional) bool {
     };
 }
 
-inline fn getReg(self: *Self, comptime field: Registers) *u8 {
-    return switch (field) {
-        .A => &self.af.a,
-        .B => &self.bc.a,
-        .C => &self.bc.b,
-        .D => &self.de.a,
-        .E => &self.de.b,
-        .H => &self.hl.a,
-        .L => &self.hl.b,
-        .PHL => self.bus.getAddress(@bitCast(u16, self.hl)),
-        .PBC => self.bus.getAddress(@bitCast(u16, self.bc)),
-        .PDE => self.bus.getAddress(@bitCast(u16, self.de)),
+inline fn printRegU16(self: *Self, comptime field: Registers) void {
+    switch (field) {
+        .AF => self.write("AF, "),
+        .BC => self.write("BC, "),
+        .DE => self.write("DE, "),
+        .HL => self.write("HL, "),
+        .SP => self.write("SP, "),
+        .PC => self.write("PC, "),
         else => @compileError("Invalid reg"),
+    }
+}
+
+inline fn getRegU8(self: *Self, comptime field: Registers) *u8 {
+    return blk: {
+        switch (field) {
+            .A => {
+                self.write("A, ");
+                break :blk &self.af.a;
+            },
+            .B => {
+                self.write("B, ");
+                break :blk &self.bc.a;
+            },
+            .C => {
+                self.write("C, ");
+                break :blk &self.bc.b;
+            },
+            .D => {
+                self.write("D, ");
+                break :blk &self.de.a;
+            },
+            .E => {
+                self.write("E, ");
+                break :blk &self.de.b;
+            },
+            .H => {
+                self.write("H, ");
+                break :blk &self.hl.a;
+            },
+            .L => {
+                self.write("L, ");
+                break :blk &self.hl.b;
+            },
+            .PBC => {
+                self.write("(BC), ");
+                break :blk self.bus.getAddress(@bitCast(u16, self.bc));
+            },
+            .PDE => {
+                self.write("(DE), ");
+                break :blk self.bus.getAddress(@bitCast(u16, self.de));
+            },
+            .PHL => {
+                self.write("(HL), ");
+                break :blk self.bus.getAddress(@bitCast(u16, self.hl));
+            },
+            else => @compileError("Invalid reg"),
+        }
     };
+}
+
+inline fn getArgU8(self: *Self, arg: Argument) u8 {
+    return blk: {
+        switch (arg) {
+            .a => {
+                self.write("A");
+                break :blk self.af.a;
+            },
+            .b => {
+                self.write("B");
+                break :blk self.bc.a;
+            },
+            .c => {
+                self.write("C");
+                break :blk self.bc.b;
+            },
+            .d => {
+                self.write("D");
+                break :blk self.de.a;
+            },
+            .e => {
+                self.write("E");
+                break :blk self.de.b;
+            },
+            .h => {
+                self.write("H");
+                break :blk self.hl.a;
+            },
+            .l => {
+                self.write("L");
+                break :blk self.hl.b;
+            },
+            .phl => {
+                self.write("(HL)");
+                break :blk self.bus.getAddress(@bitCast(u16, self.hl)).*;
+            },
+            .pbc => {
+                self.write("(BC)");
+                break :blk self.bus.getAddress(@bitCast(u16, self.bc)).*;
+            },
+            .pde => {
+                self.write("(DE)");
+                break :blk self.bus.getAddress(@bitCast(u16, self.de)).*;
+            },
+            .phlp => {
+                self.write("(HL+)");
+                self.hl.add(1);
+                break :blk self.bus.getAddress(@bitCast(u16, self.hl) -% 1).*;
+            },
+            .phlm => {
+                self.write("(HL-)");
+                self.hl.sub(1);
+                break :blk self.bus.getAddress(@bitCast(u16, self.hl) +% 1).*;
+            },
+            .p => |p| {
+                self.writeWithArg("0x{x:0>2}", .{p});
+                break :blk self.bus.getAddress(p).*;
+            },
+            .immU8 => {
+                const b = self.immU8();
+                self.writeWithArg("0x{x:0>2}", .{b});
+                break :blk b;
+            },
+            .valU8 => |v| {
+                self.writeWithArg("0x{x:0>2}", .{v});
+                break :blk v;
+            },
+            else => unreachable,
+        }
+    };
+}
+
+inline fn getArgU16(self: *Self, arg: Argument) u16 {
+    return blk: {
+        switch (arg) {
+            .af => {
+                self.write("AF");
+                break :blk @bitCast(u16, self.af);
+            },
+            .bc => {
+                self.write("BC");
+                break :blk @bitCast(u16, self.bc);
+            },
+            .de => {
+                self.write("CD");
+                break :blk @bitCast(u16, self.de);
+            },
+            .hl => {
+                self.write("DE");
+                break :blk @bitCast(u16, self.hl);
+            },
+            .immU16 => {
+                const b = self.immU16();
+                self.writeWithArg("0x{x:0>4}", .{b});
+                break :blk b;
+            },
+            .valU16 => |v| {
+                self.writeWithArg("0x{x:0>4}", .{v});
+                break :blk v;
+            },
+            else => unreachable,
+        }
+    };
+}
+
+fn write(self: *Self, comptime msg: []const u8) void {
+    _ = self._writer.write(msg) catch {};
+}
+
+fn writeWithArg(self: *Self, comptime format: []const u8, args: anytype) void {
+    std.fmt.format(self._writer.unbuffered_writer, format, args) catch {};
+}
+
+fn flush(self: *Self) void {
+    self._writer.flush() catch std.debug.print("Failed to flush self._writer", .{});
 }
 
 test "cpu registers" {
     const testing = std.testing;
+    var writer = std.io.bufferedWriter(std.io.getStdOut().writer());
 
     var bus = Bus.init(undefined);
     var ppu = Ppu.init();
-    var cpu = Self.init(&bus, &ppu);
+    var cpu = Self.init(&bus, &ppu, &writer);
     cpu.af.f.z = true;
 
     const val: u8 = 0b10000000;

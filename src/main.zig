@@ -1,13 +1,16 @@
 const std = @import("std");
-const Cpu = @import("Cpu.zig");
+const io = std.io;
+const bufw = io.bufferedWriter;
 const Bus = @import("Bus.zig");
-const Ppu = @import("Ppu.zig");
 const Cartridge = @import("Cartridge.zig");
+const Cpu = @import("Cpu.zig");
+const Ppu = @import("Ppu.zig");
 const SDL = @import("sdl2");
 const sdl_native = SDL.c;
 
 var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 const blargg = getPath();
+var writer = bufw(io.getStdOut().writer());
 
 pub fn main() !void {
     var args = std.process.args();
@@ -22,7 +25,7 @@ pub fn main() !void {
     defer cart.deinit();
     var bus = Bus.init(&cart);
     var ppu = Ppu.init();
-    var cpu = Cpu.init(&bus, &ppu);
+    var cpu = Cpu.init(&bus, &ppu, &writer);
 
     var state = struct {
         auto: bool = false,
@@ -32,7 +35,7 @@ pub fn main() !void {
         cpu: Cpu,
 
         fn step(self: *@This()) void {
-            self.cpu.clock();
+            self.cpu.clock() catch {};
             self.clocks += 1;
         }
     }{ .bus = bus, .ppu = ppu, .cpu = cpu };
@@ -92,11 +95,6 @@ pub fn getPath() []const u8 {
 
         return dn(dn(root).?).? ++ "/roms/blargg/cpu_instrs/cpu_instrs.gb";
     }
-}
-
-fn sdlPanic() noreturn {
-    const str = @as(?[*:0]const u8, SDL.SDL_GetError()) orelse "unknown error";
-    @panic(std.mem.sliceTo(str, 0));
 }
 
 test {

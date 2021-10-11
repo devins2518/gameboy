@@ -26,6 +26,8 @@ pub fn build(b: *std.build.Builder) void {
 
     const tests = b.addTest("src/main.zig");
     tests.setBuildMode(mode);
+    sdk.link(tests, .static);
+    tests.addPackage(sdk.getWrapperPackage("sdl2"));
 
     const test_step = b.step("test", "Run all the tests");
     test_step.dependOn(&tests.step);
