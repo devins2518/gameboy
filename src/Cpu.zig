@@ -12,8 +12,8 @@ const Ppu = @import("Ppu.zig");
 const Self = @This();
 
 const regu16 = packed struct {
-    a: u8 = 0x00,
-    b: u8 = 0x00,
+    a: u8 align(@alignOf(u16)) = 0x00,
+    b: u8 align(@alignOf(u16)) = 0x00,
 
     fn add(self: *regu16, rhs: u16) void {
         self.* = @bitCast(regu16, @bitCast(u16, self.*) +% rhs);
@@ -70,7 +70,7 @@ fn immU8(self: *Self) u8 {
 fn immU16(self: *Self) u16 {
     const b1 = self.nextInstruction();
     const b2 = self.nextInstruction();
-    return @bitCast(u16, [2]u8{ b2, b1 });
+    return @bitCast(u16, [2]u8{ b1, b2 });
 }
 
 pub fn clock(self: *Self) !void {
@@ -218,14 +218,14 @@ pub fn clock(self: *Self) !void {
         0x3D => self.dec(Registers.A),
         0x3F => @panic("unhandled opcode: 0x3F"),
         0x76 => self.halt(),
-        0x80 => self.addU8(self.bc.a),
-        0x81 => self.addU8(self.bc.b),
-        0x82 => self.addU8(self.de.a),
-        0x83 => self.addU8(self.de.b),
-        0x84 => self.addU8(self.hl.a),
-        0x85 => self.addU8(self.hl.b),
-        0x86 => self.addU8(self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0x87 => self.addU8(self.af.a),
+        0x80 => self.addU8(Argument.b),
+        0x81 => self.addU8(Argument.c),
+        0x82 => self.addU8(Argument.d),
+        0x83 => self.addU8(Argument.e),
+        0x84 => self.addU8(Argument.h),
+        0x85 => self.addU8(Argument.l),
+        0x86 => self.addU8(Argument.phl),
+        0x87 => self.addU8(Argument.a),
         0x88 => @panic("unhandled opcode: 0x88"),
         0x89 => @panic("unhandled opcode: 0x89"),
         0x8A => @panic("unhandled opcode: 0x8A"),
@@ -258,14 +258,14 @@ pub fn clock(self: *Self) !void {
         0xA5 => self.andReg(self.hl.b),
         0xA6 => self.andReg(self.bus.getAddress(@bitCast(u16, self.hl)).*),
         0xA7 => self.andReg(self.af.a),
-        0xA8 => self.xor(self.bc.a),
-        0xA9 => self.xor(self.bc.b),
-        0xAA => self.xor(self.de.a),
-        0xAB => self.xor(self.de.b),
-        0xAC => self.xor(self.hl.a),
-        0xAD => self.xor(self.hl.b),
-        0xAE => self.xor(self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0xAF => self.xor(self.af.a),
+        0xA8 => self.xor(Argument.b),
+        0xA9 => self.xor(Argument.c),
+        0xAA => self.xor(Argument.d),
+        0xAB => self.xor(Argument.e),
+        0xAC => self.xor(Argument.h),
+        0xAD => self.xor(Argument.l),
+        0xAE => self.xor(Argument.phl),
+        0xAF => self.xor(Argument.a),
         0xB0 => self.orReg(self.bc.a),
         0xB1 => self.orReg(self.bc.b),
         0xB2 => self.orReg(self.de.a),
@@ -288,7 +288,7 @@ pub fn clock(self: *Self) !void {
         0xC3 => self.jp(self.immU16(), null),
         0xC4 => self.call(.NZ),
         0xC5 => @panic("unhandled opcode: 0xC5"),
-        0xC6 => self.addU8(self.immU8()),
+        0xC6 => self.addU8(Argument.immU8),
         0xC7 => @panic("unhandled opcode: 0xC7"),
         0xC8 => @panic("unhandled opcode: 0xC8"),
         0xC9 => @panic("unhandled opcode: 0xC9"),
@@ -360,70 +360,70 @@ pub fn clock(self: *Self) !void {
                 0x3D => self.srl(Registers.L),
                 0x3E => self.srl(Registers.PHL),
                 0x3F => self.srl(Registers.A),
-                0x40 => self.bit(0, Registers.B),
-                0x41 => self.bit(0, Registers.C),
-                0x42 => self.bit(0, Registers.D),
-                0x43 => self.bit(0, Registers.E),
-                0x44 => self.bit(0, Registers.H),
-                0x45 => self.bit(0, Registers.L),
-                0x46 => self.bit(0, Registers.PHL),
-                0x47 => self.bit(0, Registers.A),
-                0x48 => self.bit(1, Registers.B),
-                0x49 => self.bit(1, Registers.C),
-                0x4A => self.bit(1, Registers.D),
-                0x4B => self.bit(1, Registers.E),
-                0x4C => self.bit(1, Registers.H),
-                0x4D => self.bit(1, Registers.L),
-                0x4E => self.bit(1, Registers.PHL),
-                0x4F => self.bit(1, Registers.A),
-                0x50 => self.bit(2, Registers.B),
-                0x51 => self.bit(2, Registers.C),
-                0x52 => self.bit(2, Registers.D),
-                0x53 => self.bit(2, Registers.E),
-                0x54 => self.bit(2, Registers.H),
-                0x55 => self.bit(2, Registers.L),
-                0x56 => self.bit(2, Registers.PHL),
-                0x57 => self.bit(2, Registers.A),
-                0x58 => self.bit(3, Registers.B),
-                0x59 => self.bit(3, Registers.C),
-                0x5A => self.bit(3, Registers.D),
-                0x5B => self.bit(3, Registers.E),
-                0x5C => self.bit(3, Registers.H),
-                0x5D => self.bit(3, Registers.L),
-                0x5E => self.bit(3, Registers.PHL),
-                0x5F => self.bit(3, Registers.A),
-                0x60 => self.bit(4, Registers.B),
-                0x61 => self.bit(4, Registers.C),
-                0x62 => self.bit(4, Registers.D),
-                0x63 => self.bit(4, Registers.E),
-                0x64 => self.bit(4, Registers.H),
-                0x65 => self.bit(4, Registers.L),
-                0x66 => self.bit(4, Registers.PHL),
-                0x67 => self.bit(4, Registers.A),
-                0x68 => self.bit(5, Registers.B),
-                0x69 => self.bit(5, Registers.C),
-                0x6A => self.bit(5, Registers.D),
-                0x6B => self.bit(5, Registers.E),
-                0x6C => self.bit(5, Registers.H),
-                0x6D => self.bit(5, Registers.L),
-                0x6E => self.bit(5, Registers.PHL),
-                0x6F => self.bit(5, Registers.A),
-                0x70 => self.bit(6, Registers.B),
-                0x71 => self.bit(6, Registers.C),
-                0x72 => self.bit(6, Registers.D),
-                0x73 => self.bit(6, Registers.E),
-                0x74 => self.bit(6, Registers.H),
-                0x75 => self.bit(6, Registers.L),
-                0x76 => self.bit(6, Registers.PHL),
-                0x77 => self.bit(6, Registers.A),
-                0x78 => self.bit(7, Registers.B),
-                0x79 => self.bit(7, Registers.C),
-                0x7A => self.bit(7, Registers.D),
-                0x7B => self.bit(7, Registers.E),
-                0x7C => self.bit(7, Registers.H),
-                0x7D => self.bit(7, Registers.L),
-                0x7E => self.bit(7, Registers.PHL),
-                0x7F => self.bit(7, Registers.A),
+                0x40 => self.bit(0, Argument.b),
+                0x41 => self.bit(0, Argument.c),
+                0x42 => self.bit(0, Argument.d),
+                0x43 => self.bit(0, Argument.e),
+                0x44 => self.bit(0, Argument.h),
+                0x45 => self.bit(0, Argument.l),
+                0x46 => self.bit(0, Argument.phl),
+                0x47 => self.bit(0, Argument.a),
+                0x48 => self.bit(1, Argument.b),
+                0x49 => self.bit(1, Argument.c),
+                0x4A => self.bit(1, Argument.d),
+                0x4B => self.bit(1, Argument.e),
+                0x4C => self.bit(1, Argument.h),
+                0x4D => self.bit(1, Argument.l),
+                0x4E => self.bit(1, Argument.phl),
+                0x4F => self.bit(1, Argument.a),
+                0x50 => self.bit(2, Argument.b),
+                0x51 => self.bit(2, Argument.c),
+                0x52 => self.bit(2, Argument.d),
+                0x53 => self.bit(2, Argument.e),
+                0x54 => self.bit(2, Argument.h),
+                0x55 => self.bit(2, Argument.l),
+                0x56 => self.bit(2, Argument.phl),
+                0x57 => self.bit(2, Argument.a),
+                0x58 => self.bit(3, Argument.b),
+                0x59 => self.bit(3, Argument.c),
+                0x5A => self.bit(3, Argument.d),
+                0x5B => self.bit(3, Argument.e),
+                0x5C => self.bit(3, Argument.h),
+                0x5D => self.bit(3, Argument.l),
+                0x5E => self.bit(3, Argument.phl),
+                0x5F => self.bit(3, Argument.a),
+                0x60 => self.bit(4, Argument.b),
+                0x61 => self.bit(4, Argument.c),
+                0x62 => self.bit(4, Argument.d),
+                0x63 => self.bit(4, Argument.e),
+                0x64 => self.bit(4, Argument.h),
+                0x65 => self.bit(4, Argument.l),
+                0x66 => self.bit(4, Argument.phl),
+                0x67 => self.bit(4, Argument.a),
+                0x68 => self.bit(5, Argument.b),
+                0x69 => self.bit(5, Argument.c),
+                0x6A => self.bit(5, Argument.d),
+                0x6B => self.bit(5, Argument.e),
+                0x6C => self.bit(5, Argument.h),
+                0x6D => self.bit(5, Argument.l),
+                0x6E => self.bit(5, Argument.phl),
+                0x6F => self.bit(5, Argument.a),
+                0x70 => self.bit(6, Argument.b),
+                0x71 => self.bit(6, Argument.c),
+                0x72 => self.bit(6, Argument.d),
+                0x73 => self.bit(6, Argument.e),
+                0x74 => self.bit(6, Argument.h),
+                0x75 => self.bit(6, Argument.l),
+                0x76 => self.bit(6, Argument.phl),
+                0x77 => self.bit(6, Argument.a),
+                0x78 => self.bit(7, Argument.b),
+                0x79 => self.bit(7, Argument.c),
+                0x7A => self.bit(7, Argument.d),
+                0x7B => self.bit(7, Argument.e),
+                0x7C => self.bit(7, Argument.h),
+                0x7D => self.bit(7, Argument.l),
+                0x7E => self.bit(7, Argument.phl),
+                0x7F => self.bit(7, Argument.a),
                 0x80 => self.res(0, Registers.B),
                 0x81 => self.res(0, Registers.C),
                 0x82 => self.res(0, Registers.D),
@@ -587,7 +587,7 @@ pub fn clock(self: *Self) !void {
         },
         0xE9 => self.jp(@bitCast(u16, self.hl), null),
         0xEA => @panic("unhandled opcode: 0xEA"),
-        0xEE => self.xor(self.immU8()),
+        0xEE => self.xor(Argument.immU8),
         0xEF => @panic("unhandled opcode: 0xEF"),
         0xF1 => @panic("unhandled opcode: 0xF1"),
         0xF2 => @panic("unhandled opcode: 0xF2"),
@@ -613,10 +613,11 @@ pub fn clock(self: *Self) !void {
     };
 
     self.write("\n");
-    self.flush();
 }
 
-fn addU8(self: *Self, val: u8) void {
+fn addU8(self: *Self, field: Argument) void {
+    self.write("ADD A, ");
+    const val = self.getArgU8(field);
     const old_a = self.af.a;
     self.af.a +%= val;
     self.af.f.z = self.af.a == 0;
@@ -643,9 +644,10 @@ fn addU16(self: *Self, val: u16) void {
     hl +%= val;
 }
 
-fn bit(self: *Self, comptime b: u8, comptime field: Registers) void {
-    const r = self.getRegU8(field);
-    self.af.f.z = ((r.* >> b) & 0x01) == 0;
+fn bit(self: *Self, comptime b: u8, comptime arg: Argument) void {
+    self.writeWithArg("BIT {}, ", .{b});
+    const r = self.getArgU8(arg);
+    self.af.f.z = ((r >> b) & 0x01) == 0;
     self.af.f.n = false;
     self.af.f.h = true;
 }
@@ -800,31 +802,33 @@ fn jp(self: *Self, addr: u16, comptime opt: ?Optional) void {
 }
 
 fn jr(self: *Self, comptime opt: ?Optional) void {
-    if (opt) |o| if (self.check(o))
-        return;
+    const r: i8 = @bitCast(i8, self.immU8());
+    // (a + b) mod std.m2
+    // std.math.pow(u16, 2, 16);
+    const addr = @mod((self.pc + @intCast(u16, r)), std.math.pow(u16, 2, 16));
+    self.write("JR ");
+    if (opt) |o| {
+        self.writeWithArg("{}, 0x{X:0>2}", .{ o, addr });
+        if (self.check(o))
+            return;
+    }
 
-    const addr = @bitCast(u16, @bitCast(i16, self.pc) +% @intCast(i16, self.immU8()));
+    self.writeWithArg("{}", .{addr});
     self.pc = addr;
 }
 
 fn ldU16(self: *Self, comptime field: Registers, arg: Argument) void {
     self.write("LD ");
-    self.printRegU16(field);
-    const val = self.getArgU16(arg);
-    switch (field) {
-        .AF => self.af = @bitCast(regu16, val),
-        .BC => self.bc = @bitCast(regu16, val),
-        .DE => self.de = @bitCast(regu16, val),
-        .HL => self.hl = @bitCast(regu16, val),
-        .PC => self.pc = val,
-        .SP => self.sp = val,
-        else => @compileError("Tried to load u16 into u8 register"),
-    }
+    const f = self.getRegU16(field);
+    const a = self.getArgU16(arg);
+    f.* = a;
 }
 
 fn ldU8(self: *Self, comptime field: Registers, arg: Argument) void {
     self.write("LD ");
-    self.getRegU8(field).* = self.getArgU8(arg);
+    const f = self.getRegU8(field);
+    const a = self.getArgU8(arg);
+    f.* = a;
 }
 
 fn noop(_: *Self) void {}
@@ -967,7 +971,9 @@ fn swap(self: *Self, comptime field: Registers) void {
     self.af.f.z = r.* == 0;
 }
 
-fn xor(self: *Self, val: u8) void {
+fn xor(self: *Self, comptime arg: Argument) void {
+    self.write("XOR ");
+    const val = self.getArgU8(arg);
     self.af.a ^= val;
     self.af.f.z = self.af.a == 0;
     self.af.f.n = false;
@@ -990,18 +996,6 @@ fn check(self: *Self, comptime opt: Optional) bool {
         .Z => self.af.f.z,
         .NZ => !self.af.f.z,
     };
-}
-
-inline fn printRegU16(self: *Self, comptime field: Registers) void {
-    switch (field) {
-        .AF => self.write("AF, "),
-        .BC => self.write("BC, "),
-        .DE => self.write("DE, "),
-        .HL => self.write("HL, "),
-        .SP => self.write("SP, "),
-        .PC => self.write("PC, "),
-        else => @compileError("Invalid reg"),
-    }
 }
 
 inline fn getRegU8(self: *Self, comptime field: Registers) *u8 {
@@ -1046,6 +1040,38 @@ inline fn getRegU8(self: *Self, comptime field: Registers) *u8 {
             .PHL => {
                 self.write("(HL), ");
                 break :blk self.bus.getAddress(@bitCast(u16, self.hl));
+            },
+            else => @compileError("Invalid reg"),
+        }
+    };
+}
+
+inline fn getRegU16(self: *Self, comptime field: Registers) *u16 {
+    return blk: {
+        switch (field) {
+            .AF => {
+                self.write("AF, ");
+                break :blk &self.af;
+            },
+            .BC => {
+                self.write("BC, ");
+                break :blk @ptrCast(*u16, &self.bc);
+            },
+            .DE => {
+                self.write("DE, ");
+                break :blk @ptrCast(*u16, &self.de);
+            },
+            .HL => {
+                self.write("HL, ");
+                break :blk @ptrCast(*u16, &self.hl);
+            },
+            .SP => {
+                self.write("SP, ");
+                break :blk &self.sp;
+            },
+            .PC => {
+                self.write("PC, ");
+                break :blk &self.pc;
             },
             else => @compileError("Invalid reg"),
         }
@@ -1106,16 +1132,16 @@ inline fn getArgU8(self: *Self, arg: Argument) u8 {
                 break :blk self.bus.getAddress(@bitCast(u16, self.hl) +% 1).*;
             },
             .p => |p| {
-                self.writeWithArg("0x{x:0>2}", .{p});
+                self.writeWithArg("0x{X:0>2}", .{p});
                 break :blk self.bus.getAddress(p).*;
             },
             .immU8 => {
                 const b = self.immU8();
-                self.writeWithArg("0x{x:0>2}", .{b});
+                self.writeWithArg("0x{X:0>2}", .{b});
                 break :blk b;
             },
             .valU8 => |v| {
-                self.writeWithArg("0x{x:0>2}", .{v});
+                self.writeWithArg("0x{X:0>2}", .{v});
                 break :blk v;
             },
             else => unreachable,
@@ -1144,11 +1170,11 @@ inline fn getArgU16(self: *Self, arg: Argument) u16 {
             },
             .immU16 => {
                 const b = self.immU16();
-                self.writeWithArg("0x{x:0>4}", .{b});
+                self.writeWithArg("0x{X:0>4}", .{b});
                 break :blk b;
             },
             .valU16 => |v| {
-                self.writeWithArg("0x{x:0>4}", .{v});
+                self.writeWithArg("0x{X:0>4}", .{v});
                 break :blk v;
             },
             else => unreachable,
@@ -1158,13 +1184,11 @@ inline fn getArgU16(self: *Self, arg: Argument) u16 {
 
 fn write(self: *Self, comptime msg: []const u8) void {
     _ = self._writer.write(msg) catch {};
+    self._writer.flush() catch std.debug.print("Failed to flush self._writer", .{});
 }
 
 fn writeWithArg(self: *Self, comptime format: []const u8, args: anytype) void {
     std.fmt.format(self._writer.unbuffered_writer, format, args) catch {};
-}
-
-fn flush(self: *Self) void {
     self._writer.flush() catch std.debug.print("Failed to flush self._writer", .{});
 }
 
@@ -1183,4 +1207,9 @@ test "cpu registers" {
 
 test {
     std.testing.refAllDecls(@This());
+}
+
+test "compare afreg and regu16 typeinfo" {
+    std.debug.assert(@typeInfo(regu16).Struct.fields[0].alignment == @alignOf(u16));
+    std.debug.assert(@typeInfo(regu16).Struct.fields[1].alignment == @alignOf(u16));
 }
