@@ -33,4 +33,7 @@ pub const Argument = union(enum) {
     valU8: u8,
     immU16,
     valU16: u16,
+    // Pass in base address
+    offsetImmU8: u16,
+    spOffsetImmI8,
 };

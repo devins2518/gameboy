@@ -92,7 +92,7 @@ pub fn clock(self: *Self) !void {
         0x7D => self.ldU8(Registers.A, Argument.l),
         0x7E => self.ldU8(Registers.A, Argument.phl),
         0x7F => self.ldU8(Registers.A, Argument.a),
-        0xF0 => self.ldU8(Registers.A, Argument{ .p = 0xFF00 + @as(u16, self.immU8()) }),
+        0xF0 => self.ldU8(Registers.A, Argument{ .offsetImmU8 = 0xFF00 }),
         0x06 => self.ldU8(Registers.B, Argument.immU8),
         0x40 => self.ldU8(Registers.B, Argument.b),
         0x41 => self.ldU8(Registers.B, Argument.c),
@@ -615,9 +615,9 @@ pub fn clock(self: *Self) !void {
     self.write("\n");
 }
 
-fn addU8(self: *Self, field: Argument) void {
+fn addU8(self: *Self, comptime arg: Argument) void {
     self.write("ADD A, ");
-    const val = self.getArgU8(field);
+    const val = self.getArg(arg, u8);
     const old_a = self.af.a;
     self.af.a +%= val;
     self.af.f.z = self.af.a == 0;
@@ -646,7 +646,7 @@ fn addU16(self: *Self, val: u16) void {
 
 fn bit(self: *Self, comptime b: u8, comptime arg: Argument) void {
     self.writeWithArg("BIT {}, ", .{b});
-    const r = self.getArgU8(arg);
+    const r = self.getArg(arg, u8);
     self.af.f.z = ((r >> b) & 0x01) == 0;
     self.af.f.n = false;
     self.af.f.h = true;
@@ -817,17 +817,17 @@ fn jr(self: *Self, comptime opt: ?Optional) void {
     }
 }
 
-fn ldU16(self: *Self, comptime field: Registers, arg: Argument) void {
+fn ldU16(self: *Self, comptime field: Registers, comptime arg: Argument) void {
     self.write("LD ");
     const f = self.getReg(field, u16);
-    const a = self.getArgU16(arg);
+    const a = self.getArg(arg, u16);
     f.* = a;
 }
 
-fn ldU8(self: *Self, comptime field: Registers, arg: Argument) void {
+fn ldU8(self: *Self, comptime field: Registers, comptime arg: Argument) void {
     self.write("LD ");
     const f = self.getReg(field, u8);
-    const a = self.getArgU8(arg);
+    const a = self.getArg(arg, u8);
     f.* = a;
 }
 
@@ -973,7 +973,7 @@ fn swap(self: *Self, comptime field: Registers) void {
 
 fn xor(self: *Self, comptime arg: Argument) void {
     self.write("XOR ");
-    const val = self.getArgU8(arg);
+    const val = self.getArg(arg, u8);
     self.af.a ^= val;
     self.af.f.z = self.af.a == 0;
     self.af.f.n = false;
@@ -1073,12 +1073,16 @@ fn getReg(self: *Self, comptime field: Registers, comptime T: type) *T {
     };
 }
 
-inline fn getArgU8(self: *Self, arg: Argument) u8 {
+fn getArg(self: *Self, comptime arg: Argument, comptime T: type) T {
     return blk: {
         switch (arg) {
             .a => {
                 self.write("A");
                 break :blk self.af.a;
+            },
+            .f => {
+                self.write("F");
+                break :blk self.af.f;
             },
             .b => {
                 self.write("B");
@@ -1139,14 +1143,6 @@ inline fn getArgU8(self: *Self, arg: Argument) u8 {
                 self.writeWithArg("0x{X:0>2}", .{v});
                 break :blk v;
             },
-            else => unreachable,
-        }
-    };
-}
-
-inline fn getArgU16(self: *Self, arg: Argument) u16 {
-    return blk: {
-        switch (arg) {
             .af => {
                 self.write("AF");
                 break :blk @bitCast(u16, self.af);
@@ -1172,7 +1168,18 @@ inline fn getArgU16(self: *Self, arg: Argument) u16 {
                 self.writeWithArg("0x{X:0>4}", .{v});
                 break :blk v;
             },
-            else => unreachable,
+            .offsetImmU8 => |v| {
+                const val = self.immU8();
+                self.writeWithArg("(0x{X:0>4} 0x{X:0>4} )", .{ v, v + @as(u16, val) });
+                const p = v + @as(u16, val);
+                break :blk self.bus.getAddress(p).*;
+            },
+            .spOffsetImmI8 => {
+                const v = @bitCast(i8, self.immU8());
+                const d = self.sp + @as(u16, v);
+                self.writeWithArg("SP+0x{X:0>4}", .{d});
+                break :blk d;
+            },
         }
     };
 }
