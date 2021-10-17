@@ -277,14 +277,11 @@ pub fn clock(self: *Self) !void {
         0xBE => @panic("unhandled opcode: 0xBE"),
         0xBF => @panic("unhandled opcode: 0xBF"),
         0xC0 => @panic("unhandled opcode: 0xC0"),
-        0xC1 => @panic("unhandled opcode: 0xC1"),
         0xC2 => self.jp(self.immU16(), .NZ),
         0xC3 => self.jp(self.immU16(), null),
         0xC4 => self.call(.NZ),
         0xC6 => self.addU8(Argument.immU8),
         0xC7 => @panic("unhandled opcode: 0xC7"),
-        0xC8 => @panic("unhandled opcode: 0xC8"),
-        0xC9 => @panic("unhandled opcode: 0xC9"),
         0xCA => self.jp(self.immU16(), .Z),
         0xCB => {
             const nopcode = self.nextInstruction();
@@ -552,12 +549,15 @@ pub fn clock(self: *Self) !void {
         0xCE => @panic("unhandled opcode: 0xCE"),
         0xCF => @panic("unhandled opcode: 0xCF"),
         0xD0 => @panic("unhandled opcode: 0xD0"),
-        0xD1 => @panic("unhandled opcode: 0xD1"),
         0xD2 => self.jp(self.immU16(), .NC),
         0xD4 => self.call(.NC),
         0xD6 => self.sub(self.immU8()),
         0xD7 => @panic("unhandled opcode: 0xD7"),
-        0xD8 => @panic("unhandled opcode: 0xD8"),
+        0xC1 => self.ret(Optional.NZ),
+        0xC8 => self.ret(Optional.Z),
+        0xC9 => self.ret(null),
+        0xD1 => self.ret(Optional.NC),
+        0xD8 => self.ret(Optional.C),
         0xD9 => @panic("unhandled opcode: 0xD9"),
         0xDA => self.jp(self.immU16(), .C),
         0xDC => self.call(.C),
@@ -789,7 +789,7 @@ fn inc(self: *Self, comptime field: Registers) void {
 }
 
 fn jp(self: *Self, addr: u16, comptime opt: ?Optional) void {
-    if (opt) |o| if (self.check(o))
+    if (opt) |o| if (!self.check(o))
         return;
 
     self.pc = addr;
@@ -838,6 +838,20 @@ fn orReg(self: *Self, val: u8) void {
 fn res(self: *Self, comptime b: u8, comptime field: Registers) void {
     const r = self.getReg(field, u8);
     r.* |= ~@intCast(u8, 1 << b);
+}
+
+fn ret(self: *Self, comptime opt: ?Optional) void {
+    self.write("RET");
+    if (opt) |o| {
+        self.writeWithArg(" {}", .{o});
+        if (!self.check(o))
+            return;
+    }
+    const lsb = self.bus.getAddress(self.sp).*;
+    self.sp -%= 1;
+    const msb = self.bus.getAddress(self.sp).*;
+    self.sp -%= 1;
+    self.pc = @bitCast(u16, [2]u8{ msb, lsb });
 }
 
 fn rl(self: *Self, comptime field: Registers) void {
