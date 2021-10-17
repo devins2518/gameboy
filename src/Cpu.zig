@@ -819,14 +819,14 @@ fn jr(self: *Self, comptime opt: ?Optional) void {
 
 fn ldU16(self: *Self, comptime field: Registers, arg: Argument) void {
     self.write("LD ");
-    const f = self.getRegU16(field);
+    const f = self.getReg(field, u16);
     const a = self.getArgU16(arg);
     f.* = a;
 }
 
 fn ldU8(self: *Self, comptime field: Registers, arg: Argument) void {
     self.write("LD ");
-    const f = self.getRegU8(field);
+    const f = self.getReg(field, u8);
     const a = self.getArgU8(arg);
     f.* = a;
 }
@@ -842,12 +842,12 @@ fn orReg(self: *Self, val: u8) void {
 }
 
 fn res(self: *Self, comptime b: u8, comptime field: Registers) void {
-    const r = self.getRegU8(field);
+    const r = self.getReg(field, u8);
     r.* |= ~@intCast(u8, 1 << b);
 }
 
 fn rl(self: *Self, comptime field: Registers) void {
-    const reg = self.getRegU8(field);
+    const reg = self.getReg(field, u8);
     const c = @boolToInt(self.af.f.c);
     self.af.f.c = (reg.* >> 7 == 1);
     self.af.f.n = false;
@@ -867,7 +867,7 @@ fn rla(self: *Self) void {
 }
 
 fn rlc(self: *Self, comptime field: Registers) void {
-    const reg = self.getRegU8(field);
+    const reg = self.getReg(field, u8);
     self.af.f.c = (reg.* >> 7 == 1);
     self.af.f.n = false;
     self.af.f.h = false;
@@ -885,7 +885,7 @@ fn rlca(self: *Self) void {
 }
 
 fn rr(self: *Self, comptime field: Registers) void {
-    const reg = self.getRegU8(field);
+    const reg = self.getReg(field, u8);
     const c = @boolToInt(self.af.f.c);
     self.af.f.c = (reg.* & 0x01 == 1);
     self.af.f.n = false;
@@ -905,7 +905,7 @@ fn rra(self: *Self) void {
 }
 
 fn rrc(self: *Self, comptime field: Registers) void {
-    const reg = self.getRegU8(field);
+    const reg = self.getReg(field, u8);
     self.af.f.c = (reg.* & 0x01 == 1);
     self.af.f.n = false;
     self.af.f.h = false;
@@ -923,11 +923,11 @@ fn rrca(self: *Self) void {
 }
 
 fn set(self: *Self, comptime b: u8, comptime field: Registers) void {
-    self.getRegU8(field).* |= (1 << b);
+    self.getReg(field, u8).* |= (1 << b);
 }
 
 fn sla(self: *Self, comptime field: Registers) void {
-    const r = self.getRegU8(field);
+    const r = self.getReg(field, u8);
     self.af.f.c = (r.* >> 7) == 1;
     self.af.f.n = false;
     self.af.f.h = false;
@@ -936,7 +936,7 @@ fn sla(self: *Self, comptime field: Registers) void {
 }
 
 fn sra(self: *Self, comptime field: Registers) void {
-    const r = self.getRegU8(field);
+    const r = self.getReg(field, u8);
     self.af.f.c = (r.* & 0x01) == 1;
     self.af.f.n = false;
     self.af.f.h = false;
@@ -945,7 +945,7 @@ fn sra(self: *Self, comptime field: Registers) void {
 }
 
 fn srl(self: *Self, comptime field: Registers) void {
-    const r = self.getRegU8(field);
+    const r = self.getReg(field, u8);
     self.af.f.c = (r.* & 0x01) == 1;
     self.af.f.n = false;
     self.af.f.h = false;
@@ -963,7 +963,7 @@ fn sub(self: *Self, val: u8) void {
 }
 
 fn swap(self: *Self, comptime field: Registers) void {
-    const r = self.getRegU8(field);
+    const r = self.getReg(field, u8);
     r.* = (r.* & 0x0F) << 4 | (r.* & 0xF0) >> 4;
     self.af.f.c = false;
     self.af.f.n = false;
@@ -998,12 +998,16 @@ fn check(self: *Self, comptime opt: Optional) bool {
     };
 }
 
-inline fn getRegU8(self: *Self, comptime field: Registers) *u8 {
+fn getReg(self: *Self, comptime field: Registers, comptime T: type) *T {
     return blk: {
         switch (field) {
             .A => {
                 self.write("A, ");
                 break :blk &self.af.a;
+            },
+            .F => {
+                self.write("A, ");
+                break :blk &self.af.f;
             },
             .B => {
                 self.write("B, ");
@@ -1041,14 +1045,6 @@ inline fn getRegU8(self: *Self, comptime field: Registers) *u8 {
                 self.write("(HL), ");
                 break :blk self.bus.getAddress(@bitCast(u16, self.hl));
             },
-            else => @compileError("Invalid reg"),
-        }
-    };
-}
-
-inline fn getRegU16(self: *Self, comptime field: Registers) *u16 {
-    return blk: {
-        switch (field) {
             .AF => {
                 self.write("AF, ");
                 break :blk &self.af;
@@ -1073,7 +1069,6 @@ inline fn getRegU16(self: *Self, comptime field: Registers) *u16 {
                 self.write("PC, ");
                 break :blk &self.pc;
             },
-            else => @compileError("Invalid reg"),
         }
     };
 }
