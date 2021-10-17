@@ -802,19 +802,19 @@ fn jp(self: *Self, addr: u16, comptime opt: ?Optional) void {
 }
 
 fn jr(self: *Self, comptime opt: ?Optional) void {
-    const r: i8 = @bitCast(i8, self.immU8());
-    // (a + b) mod std.m2
-    // std.math.pow(u16, 2, 16);
-    const addr = @mod((self.pc + @intCast(u16, r)), std.math.pow(u16, 2, 16));
+    const r = @bitCast(i8, self.immU8());
+    const addr = @bitCast(u16, @bitCast(i16, self.pc) +% @as(i16, r));
     self.write("JR ");
     if (opt) |o| {
         self.writeWithArg("{}, 0x{X:0>2}", .{ o, addr });
-        if (self.check(o))
-            return;
+        if (!self.check(o))
+            return
+        else
+            self.pc = addr;
+    } else {
+        self.writeWithArg("{}", .{addr});
+        self.pc = addr;
     }
-
-    self.writeWithArg("{}", .{addr});
-    self.pc = addr;
 }
 
 fn ldU16(self: *Self, comptime field: Registers, arg: Argument) void {
