@@ -156,14 +156,8 @@ pub fn clock(self: *Self) !void {
         0x74 => self.ldU8(Registers.PHL, Argument.h),
         0x75 => self.ldU8(Registers.PHL, Argument.l),
         0x77 => self.ldU8(Registers.PHL, Argument.a),
-        0x22 => {
-            self.ldU8(Registers.PHL, Argument.a);
-            self.hl.add(1);
-        },
-        0x32 => {
-            self.ldU8(Registers.PHL, Argument.a);
-            self.hl.sub(1);
-        },
+        0x22 => self.ldU8(Registers.PHLP, Argument.a),
+        0x32 => self.ldU8(Registers.PHLM, Argument.a),
         0x01 => self.ldU16(Registers.BC, Argument.immU16),
         0x11 => self.ldU16(Registers.DE, Argument.immU16),
         0x21 => self.ldU16(Registers.HL, Argument.immU16),
@@ -1044,6 +1038,16 @@ fn getReg(self: *Self, comptime field: Registers, comptime T: type) *T {
             .PHL => {
                 self.write("(HL), ");
                 break :blk self.bus.getAddress(@bitCast(u16, self.hl));
+            },
+            .PHLP => {
+                self.write("(HL+), ");
+                self.hl.add(1);
+                break :blk self.bus.getAddress(@bitCast(u16, self.hl) -% 1);
+            },
+            .PHLM => {
+                self.write("(HL-), ");
+                self.hl.sub(1);
+                break :blk self.bus.getAddress(@bitCast(u16, self.hl) +% 1);
             },
             .AF => {
                 self.write("AF, ");
