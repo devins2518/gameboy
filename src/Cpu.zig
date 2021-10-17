@@ -23,7 +23,7 @@ const regu16 = packed struct {
     }
 };
 const afreg = packed struct {
-    a: u8 = 0x00,
+    a: u8 align(@alignOf(u16)) = 0x00,
     f: packed struct { _: u4 = 0x0, c: bool = false, h: bool = false, n: bool = false, z: bool = false } = .{},
 
     fn add(self: *afreg, rhs: u16) void {
@@ -281,7 +281,6 @@ pub fn clock(self: *Self) !void {
         0xC2 => self.jp(self.immU16(), .NZ),
         0xC3 => self.jp(self.immU16(), null),
         0xC4 => self.call(.NZ),
-        0xC5 => @panic("unhandled opcode: 0xC5"),
         0xC6 => self.addU8(Argument.immU8),
         0xC7 => @panic("unhandled opcode: 0xC7"),
         0xC8 => @panic("unhandled opcode: 0xC8"),
@@ -556,7 +555,6 @@ pub fn clock(self: *Self) !void {
         0xD1 => @panic("unhandled opcode: 0xD1"),
         0xD2 => self.jp(self.immU16(), .NC),
         0xD4 => self.call(.NC),
-        0xD5 => @panic("unhandled opcode: 0xD5"),
         0xD6 => self.sub(self.immU8()),
         0xD7 => @panic("unhandled opcode: 0xD7"),
         0xD8 => @panic("unhandled opcode: 0xD8"),
@@ -567,7 +565,6 @@ pub fn clock(self: *Self) !void {
         0xDF => @panic("unhandled opcode: 0xDF"),
         0xE1 => @panic("unhandled opcode: 0xE1"),
         0xE2 => self.bus.getAddress(0xFF00 + @as(u16, self.bc.b)).* = self.af.a,
-        0xE5 => @panic("unhandled opcode: 0xE5"),
         0xE6 => @panic("unhandled opcode: 0xE6"),
         0xE7 => @panic("unhandled opcode: 0xE7"),
         0xE8 => {
@@ -586,7 +583,10 @@ pub fn clock(self: *Self) !void {
         0xF1 => @panic("unhandled opcode: 0xF1"),
         0xF2 => @panic("unhandled opcode: 0xF2"),
         0xF3 => self.di(),
-        0xF5 => @panic("unhandled opcode: 0xF5"),
+        0xC5 => self.push(Argument.bc),
+        0xD5 => self.push(Argument.de),
+        0xE5 => self.push(Argument.hl),
+        0xF5 => self.push(Argument.af),
         0xF6 => self.orReg(self.immU8()),
         0xF7 => @panic("unhandled opcode: 0xF7"),
         0xF8 => self.ei(),
@@ -965,6 +965,15 @@ fn swap(self: *Self, comptime field: Registers) void {
     self.af.f.z = r.* == 0;
 }
 
+fn push(self: *Self, comptime arg: Argument) void {
+    self.write("PUSH ");
+    const v = self.getArg(arg, u16);
+    self.bus.getAddress(self.sp).* = @truncate(u8, v & 0xFF00);
+    self.sp -%= 1;
+    self.bus.getAddress(self.sp).* = @truncate(u8, v & 0x00FF);
+    self.sp -%= 1;
+}
+
 fn xor(self: *Self, comptime arg: Argument) void {
     self.write("XOR ");
     const val = self.getArg(arg, u8);
@@ -1051,7 +1060,7 @@ fn getReg(self: *Self, comptime field: Registers, comptime T: type) *T {
             },
             .AF => {
                 self.write("AF, ");
-                break :blk &self.af;
+                break :blk @ptrCast(*u16, &self.af);
             },
             .BC => {
                 self.write("BC, ");
