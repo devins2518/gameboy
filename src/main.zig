@@ -5,6 +5,7 @@ const Bus = @import("Bus.zig");
 const Cartridge = @import("Cartridge.zig");
 const Cpu = @import("Cpu.zig");
 const Ppu = @import("Ppu.zig");
+const Gameboy = @import("Gameboy.zig");
 const SDL = @import("sdl2");
 const sdl_native = SDL.c;
 
@@ -27,18 +28,7 @@ pub fn main() !void {
     var ppu = Ppu.init();
     var cpu = Cpu.init(&bus, &ppu, &writer);
 
-    var state = struct {
-        auto: bool = false,
-        clocks: u64 = 0,
-        bus: Bus,
-        ppu: Ppu,
-        cpu: Cpu,
-
-        fn step(self: *@This()) void {
-            self.cpu.clock() catch {};
-            self.clocks += 1;
-        }
-    }{ .bus = bus, .ppu = ppu, .cpu = cpu };
+    var gb = Gameboy.init(bus, ppu, cpu);
 
     try SDL.init(.{
         .video = true,
@@ -66,8 +56,8 @@ pub fn main() !void {
                 .quit => break :mainLoop,
                 .key_down => {
                     switch (ev.key_down.keysym.scancode) {
-                        sdl_native.SDL_SCANCODE_A => state.auto = !state.auto,
-                        sdl_native.SDL_SCANCODE_G => state.step(),
+                        sdl_native.SDL_SCANCODE_A => gb.auto = !gb.auto,
+                        sdl_native.SDL_SCANCODE_G => gb.step(),
                         else => {},
                     }
                 },
@@ -79,8 +69,8 @@ pub fn main() !void {
         try renderer.clear();
 
         // if self.auto && frame_delta > clock_interval {
-        if (state.auto)
-            state.step();
+        if (gb.auto)
+            gb.step();
 
         renderer.present();
     }

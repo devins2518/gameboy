@@ -812,9 +812,7 @@ fn jr(self: *Self, comptime opt: ?Optional) void {
     self.write("JR ");
     if (opt) |o| {
         self.writeWithArg("{}, 0x{X:0>2}", .{ o, addr });
-        if (!self.check(o))
-            return
-        else
+        if (self.check(o))
             self.pc = addr;
     } else {
         self.writeWithArg("{}", .{addr});
