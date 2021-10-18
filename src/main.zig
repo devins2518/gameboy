@@ -66,7 +66,7 @@ pub fn main() !void {
                 .quit => break :mainLoop,
                 .key_down => {
                     switch (ev.key_down.keysym.scancode) {
-                        sdl_native.SDL_SCANCODE_A => state.auto = true,
+                        sdl_native.SDL_SCANCODE_A => state.auto = !state.auto,
                         sdl_native.SDL_SCANCODE_G => state.step(),
                         else => {},
                     }

@@ -220,14 +220,14 @@ pub fn clock(self: *Self) !void {
         0x85 => self.addU8(Argument.l),
         0x86 => self.addU8(Argument.phl),
         0x87 => self.addU8(Argument.a),
-        0x88 => @panic("unhandled opcode: 0x88"),
-        0x89 => @panic("unhandled opcode: 0x89"),
-        0x8A => @panic("unhandled opcode: 0x8A"),
-        0x8B => @panic("unhandled opcode: 0x8B"),
-        0x8C => @panic("unhandled opcode: 0x8C"),
-        0x8D => @panic("unhandled opcode: 0x8D"),
-        0x8E => @panic("unhandled opcode: 0x8E"),
-        0x8F => @panic("unhandled opcode: 0x8F"),
+        0x88 => self.adc(Argument.b),
+        0x89 => self.adc(Argument.c),
+        0x8A => self.adc(Argument.d),
+        0x8B => self.adc(Argument.e),
+        0x8C => self.adc(Argument.h),
+        0x8D => self.adc(Argument.l),
+        0x8E => self.adc(Argument.phl),
+        0x8F => self.adc(Argument.a),
         0x90 => self.sub(self.bc.a),
         0x91 => self.sub(self.bc.b),
         0x92 => self.sub(self.de.a),
@@ -636,6 +636,17 @@ fn addU16(self: *Self, val: u16) void {
     self.carry(hl, val);
 
     hl +%= val;
+}
+
+fn adc(self: *Self, comptime arg: Argument) void {
+    self.write("ADD A, ");
+    const val = self.getArg(arg, u8);
+    const old_a = self.af.a;
+    self.af.a +%= val +% @boolToInt(self.af.f.c);
+    self.af.f.z = self.af.a == 0;
+    self.af.f.n = false;
+    self.halfCarry(old_a, val);
+    self.carry(old_a, val);
 }
 
 fn bit(self: *Self, comptime b: u8, comptime arg: Argument) void {
