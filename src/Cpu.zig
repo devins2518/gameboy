@@ -58,7 +58,7 @@ pub fn init(bus: *Bus, ppu: *Ppu, _w: *Bufw) Self {
 }
 
 fn nextInstruction(self: *Self) u8 {
-    const data = self.bus.getAddress(self.pc).*;
+    const data = self.bus.getAddress(self.pc);
     self.pc += 1;
     return data;
 }
@@ -165,7 +165,7 @@ pub fn clock(self: *Self) !void {
         0xE0 => {
             const b = self.immU8();
             self.writeWithArg("LD (0xFF00 + 0x{X:0>2}), A", .{b});
-            self.bus.getAddress(0xFF00 + @as(u16, b)).* = self.af.a;
+            self.bus.getAddressPtr(0xFF00 + @as(u16, b)).* = self.af.a;
         },
         0x03 => self.inc(Registers.BC),
         0x04 => self.inc(Registers.B),
@@ -183,8 +183,8 @@ pub fn clock(self: *Self) !void {
         0x07 => self.rlca(),
         0x08 => {
             const val = self.immU16();
-            self.bus.getAddress(val).* = @truncate(u8, self.sp >> 8);
-            self.bus.getAddress(val + 1).* = @truncate(u8, self.sp);
+            self.bus.getAddressPtr(val).* = @truncate(u8, self.sp >> 8);
+            self.bus.getAddressPtr(val + 1).* = @truncate(u8, self.sp);
         },
         0x0B => self.dec(Registers.BC),
         0x0D => self.dec(Registers.C),
@@ -205,7 +205,7 @@ pub fn clock(self: *Self) !void {
         0x2F => @panic("unhandled opcode: 0x2F"),
         0x30 => self.jr(.NC),
         0x35 => self.dec(Registers.PHL),
-        0x36 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.immU8(),
+        0x36 => self.ldU8(Registers.PHL, Argument.immU8),
         0x37 => @panic("unhandled opcode: 0x37"),
         0x38 => self.jr(.C),
         0x09 => self.add(Registers.HL, Argument.bc, u16),
@@ -251,14 +251,15 @@ pub fn clock(self: *Self) !void {
         0x9D => @panic("unhandled opcode: 0x9D"),
         0x9E => @panic("unhandled opcode: 0x9E"),
         0x9F => @panic("unhandled opcode: 0x9F"),
-        0xA0 => self.andReg(self.bc.a),
-        0xA1 => self.andReg(self.bc.b),
-        0xA2 => self.andReg(self.de.a),
-        0xA3 => self.andReg(self.de.b),
-        0xA4 => self.andReg(self.hl.a),
-        0xA5 => self.andReg(self.hl.b),
-        0xA6 => self.andReg(self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0xA7 => self.andReg(self.af.a),
+        0xA0 => self.andReg(Argument.b),
+        0xA1 => self.andReg(Argument.c),
+        0xA2 => self.andReg(Argument.d),
+        0xA3 => self.andReg(Argument.e),
+        0xA4 => self.andReg(Argument.h),
+        0xA5 => self.andReg(Argument.l),
+        0xA6 => self.andReg(Argument.phl),
+        0xA7 => self.andReg(Argument.a),
+        0xE6 => self.andReg(Argument.immU8),
         0xA8 => self.xor(Argument.b),
         0xA9 => self.xor(Argument.c),
         0xAA => self.xor(Argument.d),
@@ -267,14 +268,16 @@ pub fn clock(self: *Self) !void {
         0xAD => self.xor(Argument.l),
         0xAE => self.xor(Argument.phl),
         0xAF => self.xor(Argument.a),
-        0xB0 => self.orReg(self.bc.a),
-        0xB1 => self.orReg(self.bc.b),
-        0xB2 => self.orReg(self.de.a),
-        0xB3 => self.orReg(self.de.b),
-        0xB4 => self.orReg(self.hl.a),
-        0xB5 => self.orReg(self.hl.b),
-        0xB6 => self.orReg(self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0xB7 => self.orReg(self.af.a),
+        0xEE => self.xor(Argument.immU8),
+        0xB0 => self.orReg(Argument.b),
+        0xB1 => self.orReg(Argument.c),
+        0xB2 => self.orReg(Argument.d),
+        0xB3 => self.orReg(Argument.e),
+        0xB4 => self.orReg(Argument.h),
+        0xB5 => self.orReg(Argument.l),
+        0xB6 => self.orReg(Argument.phl),
+        0xB7 => self.orReg(Argument.a),
+        0xF6 => self.orReg(Argument.immU8),
         0xB8 => @panic("unhandled opcode: 0xB8"),
         0xB9 => @panic("unhandled opcode: 0xB9"),
         0xBA => @panic("unhandled opcode: 0xBA"),
@@ -285,7 +288,6 @@ pub fn clock(self: *Self) !void {
         0xBF => @panic("unhandled opcode: 0xBF"),
         0xC0 => @panic("unhandled opcode: 0xC0"),
         0xC4 => self.call(.NZ),
-        0xC7 => @panic("unhandled opcode: 0xC7"),
         0xCB => {
             const nopcode = self.nextInstruction();
             switch (nopcode) {
@@ -549,10 +551,16 @@ pub fn clock(self: *Self) !void {
         },
         0xCC => self.call(.C),
         0xCD => self.call(null),
-        0xCF => @panic("unhandled opcode: 0xCF"),
+        0xC7 => self.rst(0x00),
+        0xCF => self.rst(0x08),
+        0xD7 => self.rst(0x10),
+        0xDF => self.rst(0x18),
+        0xE7 => self.rst(0x20),
+        0xEF => self.rst(0x28),
+        0xF7 => self.rst(0x30),
+        0xFF => self.rst(0x38),
         0xD0 => @panic("unhandled opcode: 0xD0"),
         0xD4 => self.call(.NC),
-        0xD7 => @panic("unhandled opcode: 0xD7"),
         0xC1 => self.ret(Optional.NZ),
         0xC8 => self.ret(Optional.Z),
         0xC9 => self.ret(null),
@@ -561,14 +569,11 @@ pub fn clock(self: *Self) !void {
         0xD9 => @panic("unhandled opcode: 0xD9"),
         0xDC => self.call(.C),
         0xDE => @panic("unhandled opcode: 0xDE"),
-        0xDF => @panic("unhandled opcode: 0xDF"),
         0xE1 => @panic("unhandled opcode: 0xE1"),
         0xE2 => {
             self.write("LD (0xFF00 + C), A");
-            self.bus.getAddress(0xFF00 + @as(u16, self.bc.b)).* = self.af.a;
+            self.bus.getAddressPtr(0xFF00 + @as(u16, self.bc.b)).* = self.af.a;
         },
-        0xE6 => @panic("unhandled opcode: 0xE6"),
-        0xE7 => @panic("unhandled opcode: 0xE7"),
         0xE8 => {
             const a = self.sp;
             const b = self.immU8();
@@ -585,8 +590,6 @@ pub fn clock(self: *Self) !void {
         0xDA => self.jp(Argument.immU16, .C),
         0xE9 => self.jp(Argument.hl, null),
         0xEA => @panic("unhandled opcode: 0xEA"),
-        0xEE => self.xor(Argument.immU8),
-        0xEF => @panic("unhandled opcode: 0xEF"),
         0xF1 => @panic("unhandled opcode: 0xF1"),
         0xF2 => @panic("unhandled opcode: 0xF2"),
         0xF3 => self.di(),
@@ -594,14 +597,11 @@ pub fn clock(self: *Self) !void {
         0xD5 => self.push(Argument.de),
         0xE5 => self.push(Argument.hl),
         0xF5 => self.push(Argument.af),
-        0xF6 => self.orReg(self.immU8()),
-        0xF7 => @panic("unhandled opcode: 0xF7"),
         0xF8 => self.ei(),
         0xF9 => @panic("unhandled opcode: 0xF9"),
         0xFA => @panic("unhandled opcode: 0xFA"),
         0xFB => @panic("unhandled opcode: 0xFB"),
         0xFE => @panic("unhandled opcode: 0xFE"),
-        0xFF => @panic("unhandled opcode: 0xFF"),
         else => unreachable,
     }
 
@@ -631,7 +631,9 @@ fn add(self: *Self, comptime field: Registers, comptime arg: Argument, comptime 
     self.carry(old_reg, val);
 }
 
-fn andReg(self: *Self, val: u8) void {
+fn andReg(self: *Self, comptime arg: Argument) void {
+    self.write("AND A, ");
+    const val = self.getArg(arg, u8);
     self.af.a &= val;
     self.af.f.z = self.af.a == 0;
     self.af.f.n = false;
@@ -640,7 +642,7 @@ fn andReg(self: *Self, val: u8) void {
 }
 
 fn adc(self: *Self, comptime arg: Argument) void {
-    self.write("ADD A, ");
+    self.write("ADC A, ");
     const val = self.getArg(arg, u8);
     const old_a = self.af.a;
     self.af.a +%= val +% @boolToInt(self.af.f.c);
@@ -663,9 +665,9 @@ fn call(self: *Self, comptime opt: ?Optional) void {
         return;
 
     const addr = self.immU16();
-    self.bus.getAddress(self.sp).* = @truncate(u8, self.pc & 0x0F);
+    self.bus.getAddressPtr(self.sp).* = @truncate(u8, self.pc & 0x0F);
     self.sp -%= 1;
-    self.bus.getAddress(self.sp).* = @truncate(u8, (self.pc & 0xF0) >> 8);
+    self.bus.getAddressPtr(self.sp).* = @truncate(u8, (self.pc & 0xF0) >> 8);
     self.sp -%= 1;
 
     self.pc = addr;
@@ -684,52 +686,11 @@ fn dec(self: *Self, comptime field: Registers) void {
         .PC => self.pc -%= 1,
         .SP => self.sp -%= 1,
         else => {
-            const r = blk: {
-                switch (field) {
-                    .A => {
-                        self.af.a -%= 1;
-                        break :blk self.af.a;
-                    },
-                    .F => {
-                        self.af.f -%= 1;
-                        break :blk self.af.f;
-                    },
-                    .B => {
-                        self.bc.a -%= 1;
-                        break :blk self.bc.a;
-                    },
-                    .C => {
-                        self.bc.b -%= 1;
-                        break :blk self.bc.b;
-                    },
-                    .D => {
-                        self.de.a -%= 1;
-                        break :blk self.de.a;
-                    },
-                    .E => {
-                        self.de.b -%= 1;
-                        break :blk self.de.b;
-                    },
-                    .H => {
-                        self.hl.a -%= 1;
-                        break :blk self.hl.a;
-                    },
-                    .L => {
-                        self.hl.b -%= 1;
-                        break :blk self.hl.b;
-                    },
-                    .PHL => {
-                        const val = self.bus.getAddress(@bitCast(u16, self.hl));
-                        val.* -%= 1;
-                        break :blk val.*;
-                    },
-                    else => @compileError("Invalid reg"),
-                }
-            };
-
-            self.af.f.z = r == 0;
+            const r = self.getReg(field, u8);
+            self.halfCarry(r.*, 1);
+            r.* -%= 1;
+            self.af.f.z = r.* == 0;
             self.af.f.n = true;
-            self.halfCarry(r +% 1, 1);
         },
     }
 }
@@ -750,51 +711,11 @@ fn inc(self: *Self, comptime field: Registers) void {
             reg.* +%= 1;
         },
         else => {
-            const r = blk: {
-                switch (field) {
-                    .A => {
-                        self.af.a +%= 1;
-                        break :blk self.af.a;
-                    },
-                    .F => {
-                        self.af.f +%= 1;
-                        break :blk self.af.f;
-                    },
-                    .B => {
-                        self.bc.a +%= 1;
-                        break :blk self.bc.a;
-                    },
-                    .C => {
-                        self.bc.b +%= 1;
-                        break :blk self.bc.b;
-                    },
-                    .D => {
-                        self.de.a +%= 1;
-                        break :blk self.de.a;
-                    },
-                    .E => {
-                        self.de.b +%= 1;
-                        break :blk self.de.b;
-                    },
-                    .H => {
-                        self.hl.a +%= 1;
-                        break :blk self.hl.a;
-                    },
-                    .L => {
-                        self.hl.b +%= 1;
-                        break :blk self.hl.b;
-                    },
-                    .PHL => {
-                        const val = self.bus.getAddress(@bitCast(u16, self.hl));
-                        val.* +%= 1;
-                        break :blk val.*;
-                    },
-                    else => @compileError("Invalid reg"),
-                }
-            };
-            self.af.f.z = r == 0;
+            const r = self.getReg(field, u8);
+            self.halfCarry(r.*, 1);
+            r.* +%= 1;
+            self.af.f.z = r.* == 0;
             self.af.f.n = false;
-            self.halfCarry(r -% 1, 1);
         },
     }
 }
@@ -840,7 +761,9 @@ fn ldU8(self: *Self, comptime field: Registers, comptime arg: Argument) void {
 
 fn noop(_: *Self) void {}
 
-fn orReg(self: *Self, val: u8) void {
+fn orReg(self: *Self, comptime arg: Argument) void {
+    self.write("OR A, ");
+    const val = self.getArg(arg, u8);
     self.af.a |= val;
     self.af.f.z = self.af.a == 0;
     self.af.f.n = false;
@@ -860,9 +783,9 @@ fn ret(self: *Self, comptime opt: ?Optional) void {
         if (!self.check(o))
             return;
     }
-    const lsb = self.bus.getAddress(self.sp).*;
+    const lsb = self.bus.getAddress(self.sp);
     self.sp -%= 1;
-    const msb = self.bus.getAddress(self.sp).*;
+    const msb = self.bus.getAddress(self.sp);
     self.sp -%= 1;
     self.pc = @bitCast(u16, [2]u8{ msb, lsb });
 }
@@ -943,6 +866,15 @@ fn rrca(self: *Self) void {
     self.af.f.z = reg.* == 0;
 }
 
+fn rst(self: *Self, comptime addr: u16) void {
+    self.writeWithArg("RST 0x{X:0>2}", .{addr});
+    const b = @bitCast([2]u8, self.pc);
+    self.bus.getAddressPtr(self.sp).* = b[0];
+    self.sp -%= 1;
+    self.bus.getAddressPtr(self.sp).* = b[1];
+    self.sp -%= 1;
+}
+
 fn set(self: *Self, comptime b: u8, comptime field: Registers) void {
     self.getReg(field, u8).* |= (1 << b);
 }
@@ -997,9 +929,9 @@ fn swap(self: *Self, comptime field: Registers) void {
 fn push(self: *Self, comptime arg: Argument) void {
     self.write("PUSH ");
     const v = self.getArg(arg, u16);
-    self.bus.getAddress(self.sp).* = @truncate(u8, v & 0xFF00);
+    self.bus.getAddressPtr(self.sp).* = @truncate(u8, v & 0xFF00);
     self.sp -%= 1;
-    self.bus.getAddress(self.sp).* = @truncate(u8, v & 0x00FF);
+    self.bus.getAddressPtr(self.sp).* = @truncate(u8, v & 0x00FF);
     self.sp -%= 1;
 }
 
@@ -1067,25 +999,25 @@ fn getReg(self: *Self, comptime field: Registers, comptime T: type) *T {
             },
             .PBC => {
                 self.write("(BC), ");
-                break :blk self.bus.getAddress(@bitCast(u16, self.bc));
+                break :blk self.bus.getAddressPtr(@bitCast(u16, self.bc));
             },
             .PDE => {
                 self.write("(DE), ");
-                break :blk self.bus.getAddress(@bitCast(u16, self.de));
+                break :blk self.bus.getAddressPtr(@bitCast(u16, self.de));
             },
             .PHL => {
                 self.write("(HL), ");
-                break :blk self.bus.getAddress(@bitCast(u16, self.hl));
+                break :blk self.bus.getAddressPtr(@bitCast(u16, self.hl));
             },
             .PHLP => {
                 self.write("(HL+), ");
                 self.hl.add(1);
-                break :blk self.bus.getAddress(@bitCast(u16, self.hl) -% 1);
+                break :blk self.bus.getAddressPtr(@bitCast(u16, self.hl) -% 1);
             },
             .PHLM => {
                 self.write("(HL-), ");
                 self.hl.sub(1);
-                break :blk self.bus.getAddress(@bitCast(u16, self.hl) +% 1);
+                break :blk self.bus.getAddressPtr(@bitCast(u16, self.hl) +% 1);
             },
             .AF => {
                 self.write("AF, ");
@@ -1152,29 +1084,29 @@ fn getArg(self: *Self, comptime arg: Argument, comptime T: type) T {
             },
             .phl => {
                 self.write("(HL)");
-                break :blk self.bus.getAddress(@bitCast(u16, self.hl)).*;
+                break :blk self.bus.getAddress(@bitCast(u16, self.hl));
             },
             .pbc => {
                 self.write("(BC)");
-                break :blk self.bus.getAddress(@bitCast(u16, self.bc)).*;
+                break :blk self.bus.getAddress(@bitCast(u16, self.bc));
             },
             .pde => {
                 self.write("(DE)");
-                break :blk self.bus.getAddress(@bitCast(u16, self.de)).*;
+                break :blk self.bus.getAddress(@bitCast(u16, self.de));
             },
             .phlp => {
                 self.write("(HL+)");
                 self.hl.add(1);
-                break :blk self.bus.getAddress(@bitCast(u16, self.hl) -% 1).*;
+                break :blk self.bus.getAddress(@bitCast(u16, self.hl) -% 1);
             },
             .phlm => {
                 self.write("(HL-)");
                 self.hl.sub(1);
-                break :blk self.bus.getAddress(@bitCast(u16, self.hl) +% 1).*;
+                break :blk self.bus.getAddress(@bitCast(u16, self.hl) +% 1);
             },
             .p => |p| {
                 self.writeWithArg("0x{X:0>2}", .{p});
-                break :blk self.bus.getAddress(p).*;
+                break :blk self.bus.getAddress(p);
             },
             .immU8 => {
                 const b = self.immU8();
@@ -1222,7 +1154,7 @@ fn getArg(self: *Self, comptime arg: Argument, comptime T: type) T {
                 const val = self.immU8();
                 self.writeWithArg("(0x{X:0>4} 0x{X:0>4} )", .{ v, v + @as(u16, val) });
                 const p = v + @as(u16, val);
-                break :blk self.bus.getAddress(p).*;
+                break :blk self.bus.getAddress(p);
             },
             .spOffsetImmI8 => {
                 const v = @bitCast(i8, self.immU8());
@@ -1264,11 +1196,4 @@ test {
 test "compare afreg and regu16 typeinfo" {
     std.debug.assert(@typeInfo(regu16).Struct.fields[0].alignment == @alignOf(u16));
     std.debug.assert(@typeInfo(regu16).Struct.fields[1].alignment == @alignOf(u16));
-}
-
-test "separate memory reads from writes" {
-    const Gameboy = @import("Gameboy.zig");
-
-    var gb = Gameboy.init();
-    defer gb.deinit();
 }

@@ -50,7 +50,31 @@ pub fn init(cart: *Cartridge) Self {
     return .{ .cart = cart };
 }
 
-pub fn getAddress(self: *Self, addr: u16) *u8 {
+pub fn getAddress(self: *Self, addr: u16) u8 {
+    return switch (addr) {
+        0x0000...0x100 => {
+            if (addr == 0xFF) self._finished_boot = true;
+            return if (!self._finished_boot)
+                self.bootrom[addr]
+            else
+                self.cart.getAddr(addr).*;
+        },
+        0x0101...0x7FFF => self.cart.getAddr(addr).*,
+        0x8000...0x9FFF => self.vram[@mod(addr, VRAM_START)],
+        0xA000...0xBFFF => @panic("attempted to read from cartridge"),
+        0xC000...0xDFFF => self.ram[@mod(addr, RAM_START)],
+        0xE000...0xFDFF => self.ram[@mod((addr - 0x2000), RAM_START)],
+        0xFE00...0xFE9F => self.sat[@mod(addr, SAT_START)],
+        0xFEA0...0xFEFF => {
+            return 0x00;
+        },
+        0xFF00...0xFF7F => self.io_reg[@mod(addr, IOREG_START)],
+        0xFF80...0xFFFE => self.hram[@mod(addr, HRAM_START)],
+        0xFFFF => self.ie_reg,
+    };
+}
+
+pub fn getAddressPtr(self: *Self, addr: u16) *u8 {
     return switch (addr) {
         0x0000...0x100 => {
             if (addr == 0xFF) self._finished_boot = true;
@@ -61,14 +85,11 @@ pub fn getAddress(self: *Self, addr: u16) *u8 {
         },
         0x0101...0x7FFF => self.cart.getAddr(addr),
         0x8000...0x9FFF => &self.vram[@mod(addr, VRAM_START)],
-        0xA000...0xBFFF => @panic("attempted to read from cartridge"),
+        0xA000...0xBFFF => @panic("attempted to write from cartridge"),
         0xC000...0xDFFF => &self.ram[@mod(addr, RAM_START)],
         0xE000...0xFDFF => &self.ram[@mod((addr - 0x2000), RAM_START)],
         0xFE00...0xFE9F => &self.sat[@mod(addr, SAT_START)],
-        0xFEA0...0xFEFF => {
-            var zero: u8 = 0x00;
-            return &zero;
-        },
+        0xFEA0...0xFEFF => @panic("unhandled"),
         0xFF00...0xFF7F => &self.io_reg[@mod(addr, IOREG_START)],
         0xFF80...0xFFFE => &self.hram[@mod(addr, HRAM_START)],
         0xFFFF => &self.ie_reg,

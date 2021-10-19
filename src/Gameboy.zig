@@ -14,21 +14,10 @@ bus: Bus,
 ppu: Ppu,
 cpu: Cpu,
 
-var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 var writer = bufw(std.io.getStdOut().writer());
-const blargg = utils.getPath();
 
-pub fn init() Self {
-    var args = std.process.args();
-    defer args.deinit();
-    _ = args.skip();
-    const path = if (args.next(arena.child_allocator)) |file|
-        file catch blargg
-    else
-        blargg;
-    std.debug.print("{s}\n", .{path});
-    var cart = Cartridge.init(path, arena.child_allocator) catch @panic("");
-    var bus = Bus.init(&cart);
+pub fn init(cart: *Cartridge) Self {
+    var bus = Bus.init(cart);
     var ppu = Ppu.init();
     var cpu = Cpu.init(&bus, &ppu, &writer);
     return Self{ .bus = bus, .ppu = ppu, .cpu = cpu };
@@ -36,7 +25,6 @@ pub fn init() Self {
 
 pub fn deinit(self: Self) void {
     self.bus.cart.deinit();
-    arena.deinit();
 }
 
 pub fn step(self: *Self) void {
