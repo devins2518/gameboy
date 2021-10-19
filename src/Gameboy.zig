@@ -20,6 +20,7 @@ const blargg = utils.getPath();
 
 pub fn init() Self {
     var args = std.process.args();
+    defer args.deinit();
     _ = args.skip();
     const path = if (args.next(arena.child_allocator)) |file|
         file catch blargg

@@ -564,7 +564,10 @@ pub fn clock(self: *Self) !void {
         0xDE => @panic("unhandled opcode: 0xDE"),
         0xDF => @panic("unhandled opcode: 0xDF"),
         0xE1 => @panic("unhandled opcode: 0xE1"),
-        0xE2 => self.bus.getAddress(0xFF00 + @as(u16, self.bc.b)).* = self.af.a,
+        0xE2 => {
+            self.write("LD (0xFF00 + C), A");
+            self.bus.getAddress(0xFF00 + @as(u16, self.bc.b)).* = self.af.a;
+        },
         0xE6 => @panic("unhandled opcode: 0xE6"),
         0xE7 => @panic("unhandled opcode: 0xE7"),
         0xE8 => {
@@ -742,13 +745,12 @@ fn halt(self: *Self) void {
 }
 
 fn inc(self: *Self, comptime field: Registers) void {
+    self.write("INC ");
     switch (field) {
-        .AF => self.af.add(1),
-        .BC => self.bc.add(1),
-        .DE => self.de.add(1),
-        .HL => self.hl.add(1),
-        .PC => self.pc +%= 1,
-        .SP => self.sp +%= 1,
+        .AF, .BC, .DE, .HL, .PC, .SP => {
+            const reg = self.getReg(field, u16);
+            reg.* +%= 1;
+        },
         else => {
             const r = blk: {
                 switch (field) {
