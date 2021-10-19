@@ -661,16 +661,20 @@ fn bit(self: *Self, comptime b: u8, comptime arg: Argument) void {
 }
 
 fn call(self: *Self, comptime opt: ?Optional) void {
-    if (opt) |o| if (!self.check(o))
-        return;
-
+    self.write("CALL ");
     const addr = self.immU16();
-    self.bus.getAddressPtr(self.sp).* = @truncate(u8, self.pc & 0x0F);
-    self.sp -%= 1;
-    self.bus.getAddressPtr(self.sp).* = @truncate(u8, (self.pc & 0xF0) >> 8);
-    self.sp -%= 1;
+    if (opt) |o| {
+        self.writeWithArg("{}, ", .{o});
+        if (self.check(o)) {
+            self.bus.getAddressPtr(self.sp).* = @truncate(u8, self.pc & 0x0F);
+            self.sp -%= 1;
+            self.bus.getAddressPtr(self.sp).* = @truncate(u8, (self.pc & 0xF0) >> 8);
+            self.sp -%= 1;
 
-    self.pc = addr;
+            self.pc = addr;
+        }
+    }
+    self.writeWithArg("0x{X:0>2}", .{addr});
 }
 
 fn di(self: *Self) void {
