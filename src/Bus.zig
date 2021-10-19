@@ -36,7 +36,7 @@ bootrom: [BOOTROM_SIZE]u8 = .{
     0x34, 0x20, 0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE,
     0x3E, 0x01, 0xE0, 0x50,
 },
-cart: *Cartridge,
+cart: Cartridge,
 vram: [VRAM_SIZE]u8 = mem.zeroes([VRAM_SIZE]u8),
 ram: [RAM_SIZE]u8 = mem.zeroes([RAM_SIZE]u8),
 sat: [SAT_SIZE]u8 = mem.zeroes([SAT_SIZE]u8),
@@ -46,7 +46,7 @@ ie_reg: u8 = 0,
 
 _finished_boot: bool = false,
 
-pub fn init(cart: *Cartridge) Self {
+pub fn init(cart: Cartridge) Self {
     return .{ .cart = cart };
 }
 

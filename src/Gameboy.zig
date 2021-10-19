@@ -16,7 +16,7 @@ cpu: Cpu,
 
 var writer = bufw(std.io.getStdOut().writer());
 
-pub fn init(cart: *Cartridge) Self {
+pub fn init(cart: Cartridge) Self {
     var bus = Bus.init(cart);
     var ppu = Ppu.init();
     var cpu = Cpu.init(&bus, &ppu, &writer);

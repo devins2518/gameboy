@@ -24,7 +24,7 @@ pub fn main() !void {
     std.debug.print("{s}\n", .{path});
     var cart = Cartridge.init(path, arena.child_allocator) catch @panic("");
 
-    var gb = Gameboy.init(&cart);
+    var gb = Gameboy.init(cart);
     defer gb.deinit();
 
     try SDL.init(.{
