@@ -1,6 +1,5 @@
 const std = @import("std");
 const io = std.io;
-const bufw = io.bufferedWriter;
 const Bus = @import("Bus.zig");
 const Cartridge = @import("Cartridge.zig");
 const Cpu = @import("Cpu.zig");
@@ -9,26 +8,9 @@ const Gameboy = @import("Gameboy.zig");
 const SDL = @import("sdl2");
 const sdl_native = SDL.c;
 
-var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-const blargg = getPath();
-var writer = bufw(io.getStdOut().writer());
-
 pub fn main() !void {
-    var args = std.process.args();
-    _ = args.skip();
-    const path = if (args.next(arena.child_allocator)) |file|
-        file catch blargg
-    else
-        blargg;
-
-    std.log.info("{s}", .{path});
-    var cart = Cartridge.init(path, arena.child_allocator) catch unreachable;
-    defer cart.deinit();
-    var bus = Bus.init(&cart);
-    var ppu = Ppu.init();
-    var cpu = Cpu.init(&bus, &ppu, &writer);
-
-    var gb = Gameboy.init(bus, ppu, cpu);
+    var gb = Gameboy.init();
+    defer gb.deinit();
 
     try SDL.init(.{
         .video = true,
@@ -73,17 +55,6 @@ pub fn main() !void {
             gb.step();
 
         renderer.present();
-    }
-
-    arena.deinit();
-}
-
-pub fn getPath() []const u8 {
-    comptime {
-        const dn = std.fs.path.dirname;
-        const root = @src().file;
-
-        return dn(dn(root).?).? ++ "/roms/blargg/cpu_instrs/cpu_instrs.gb";
     }
 }
 

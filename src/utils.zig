@@ -37,3 +37,12 @@ pub const Argument = union(enum) {
     offsetImmU8: u16,
     spOffsetImmI8,
 };
+
+pub fn getPath() []const u8 {
+    comptime {
+        const dn = std.fs.path.dirname;
+        const root = @src().file;
+
+        return dn(dn(root).?).? ++ "/roms/blargg/cpu_instrs/cpu_instrs.gb";
+    }
+}

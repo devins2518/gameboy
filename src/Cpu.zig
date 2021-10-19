@@ -1251,3 +1251,10 @@ test "compare afreg and regu16 typeinfo" {
     std.debug.assert(@typeInfo(regu16).Struct.fields[0].alignment == @alignOf(u16));
     std.debug.assert(@typeInfo(regu16).Struct.fields[1].alignment == @alignOf(u16));
 }
+
+test "separate memory reads from writes" {
+    const Gameboy = @import("Gameboy.zig");
+
+    var gb = Gameboy.init();
+    defer gb.deinit();
+}
