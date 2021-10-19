@@ -50,6 +50,10 @@ pub fn init(cart: Cartridge) Self {
     return .{ .cart = cart };
 }
 
+pub fn deinit(self: Self) void {
+    self.cart.deinit();
+}
+
 pub fn getAddress(self: *Self, addr: u16) u8 {
     return switch (addr) {
         0x0000...0x100 => {

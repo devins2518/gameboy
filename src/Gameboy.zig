@@ -24,10 +24,14 @@ pub fn init(cart: Cartridge) Self {
 }
 
 pub fn deinit(self: Self) void {
-    self.bus.cart.deinit();
+    self.bus.deinit();
 }
 
 pub fn step(self: *Self) void {
     self.cpu.clock() catch {};
     self.clocks += 1;
+}
+
+test {
+    std.testing.refAllDecls(@This());
 }
