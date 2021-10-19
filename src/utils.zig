@@ -23,6 +23,8 @@ pub const Argument = union(enum) {
     bc,
     de,
     hl,
+    sp,
+    pc,
     pbc,
     pde,
     phl,

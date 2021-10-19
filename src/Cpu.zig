@@ -162,7 +162,11 @@ pub fn clock(self: *Self) !void {
         0x11 => self.ldU16(Registers.DE, Argument.immU16),
         0x21 => self.ldU16(Registers.HL, Argument.immU16),
         0x31 => self.ldU16(Registers.SP, Argument.immU16),
-        0xE0 => self.bus.getAddress(0xFF00 + @as(u16, self.immU8())).* = self.af.a,
+        0xE0 => {
+            const b = self.immU8();
+            self.writeWithArg("LD (0xFF00 + 0x{X:0>2}), A", .{b});
+            self.bus.getAddress(0xFF00 + @as(u16, b)).* = self.af.a;
+        },
         0x03 => self.inc(Registers.BC),
         0x04 => self.inc(Registers.B),
         0x0C => self.inc(Registers.C),
@@ -182,7 +186,6 @@ pub fn clock(self: *Self) !void {
             self.bus.getAddress(val).* = @truncate(u8, self.sp >> 8);
             self.bus.getAddress(val + 1).* = @truncate(u8, self.sp);
         },
-        0x09 => self.addU16(@bitCast(u16, self.bc)),
         0x0B => self.dec(Registers.BC),
         0x0D => self.dec(Registers.C),
         0x0F => self.rrca(),
@@ -190,7 +193,6 @@ pub fn clock(self: *Self) !void {
         0x15 => self.dec(Registers.D),
         0x17 => self.rla(),
         0x18 => self.jr(null),
-        0x19 => self.addU16(@bitCast(u16, self.de)),
         0x1B => self.dec(Registers.DE),
         0x1D => self.dec(Registers.E),
         0x1F => self.rra(),
@@ -198,7 +200,6 @@ pub fn clock(self: *Self) !void {
         0x25 => self.dec(Registers.H),
         0x27 => @panic("unhandled opcode: 0x27"),
         0x28 => self.jr(.Z),
-        0x29 => self.addU16(@bitCast(u16, self.hl)),
         0x2B => self.dec(Registers.HL),
         0x2D => self.dec(Registers.L),
         0x2F => @panic("unhandled opcode: 0x2F"),
@@ -207,19 +208,23 @@ pub fn clock(self: *Self) !void {
         0x36 => self.bus.getAddress(@bitCast(u16, self.hl)).* = self.immU8(),
         0x37 => @panic("unhandled opcode: 0x37"),
         0x38 => self.jr(.C),
-        0x39 => self.addU16(self.sp),
+        0x09 => self.add(Registers.HL, Argument.bc, u16),
+        0x19 => self.add(Registers.HL, Argument.de, u16),
+        0x29 => self.add(Registers.HL, Argument.hl, u16),
+        0x39 => self.add(Registers.HL, Argument.sp, u16),
         0x3B => self.dec(Registers.SP),
         0x3D => self.dec(Registers.A),
         0x3F => @panic("unhandled opcode: 0x3F"),
         0x76 => self.halt(),
-        0x80 => self.addU8(Argument.b),
-        0x81 => self.addU8(Argument.c),
-        0x82 => self.addU8(Argument.d),
-        0x83 => self.addU8(Argument.e),
-        0x84 => self.addU8(Argument.h),
-        0x85 => self.addU8(Argument.l),
-        0x86 => self.addU8(Argument.phl),
-        0x87 => self.addU8(Argument.a),
+        0x80 => self.add(Registers.A, Argument.b, u8),
+        0x81 => self.add(Registers.A, Argument.c, u8),
+        0x82 => self.add(Registers.A, Argument.d, u8),
+        0x83 => self.add(Registers.A, Argument.e, u8),
+        0x84 => self.add(Registers.A, Argument.h, u8),
+        0x85 => self.add(Registers.A, Argument.l, u8),
+        0x86 => self.add(Registers.A, Argument.phl, u8),
+        0x87 => self.add(Registers.A, Argument.a, u8),
+        0xC6 => self.add(Registers.A, Argument.immU8, u8),
         0x88 => self.adc(Argument.b),
         0x89 => self.adc(Argument.c),
         0x8A => self.adc(Argument.d),
@@ -228,14 +233,16 @@ pub fn clock(self: *Self) !void {
         0x8D => self.adc(Argument.l),
         0x8E => self.adc(Argument.phl),
         0x8F => self.adc(Argument.a),
-        0x90 => self.sub(self.bc.a),
-        0x91 => self.sub(self.bc.b),
-        0x92 => self.sub(self.de.a),
-        0x93 => self.sub(self.de.b),
-        0x94 => self.sub(self.hl.a),
-        0x95 => self.sub(self.hl.b),
-        0x96 => self.sub(self.bus.getAddress(@bitCast(u16, self.hl)).*),
-        0x97 => self.sub(self.af.a),
+        0xCE => self.adc(Argument.immU8),
+        0x90 => self.sub(Argument.b),
+        0x91 => self.sub(Argument.c),
+        0x92 => self.sub(Argument.d),
+        0x93 => self.sub(Argument.e),
+        0x94 => self.sub(Argument.h),
+        0x95 => self.sub(Argument.l),
+        0x96 => self.sub(Argument.phl),
+        0x97 => self.sub(Argument.a),
+        0xD6 => self.sub(Argument.immU8),
         0x98 => @panic("unhandled opcode: 0x98"),
         0x99 => @panic("unhandled opcode: 0x99"),
         0x9A => @panic("unhandled opcode: 0x9A"),
@@ -277,12 +284,8 @@ pub fn clock(self: *Self) !void {
         0xBE => @panic("unhandled opcode: 0xBE"),
         0xBF => @panic("unhandled opcode: 0xBF"),
         0xC0 => @panic("unhandled opcode: 0xC0"),
-        0xC2 => self.jp(self.immU16(), .NZ),
-        0xC3 => self.jp(self.immU16(), null),
         0xC4 => self.call(.NZ),
-        0xC6 => self.addU8(Argument.immU8),
         0xC7 => @panic("unhandled opcode: 0xC7"),
-        0xCA => self.jp(self.immU16(), .Z),
         0xCB => {
             const nopcode = self.nextInstruction();
             switch (nopcode) {
@@ -546,12 +549,9 @@ pub fn clock(self: *Self) !void {
         },
         0xCC => self.call(.C),
         0xCD => self.call(null),
-        0xCE => @panic("unhandled opcode: 0xCE"),
         0xCF => @panic("unhandled opcode: 0xCF"),
         0xD0 => @panic("unhandled opcode: 0xD0"),
-        0xD2 => self.jp(self.immU16(), .NC),
         0xD4 => self.call(.NC),
-        0xD6 => self.sub(self.immU8()),
         0xD7 => @panic("unhandled opcode: 0xD7"),
         0xC1 => self.ret(Optional.NZ),
         0xC8 => self.ret(Optional.Z),
@@ -559,7 +559,6 @@ pub fn clock(self: *Self) !void {
         0xD1 => self.ret(Optional.NC),
         0xD8 => self.ret(Optional.C),
         0xD9 => @panic("unhandled opcode: 0xD9"),
-        0xDA => self.jp(self.immU16(), .C),
         0xDC => self.call(.C),
         0xDE => @panic("unhandled opcode: 0xDE"),
         0xDF => @panic("unhandled opcode: 0xDF"),
@@ -579,7 +578,12 @@ pub fn clock(self: *Self) !void {
             self.halfCarry(@truncate(u8, a), @truncate(u8, b));
             self.carry(a, b);
         },
-        0xE9 => self.jp(@bitCast(u16, self.hl), null),
+        0xC2 => self.jp(Argument.immU16, .NZ),
+        0xC3 => self.jp(Argument.immU16, null),
+        0xCA => self.jp(Argument.immU16, .Z),
+        0xD2 => self.jp(Argument.immU16, .NC),
+        0xDA => self.jp(Argument.immU16, .C),
+        0xE9 => self.jp(Argument.hl, null),
         0xEA => @panic("unhandled opcode: 0xEA"),
         0xEE => self.xor(Argument.immU8),
         0xEF => @panic("unhandled opcode: 0xEF"),
@@ -612,15 +616,19 @@ pub fn clock(self: *Self) !void {
     self.write("\n");
 }
 
-fn addU8(self: *Self, comptime arg: Argument) void {
-    self.write("ADD A, ");
-    const val = self.getArg(arg, u8);
-    const old_a = self.af.a;
-    self.af.a +%= val;
-    self.af.f.z = self.af.a == 0;
+fn add(self: *Self, comptime field: Registers, comptime arg: Argument, comptime T: type) void {
+    self.write("ADD ");
+    const reg = self.getReg(field, T);
+    const old_reg = reg.*;
+    const val = self.getArg(arg, T);
+    reg.* +%= val;
+    if (T == u8)
+        self.af.f.z = reg.* == 0
+    else if (field == Registers.SP)
+        self.af.a.z = false;
     self.af.f.n = false;
-    self.halfCarry(old_a, val);
-    self.carry(old_a, val);
+    self.halfCarry(@truncate(u8, old_reg), @truncate(u8, val));
+    self.carry(old_reg, val);
 }
 
 fn andReg(self: *Self, val: u8) void {
@@ -629,16 +637,6 @@ fn andReg(self: *Self, val: u8) void {
     self.af.f.n = false;
     self.af.f.h = true;
     self.af.f.c = false;
-}
-
-fn addU16(self: *Self, val: u16) void {
-    var hl = @bitCast(u16, self.hl);
-
-    self.af.f.n = false;
-    self.halfCarry(@truncate(u8, hl), @truncate(u8, val));
-    self.carry(hl, val);
-
-    hl +%= val;
 }
 
 fn adc(self: *Self, comptime arg: Argument) void {
@@ -801,11 +799,15 @@ fn inc(self: *Self, comptime field: Registers) void {
     }
 }
 
-fn jp(self: *Self, addr: u16, comptime opt: ?Optional) void {
-    if (opt) |o| if (!self.check(o))
-        return;
-
-    self.pc = addr;
+fn jp(self: *Self, comptime arg: Argument, comptime opt: ?Optional) void {
+    const addr = self.getArg(arg, u16);
+    self.write("JP ");
+    if (opt) |o| {
+        self.writeWithArg("{}, ", .{o});
+        if (self.check(o))
+            self.pc = addr;
+    }
+    self.writeWithArg("0x{X:0>2}", .{addr});
 }
 
 fn jr(self: *Self, comptime opt: ?Optional) void {
@@ -972,7 +974,9 @@ fn srl(self: *Self, comptime field: Registers) void {
     self.af.f.z = r.* == 0;
 }
 
-fn sub(self: *Self, val: u8) void {
+fn sub(self: *Self, comptime arg: Argument) void {
+    self.write("SUB A, ");
+    const val = self.getArg(arg, u8);
     self.af.f.z = self.af.a == 0;
     self.af.f.n = true;
     self.halfCarry(self.af.a, val);
@@ -1196,6 +1200,14 @@ fn getArg(self: *Self, comptime arg: Argument, comptime T: type) T {
             .hl => {
                 self.write("DE");
                 break :blk @bitCast(u16, self.hl);
+            },
+            .sp => {
+                self.write("SP");
+                break :blk self.sp;
+            },
+            .pc => {
+                self.write("PC");
+                break :blk self.pc;
             },
             .immU16 => {
                 const b = self.immU16();
