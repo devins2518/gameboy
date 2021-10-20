@@ -1,5 +1,7 @@
 const std = @import("std");
 const debug = std.log.debug;
+const SDL = @import("sdl2");
+const sdl_native = SDL.c;
 
 pub fn debugAddr(comptime header: []const u8, args: anytype) void {
     const format = " 0x{X:0>2}";
@@ -47,4 +49,9 @@ pub fn getPath() []const u8 {
 
         return dn(dn(root).?).? ++ "/roms/blargg/cpu_instrs/cpu_instrs.gb";
     }
+}
+
+pub fn sdlPanic() noreturn {
+    const str = @as(?[*:0]const u8, sdl_native.SDL_GetError()) orelse "unknown error";
+    @panic(std.mem.sliceTo(str, 0));
 }

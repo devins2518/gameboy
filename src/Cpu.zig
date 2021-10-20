@@ -158,6 +158,11 @@ pub fn clock(self: *Self) !void {
         0x77 => self.ldU8(Registers.PHL, Argument.a),
         0x22 => self.ldU8(Registers.PHLP, Argument.a),
         0x32 => self.ldU8(Registers.PHLM, Argument.a),
+        0xEA => {
+            const b = self.immU16();
+            self.writeWithArg("LD 0x{X:0>2}, A", .{b});
+            self.bus.getAddressPtr(b).* = self.af.a;
+        },
         0x01 => self.ldU16(Registers.BC, Argument.immU16),
         0x11 => self.ldU16(Registers.DE, Argument.immU16),
         0x21 => self.ldU16(Registers.HL, Argument.immU16),
@@ -590,7 +595,6 @@ pub fn clock(self: *Self) !void {
         0xD2 => self.jp(Argument.immU16, .NC),
         0xDA => self.jp(Argument.immU16, .C),
         0xE9 => self.jp(Argument.hl, null),
-        0xEA => @panic("unhandled opcode: 0xEA"),
         0xF1 => @panic("unhandled opcode: 0xF1"),
         0xF2 => @panic("unhandled opcode: 0xF2"),
         0xF3 => self.di(),
@@ -1166,7 +1170,7 @@ fn getArg(self: *Self, comptime arg: Argument, comptime T: type) T {
             },
             .offsetImmU8 => |v| {
                 const val = self.immU8();
-                self.writeWithArg("(0x{X:0>4} 0x{X:0>4} )", .{ v, v + @as(u16, val) });
+                self.writeWithArg("(0x{X:0>4} + 0x{X:0>4})", .{ v, @as(u16, val) });
                 const p = v + @as(u16, val);
                 break :blk self.bus.getAddress(p);
             },
