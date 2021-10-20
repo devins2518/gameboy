@@ -278,14 +278,15 @@ pub fn clock(self: *Self) !void {
         0xB6 => self.orReg(Argument.phl),
         0xB7 => self.orReg(Argument.a),
         0xF6 => self.orReg(Argument.immU8),
-        0xB8 => @panic("unhandled opcode: 0xB8"),
-        0xB9 => @panic("unhandled opcode: 0xB9"),
-        0xBA => @panic("unhandled opcode: 0xBA"),
-        0xBB => @panic("unhandled opcode: 0xBB"),
-        0xBC => @panic("unhandled opcode: 0xBC"),
-        0xBD => @panic("unhandled opcode: 0xBD"),
-        0xBE => @panic("unhandled opcode: 0xBE"),
-        0xBF => @panic("unhandled opcode: 0xBF"),
+        0xB8 => self.cp(Argument.b),
+        0xB9 => self.cp(Argument.c),
+        0xBA => self.cp(Argument.d),
+        0xBB => self.cp(Argument.e),
+        0xBC => self.cp(Argument.h),
+        0xBD => self.cp(Argument.l),
+        0xBE => self.cp(Argument.phl),
+        0xBF => self.cp(Argument.a),
+        0xFE => self.cp(Argument.immU8),
         0xC0 => @panic("unhandled opcode: 0xC0"),
         0xC4 => self.call(.NZ),
         0xCB => {
@@ -601,7 +602,6 @@ pub fn clock(self: *Self) !void {
         0xF9 => @panic("unhandled opcode: 0xF9"),
         0xFA => @panic("unhandled opcode: 0xFA"),
         0xFB => @panic("unhandled opcode: 0xFB"),
-        0xFE => @panic("unhandled opcode: 0xFE"),
         else => unreachable,
     }
 
@@ -666,15 +666,24 @@ fn call(self: *Self, comptime opt: ?Optional) void {
     if (opt) |o| {
         self.writeWithArg("{}, ", .{o});
         if (self.check(o)) {
-            self.bus.getAddressPtr(self.sp).* = @truncate(u8, self.pc & 0x0F);
+            self.bus.getAddressPtr(self.sp).* = @truncate(u8, self.pc & 0x00FF);
             self.sp -%= 1;
-            self.bus.getAddressPtr(self.sp).* = @truncate(u8, (self.pc & 0xF0) >> 8);
+            self.bus.getAddressPtr(self.sp).* = @truncate(u8, (self.pc & 0xFF00) >> 8);
             self.sp -%= 1;
 
             self.pc = addr;
         }
     }
     self.writeWithArg("0x{X:0>2}", .{addr});
+}
+
+fn cp(self: *Self, comptime arg: Argument) void {
+    self.write("CP A, ");
+    const n = self.getArg(arg, u8);
+    self.halfCarry(self.af.a, n);
+    self.af.f.c = self.af.a < n;
+    const val = self.af.a -% n;
+    self.af.f.z = val == 0;
 }
 
 fn di(self: *Self) void {
@@ -707,6 +716,7 @@ fn halt(self: *Self) void {
     self.halted = true;
 }
 
+// TODO: Prints , after register
 fn inc(self: *Self, comptime field: Registers) void {
     self.write("INC ");
     switch (field) {
