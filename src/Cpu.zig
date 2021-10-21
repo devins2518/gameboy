@@ -1199,7 +1199,7 @@ test "cpu registers" {
     var writer = std.io.bufferedWriter(std.io.getStdOut().writer());
 
     var bus = Bus.init(undefined);
-    var ppu = Ppu.init();
+    var ppu = try Ppu.init(&bus);
     var cpu = Self.init(&bus, &ppu, &writer);
     cpu.af.f.z = true;
 
