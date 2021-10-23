@@ -10,7 +10,15 @@ pub fn debugAddr(comptime header: []const u8, args: anytype) void {
 
 pub const Registers = enum { AF, BC, DE, HL, A, F, B, C, D, E, H, L, SP, PC, PHL, PHLP, PHLM, PBC, PDE };
 
-pub const Optional = enum { C, NC, Z, NZ };
+pub const Optional = enum {
+    C,
+    NC,
+    Z,
+    NZ,
+    pub fn format(value: Optional, comptime _: []const u8, _: std.fmt.FormatOptions, writer: anytype) !void {
+        try writer.writeAll(@tagName(value));
+    }
+};
 
 pub const Argument = union(enum) {
     a,
