@@ -603,7 +603,7 @@ pub fn clock(self: *Self) !void {
         0xE5 => self.push(Argument.hl),
         0xF5 => self.push(Argument.af),
         0xF8 => self.ei(),
-        0xF9 => @panic("unhandled opcode: 0xF9"),
+        0xF9 => self.ldU16(Registers.SP, Argument.hl),
         0xFA => @panic("unhandled opcode: 0xFA"),
         0xFB => @panic("unhandled opcode: 0xFB"),
         else => unreachable,

@@ -44,6 +44,15 @@ const mode = enum(u2) {
 
 lcdc: *lcdc_struct,
 lcds: *lcd_status,
+scy: *u8,
+scx: *u8,
+ly: *u8,
+lyc: *u8,
+bgPaletteData: *u8,
+obp0: *u8,
+obp1: *u8,
+wy: *u8,
+wx: *u8,
 
 renderer: SDL.Renderer,
 window: SDL.Window,
@@ -51,8 +60,8 @@ texture: SDL.Texture,
 
 mode: mode,
 
-const height = 480;
-const width = 640;
+const screen_h = 160;
+const screen_w = 144;
 
 pub fn init(bus: *Bus) !Self {
     try SDL.init(.{
@@ -65,8 +74,8 @@ pub fn init(bus: *Bus) !Self {
         "Ziggyboy",
         .{ .centered = {} },
         .{ .centered = {} },
-        width,
-        height,
+        screen_w,
+        screen_h,
         .{ .shown = true },
     );
     var r = try SDL.createRenderer(w, null, .{ .accelerated = true });
@@ -81,6 +90,15 @@ pub fn init(bus: *Bus) !Self {
         .mode = mode.oam_scan,
         .lcdc = @ptrCast(*lcdc_struct, bus.getAddressPtr(LCDC)),
         .lcds = @ptrCast(*lcd_status, bus.getAddressPtr(LCDS)),
+        .scy = bus.getAddressPtr(SCY),
+        .scx = bus.getAddressPtr(SCX),
+        .ly = bus.getAddressPtr(LY),
+        .lyc = bus.getAddressPtr(LYC),
+        .bgPaletteData = bus.getAddressPtr(bgPaletteData),
+        .obp0 = bus.getAddressPtr(obp0),
+        .obp1 = bus.getAddressPtr(obp1),
+        .wy = bus.getAddressPtr(WY),
+        .wx = bus.getAddressPtr(WX),
     };
 }
 
@@ -95,5 +113,5 @@ pub fn clock(self: *Self) !void {
 }
 
 fn createTextureBuffer(r: *SDL.Renderer) SDL.Texture {
-    return SDL.createTexture(r.*, .argb8888, .streaming, width, height) catch utils.sdlPanic();
+    return SDL.createTexture(r.*, .argb8888, .streaming, screen_w, screen_h) catch utils.sdlPanic();
 }
