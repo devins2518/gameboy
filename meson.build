@@ -6,7 +6,13 @@ src = [
   'src/main.c',
 ]
 
-exe = executable('crustyboy', src,
-  install : true)
+sdl = dependency('SDL2')
+
+exe = executable(
+  'crustyboy',
+  src,
+  dependencies : [sdl],
+  install : true
+)
 
 test('basic', exe)
