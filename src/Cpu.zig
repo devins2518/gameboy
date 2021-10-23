@@ -292,7 +292,7 @@ pub fn clock(self: *Self) !void {
         0xBE => self.cp(Argument.phl),
         0xBF => self.cp(Argument.a),
         0xFE => self.cp(Argument.immU8),
-        0xC0 => @panic("unhandled opcode: 0xC0"),
+        0xC1 => @panic("unhandled opcode: 0xC1"),
         0xC4 => self.call(.NZ),
         0xCB => {
             const nopcode = self.nextInstruction();
@@ -567,7 +567,7 @@ pub fn clock(self: *Self) !void {
         0xFF => self.rst(0x38),
         0xD0 => @panic("unhandled opcode: 0xD0"),
         0xD4 => self.call(.NC),
-        0xC1 => self.ret(Optional.NZ),
+        0xC0 => self.ret(Optional.NZ),
         0xC8 => self.ret(Optional.Z),
         0xC9 => self.ret(null),
         0xD1 => self.ret(Optional.NC),
@@ -595,7 +595,7 @@ pub fn clock(self: *Self) !void {
         0xD2 => self.jp(Argument.immU16, .NC),
         0xDA => self.jp(Argument.immU16, .C),
         0xE9 => self.jp(Argument.hl, null),
-        0xF1 => @panic("unhandled opcode: 0xF1"),
+        0xF1 => self.ldU8(Registers.A, Argument{ .offsetImmU8 = 0xFF00 }),
         0xF2 => @panic("unhandled opcode: 0xF2"),
         0xF3 => self.di(),
         0xC5 => self.push(Argument.bc),
