@@ -1,6 +1,7 @@
 const std = @import("std");
 const mem = std.mem;
 const Cartridge = @import("Cartridge.zig");
+const utils = @import("utils.zig");
 const Self = @This();
 
 const BOOTROM_SIZE: usize = 0x0100;
@@ -78,26 +79,69 @@ pub fn getAddress(self: *Self, addr: u16) u8 {
     };
 }
 
-pub fn getAddressPtr(self: *Self, addr: u16) *u8 {
-    return switch (addr) {
+pub fn getLcdc(self: *Self) *utils.lcdc_struct {
+    return @ptrCast(*utils.lcdc_struct, &self.io_reg[@mod(utils.LCDC, IOREG_START)]);
+}
+
+pub fn getLcds(self: *Self) *utils.lcd_status {
+    return @ptrCast(*utils.lcd_status, &self.io_reg[@mod(utils.LCDS, IOREG_START)]);
+}
+
+pub fn getScy(self: *Self) *u8 {
+    return &self.io_reg[@mod(utils.SCY, IOREG_START)];
+}
+
+pub fn getScx(self: *Self) *u8 {
+    return &self.io_reg[@mod(utils.SCX, IOREG_START)];
+}
+
+pub fn getLy(self: *Self) *u8 {
+    return &self.io_reg[@mod(utils.LY, IOREG_START)];
+}
+
+pub fn getLyc(self: *Self) *u8 {
+    return &self.io_reg[@mod(utils.LYC, IOREG_START)];
+}
+
+pub fn getBgPaletteData(self: *Self) *u8 {
+    return &self.io_reg[@mod(utils.bgPaletteData, IOREG_START)];
+}
+
+pub fn getObp0(self: *Self) *u8 {
+    return &self.io_reg[@mod(utils.obp0, IOREG_START)];
+}
+
+pub fn getObp1(self: *Self) *u8 {
+    return &self.io_reg[@mod(utils.obp1, IOREG_START)];
+}
+
+pub fn getWy(self: *Self) *u8 {
+    return &self.io_reg[@mod(utils.WY, IOREG_START)];
+}
+
+pub fn getWx(self: *Self) *u8 {
+    return &self.io_reg[@mod(utils.WX, IOREG_START)];
+}
+
+pub fn writeAddress(self: *Self, addr: u16, n: u8) void {
+    switch (addr) {
         0x0000...0x100 => {
-            if (addr == 0xFF) self._finished_boot = true;
-            return if (!self._finished_boot)
-                &self.bootrom[addr]
+            if (!self._finished_boot)
+                self.bootrom[addr] = n
             else
-                self.cart.getAddr(addr);
+                self.cart.getAddr(addr).* = n;
         },
-        0x0101...0x7FFF => self.cart.getAddr(addr),
-        0x8000...0x9FFF => &self.vram[@mod(addr, VRAM_START)],
+        0x0101...0x7FFF => self.cart.getAddr(addr).* = n,
+        0x8000...0x9FFF => self.vram[@mod(addr, VRAM_START)] = n,
         0xA000...0xBFFF => @panic("attempted to write from cartridge"),
-        0xC000...0xDFFF => &self.ram[@mod(addr, RAM_START)],
-        0xE000...0xFDFF => &self.ram[@mod((addr - 0x2000), RAM_START)],
-        0xFE00...0xFE9F => &self.sat[@mod(addr, SAT_START)],
+        0xC000...0xDFFF => self.ram[@mod(addr, RAM_START)] = n,
+        0xE000...0xFDFF => self.ram[@mod((addr - 0x2000), RAM_START)] = n,
+        0xFE00...0xFE9F => self.sat[@mod(addr, SAT_START)] = n,
         0xFEA0...0xFEFF => @panic("unhandled"),
-        0xFF00...0xFF7F => &self.io_reg[@mod(addr, IOREG_START)],
-        0xFF80...0xFFFE => &self.hram[@mod(addr, HRAM_START)],
-        0xFFFF => &self.ie_reg,
-    };
+        0xFF00...0xFF7F => self.io_reg[@mod(addr, IOREG_START)] = n,
+        0xFF80...0xFFFE => self.hram[@mod(addr, HRAM_START)] = n,
+        0xFFFF => self.ie_reg = n,
+    }
 }
 
 test {

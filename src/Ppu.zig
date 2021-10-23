@@ -3,47 +3,8 @@ const utils = @import("utils.zig");
 const SDL = @import("sdl2");
 const Self = @This();
 
-const LCDC = 0xFF40;
-const LCDS = 0xFF41;
-const SCY = 0xFF42;
-const SCX = 0xFF43;
-const LY = 0xFF44;
-const LYC = 0xFF45;
-const bgPaletteData = 0xFF47;
-const obp0 = 0xFF48;
-const obp1 = 0xFF49;
-const WY = 0xFF4A;
-const WX = 0xFF4B;
-
-const lcdc_struct = packed struct {
-    enable: bool,
-    window_tilemap: u1,
-    window_enable: bool,
-    bg_window_address_mode: u1,
-    bg_tilemap: u1,
-    obj_size: u1,
-    obj_enable: bool,
-    window_priority: u1,
-};
-const lcd_status = packed struct {
-    _: u1,
-    // TODO
-    lyc_eq_ly_stat: bool,
-    mode2_int: bool,
-    mode1_int: bool,
-    mode0_int: bool,
-    lyc_eq_ly_flag: bool,
-    mode: mode,
-};
-const mode = enum(u2) {
-    hblank,
-    vblank,
-    oam_scan,
-    draw,
-};
-
-lcdc: *lcdc_struct,
-lcds: *lcd_status,
+lcdc: *utils.lcdc_struct,
+lcds: *utils.lcd_status,
 scy: *u8,
 scx: *u8,
 ly: *u8,
@@ -58,7 +19,7 @@ renderer: SDL.Renderer,
 window: SDL.Window,
 texture: SDL.Texture,
 
-mode: mode,
+mode: utils.mode,
 
 const screen_h = 160;
 const screen_w = 144;
@@ -87,18 +48,18 @@ pub fn init(bus: *Bus) !Self {
         .renderer = r,
         .window = w,
         .texture = t,
-        .mode = mode.oam_scan,
-        .lcdc = @ptrCast(*lcdc_struct, bus.getAddressPtr(LCDC)),
-        .lcds = @ptrCast(*lcd_status, bus.getAddressPtr(LCDS)),
-        .scy = bus.getAddressPtr(SCY),
-        .scx = bus.getAddressPtr(SCX),
-        .ly = bus.getAddressPtr(LY),
-        .lyc = bus.getAddressPtr(LYC),
-        .bgPaletteData = bus.getAddressPtr(bgPaletteData),
-        .obp0 = bus.getAddressPtr(obp0),
-        .obp1 = bus.getAddressPtr(obp1),
-        .wy = bus.getAddressPtr(WY),
-        .wx = bus.getAddressPtr(WX),
+        .mode = .oam_scan,
+        .lcdc = bus.getLcdc(),
+        .lcds = bus.getLcds(),
+        .scy = bus.getScy(),
+        .scx = bus.getScx(),
+        .ly = bus.getLy(),
+        .lyc = bus.getLyc(),
+        .bgPaletteData = bus.getBgPaletteData(),
+        .obp0 = bus.getObp0(),
+        .obp1 = bus.getObp1(),
+        .wy = bus.getWy(),
+        .wx = bus.getWx(),
     };
 }
 

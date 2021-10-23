@@ -79,98 +79,101 @@ pub fn clock(self: *Self) !void {
     debug("Matching opcode:", .{opcode});
     switch (opcode) {
         0x00 => self.noop(),
-        0x0A => self.ldU8(Registers.A, Argument.pbc),
-        0x1A => self.ldU8(Registers.A, Argument.pde),
-        0x2A => self.ldU8(Registers.A, Argument.phlp),
-        0x3A => self.ldU8(Registers.A, Argument.phlm),
-        0x3E => self.ldU8(Registers.A, Argument.immU8),
-        0x78 => self.ldU8(Registers.A, Argument.b),
-        0x79 => self.ldU8(Registers.A, Argument.c),
-        0x7A => self.ldU8(Registers.A, Argument.d),
-        0x7B => self.ldU8(Registers.A, Argument.e),
-        0x7C => self.ldU8(Registers.A, Argument.h),
-        0x7D => self.ldU8(Registers.A, Argument.l),
-        0x7E => self.ldU8(Registers.A, Argument.phl),
-        0x7F => self.ldU8(Registers.A, Argument.a),
-        0xF0 => self.ldU8(Registers.A, Argument{ .offsetImmU8 = 0xFF00 }),
-        0x06 => self.ldU8(Registers.B, Argument.immU8),
-        0x40 => self.ldU8(Registers.B, Argument.b),
-        0x41 => self.ldU8(Registers.B, Argument.c),
-        0x42 => self.ldU8(Registers.B, Argument.d),
-        0x43 => self.ldU8(Registers.B, Argument.e),
-        0x44 => self.ldU8(Registers.B, Argument.h),
-        0x45 => self.ldU8(Registers.B, Argument.l),
-        0x46 => self.ldU8(Registers.B, Argument.phl),
-        0x47 => self.ldU8(Registers.B, Argument.a),
-        0x0E => self.ldU8(Registers.C, Argument.immU8),
-        0x48 => self.ldU8(Registers.C, Argument.b),
-        0x49 => self.ldU8(Registers.C, Argument.c),
-        0x4A => self.ldU8(Registers.C, Argument.d),
-        0x4B => self.ldU8(Registers.C, Argument.e),
-        0x4C => self.ldU8(Registers.C, Argument.h),
-        0x4D => self.ldU8(Registers.C, Argument.l),
-        0x4E => self.ldU8(Registers.C, Argument.phl),
-        0x4F => self.ldU8(Registers.C, Argument.a),
-        0x16 => self.ldU8(Registers.D, Argument.immU8),
-        0x50 => self.ldU8(Registers.D, Argument.b),
-        0x51 => self.ldU8(Registers.D, Argument.c),
-        0x52 => self.ldU8(Registers.D, Argument.d),
-        0x53 => self.ldU8(Registers.D, Argument.e),
-        0x54 => self.ldU8(Registers.D, Argument.h),
-        0x55 => self.ldU8(Registers.D, Argument.l),
-        0x56 => self.ldU8(Registers.D, Argument.phl),
-        0x57 => self.ldU8(Registers.D, Argument.a),
-        0x1E => self.ldU8(Registers.E, Argument.immU8),
-        0x58 => self.ldU8(Registers.E, Argument.b),
-        0x59 => self.ldU8(Registers.E, Argument.c),
-        0x5A => self.ldU8(Registers.E, Argument.d),
-        0x5B => self.ldU8(Registers.E, Argument.e),
-        0x5C => self.ldU8(Registers.E, Argument.h),
-        0x5D => self.ldU8(Registers.E, Argument.l),
-        0x5E => self.ldU8(Registers.E, Argument.phl),
-        0x5F => self.ldU8(Registers.E, Argument.a),
-        0x26 => self.ldU8(Registers.H, Argument.immU8),
-        0x60 => self.ldU8(Registers.H, Argument.b),
-        0x61 => self.ldU8(Registers.H, Argument.c),
-        0x62 => self.ldU8(Registers.H, Argument.d),
-        0x63 => self.ldU8(Registers.H, Argument.e),
-        0x64 => self.ldU8(Registers.H, Argument.h),
-        0x65 => self.ldU8(Registers.H, Argument.l),
-        0x66 => self.ldU8(Registers.H, Argument.phl),
-        0x67 => self.ldU8(Registers.H, Argument.a),
-        0x2E => self.ldU8(Registers.L, Argument.immU8),
-        0x68 => self.ldU8(Registers.L, Argument.b),
-        0x69 => self.ldU8(Registers.L, Argument.c),
-        0x6A => self.ldU8(Registers.L, Argument.d),
-        0x6B => self.ldU8(Registers.L, Argument.e),
-        0x6C => self.ldU8(Registers.L, Argument.h),
-        0x6D => self.ldU8(Registers.L, Argument.l),
-        0x6E => self.ldU8(Registers.L, Argument.phl),
-        0x6F => self.ldU8(Registers.L, Argument.a),
-        0x02 => self.ldU8(Registers.PBC, Argument.a),
-        0x12 => self.ldU8(Registers.PDE, Argument.a),
-        0x70 => self.ldU8(Registers.PHL, Argument.b),
-        0x71 => self.ldU8(Registers.PHL, Argument.c),
-        0x72 => self.ldU8(Registers.PHL, Argument.d),
-        0x73 => self.ldU8(Registers.PHL, Argument.e),
-        0x74 => self.ldU8(Registers.PHL, Argument.h),
-        0x75 => self.ldU8(Registers.PHL, Argument.l),
-        0x77 => self.ldU8(Registers.PHL, Argument.a),
-        0x22 => self.ldU8(Registers.PHLP, Argument.a),
-        0x32 => self.ldU8(Registers.PHLM, Argument.a),
+        0x0A => self.ld(Registers.A, Argument.pbc, u8),
+        0x1A => self.ld(Registers.A, Argument.pde, u8),
+        0x2A => self.ld(Registers.A, Argument.phlp, u8),
+        0x3A => self.ld(Registers.A, Argument.phlm, u8),
+        0x3E => self.ld(Registers.A, Argument{ .valU8 = self.immU8() }, u8),
+        0x78 => self.ld(Registers.A, Argument.b, u8),
+        0x79 => self.ld(Registers.A, Argument.c, u8),
+        0x7A => self.ld(Registers.A, Argument.d, u8),
+        0x7B => self.ld(Registers.A, Argument.e, u8),
+        0x7C => self.ld(Registers.A, Argument.h, u8),
+        0x7D => self.ld(Registers.A, Argument.l, u8),
+        0x7E => self.ld(Registers.A, Argument.phl, u8),
+        0x7F => self.ld(Registers.A, Argument.a, u8),
+        0xF0 => self.ld(Registers.A, Argument{ .addrOffset = .{ .base = 0xFF00, .offset = self.immU8() } }, u8),
+        0xF1 => self.ld(Registers.A, Argument{ .addrOffset = .{ .base = 0xFF00, .offset = self.immU8() } }, u8),
+        0x06 => self.ld(Registers.B, Argument{ .valU8 = self.immU8() }, u8),
+        0x40 => self.ld(Registers.B, Argument.b, u8),
+        0x41 => self.ld(Registers.B, Argument.c, u8),
+        0x42 => self.ld(Registers.B, Argument.d, u8),
+        0x43 => self.ld(Registers.B, Argument.e, u8),
+        0x44 => self.ld(Registers.B, Argument.h, u8),
+        0x45 => self.ld(Registers.B, Argument.l, u8),
+        0x46 => self.ld(Registers.B, Argument.phl, u8),
+        0x47 => self.ld(Registers.B, Argument.a, u8),
+        0x0E => self.ld(Registers.C, Argument{ .valU8 = self.immU8() }, u8),
+        0x48 => self.ld(Registers.C, Argument.b, u8),
+        0x49 => self.ld(Registers.C, Argument.c, u8),
+        0x4A => self.ld(Registers.C, Argument.d, u8),
+        0x4B => self.ld(Registers.C, Argument.e, u8),
+        0x4C => self.ld(Registers.C, Argument.h, u8),
+        0x4D => self.ld(Registers.C, Argument.l, u8),
+        0x4E => self.ld(Registers.C, Argument.phl, u8),
+        0x4F => self.ld(Registers.C, Argument.a, u8),
+        0x16 => self.ld(Registers.D, Argument{ .valU8 = self.immU8() }, u8),
+        0x50 => self.ld(Registers.D, Argument.b, u8),
+        0x51 => self.ld(Registers.D, Argument.c, u8),
+        0x52 => self.ld(Registers.D, Argument.d, u8),
+        0x53 => self.ld(Registers.D, Argument.e, u8),
+        0x54 => self.ld(Registers.D, Argument.h, u8),
+        0x55 => self.ld(Registers.D, Argument.l, u8),
+        0x56 => self.ld(Registers.D, Argument.phl, u8),
+        0x57 => self.ld(Registers.D, Argument.a, u8),
+        0x1E => self.ld(Registers.E, Argument{ .valU8 = self.immU8() }, u8),
+        0x58 => self.ld(Registers.E, Argument.b, u8),
+        0x59 => self.ld(Registers.E, Argument.c, u8),
+        0x5A => self.ld(Registers.E, Argument.d, u8),
+        0x5B => self.ld(Registers.E, Argument.e, u8),
+        0x5C => self.ld(Registers.E, Argument.h, u8),
+        0x5D => self.ld(Registers.E, Argument.l, u8),
+        0x5E => self.ld(Registers.E, Argument.phl, u8),
+        0x5F => self.ld(Registers.E, Argument.a, u8),
+        0x26 => self.ld(Registers.H, Argument{ .valU8 = self.immU8() }, u8),
+        0x60 => self.ld(Registers.H, Argument.b, u8),
+        0x61 => self.ld(Registers.H, Argument.c, u8),
+        0x62 => self.ld(Registers.H, Argument.d, u8),
+        0x63 => self.ld(Registers.H, Argument.e, u8),
+        0x64 => self.ld(Registers.H, Argument.h, u8),
+        0x65 => self.ld(Registers.H, Argument.l, u8),
+        0x66 => self.ld(Registers.H, Argument.phl, u8),
+        0x67 => self.ld(Registers.H, Argument.a, u8),
+        0x2E => self.ld(Registers.L, Argument{ .valU8 = self.immU8() }, u8),
+        0x68 => self.ld(Registers.L, Argument.b, u8),
+        0x69 => self.ld(Registers.L, Argument.c, u8),
+        0x6A => self.ld(Registers.L, Argument.d, u8),
+        0x6B => self.ld(Registers.L, Argument.e, u8),
+        0x6C => self.ld(Registers.L, Argument.h, u8),
+        0x6D => self.ld(Registers.L, Argument.l, u8),
+        0x6E => self.ld(Registers.L, Argument.phl, u8),
+        0x6F => self.ld(Registers.L, Argument.a, u8),
+        0x02 => self.ld(Registers.PBC, Argument.a, u8),
+        0x12 => self.ld(Registers.PDE, Argument.a, u8),
+        0x70 => self.ld(Registers.PHL, Argument.b, u8),
+        0x71 => self.ld(Registers.PHL, Argument.c, u8),
+        0x72 => self.ld(Registers.PHL, Argument.d, u8),
+        0x73 => self.ld(Registers.PHL, Argument.e, u8),
+        0x74 => self.ld(Registers.PHL, Argument.h, u8),
+        0x75 => self.ld(Registers.PHL, Argument.l, u8),
+        0x77 => self.ld(Registers.PHL, Argument.a, u8),
+        0x36 => self.ld(Registers.PHL, Argument{ .valU8 = self.immU8() }, u8),
+        0x22 => self.ld(Registers.PHLP, Argument.a, u8),
+        0x32 => self.ld(Registers.PHLM, Argument.a, u8),
         0xEA => {
             const b = self.immU16();
             self.writeWithArg("LD 0x{X:0>2}, A", .{b});
-            self.bus.getAddressPtr(b).* = self.af.a;
+            self.bus.writeAddress(b, self.af.a);
         },
-        0x01 => self.ldU16(Registers.BC, Argument.immU16),
-        0x11 => self.ldU16(Registers.DE, Argument.immU16),
-        0x21 => self.ldU16(Registers.HL, Argument.immU16),
-        0x31 => self.ldU16(Registers.SP, Argument.immU16),
+        0x01 => self.ld(Registers.BC, Argument{ .valU16 = self.immU16() }, u16),
+        0x11 => self.ld(Registers.DE, Argument{ .valU16 = self.immU16() }, u16),
+        0x21 => self.ld(Registers.HL, Argument{ .valU16 = self.immU16() }, u16),
+        0x31 => self.ld(Registers.SP, Argument{ .valU16 = self.immU16() }, u16),
+        0xF9 => self.ld(Registers.SP, Argument.hl, u16),
         0xE0 => {
             const b = self.immU8();
             self.writeWithArg("LD (0xFF00 + 0x{X:0>2}), A", .{b});
-            self.bus.getAddressPtr(0xFF00 + @as(u16, b)).* = self.af.a;
+            self.bus.writeAddress(0xFF00 + @as(u16, b), self.af.a);
         },
         0x03 => self.inc(Registers.BC),
         0x04 => self.inc(Registers.B),
@@ -188,8 +191,8 @@ pub fn clock(self: *Self) !void {
         0x07 => self.rlca(),
         0x08 => {
             const val = self.immU16();
-            self.bus.getAddressPtr(val).* = @truncate(u8, self.sp >> 8);
-            self.bus.getAddressPtr(val + 1).* = @truncate(u8, self.sp);
+            self.bus.writeAddress(val, @truncate(u8, self.sp >> 8));
+            self.bus.writeAddress(val + 1, @truncate(u8, self.sp));
         },
         0x0B => self.dec(Registers.BC),
         0x0D => self.dec(Registers.C),
@@ -210,7 +213,6 @@ pub fn clock(self: *Self) !void {
         0x2F => @panic("unhandled opcode: 0x2F"),
         0x30 => self.jr(.NC),
         0x35 => self.dec(Registers.PHL),
-        0x36 => self.ldU8(Registers.PHL, Argument.immU8),
         0x37 => @panic("unhandled opcode: 0x37"),
         0x38 => self.jr(.C),
         0x09 => self.add(Registers.HL, Argument.bc, u16),
@@ -229,7 +231,7 @@ pub fn clock(self: *Self) !void {
         0x85 => self.add(Registers.A, Argument.l, u8),
         0x86 => self.add(Registers.A, Argument.phl, u8),
         0x87 => self.add(Registers.A, Argument.a, u8),
-        0xC6 => self.add(Registers.A, Argument.immU8, u8),
+        0xC6 => self.add(Registers.A, Argument{ .valU8 = self.immU8() }, u8),
         0x88 => self.adc(Argument.b),
         0x89 => self.adc(Argument.c),
         0x8A => self.adc(Argument.d),
@@ -238,7 +240,7 @@ pub fn clock(self: *Self) !void {
         0x8D => self.adc(Argument.l),
         0x8E => self.adc(Argument.phl),
         0x8F => self.adc(Argument.a),
-        0xCE => self.adc(Argument.immU8),
+        0xCE => self.adc(Argument{ .valU8 = self.immU8() }),
         0x90 => self.sub(Argument.b),
         0x91 => self.sub(Argument.c),
         0x92 => self.sub(Argument.d),
@@ -247,7 +249,7 @@ pub fn clock(self: *Self) !void {
         0x95 => self.sub(Argument.l),
         0x96 => self.sub(Argument.phl),
         0x97 => self.sub(Argument.a),
-        0xD6 => self.sub(Argument.immU8),
+        0xD6 => self.sub(Argument{ .valU8 = self.immU8() }),
         0x98 => @panic("unhandled opcode: 0x98"),
         0x99 => @panic("unhandled opcode: 0x99"),
         0x9A => @panic("unhandled opcode: 0x9A"),
@@ -264,7 +266,7 @@ pub fn clock(self: *Self) !void {
         0xA5 => self.andReg(Argument.l),
         0xA6 => self.andReg(Argument.phl),
         0xA7 => self.andReg(Argument.a),
-        0xE6 => self.andReg(Argument.immU8),
+        0xE6 => self.andReg(Argument{ .valU8 = self.immU8() }),
         0xA8 => self.xor(Argument.b),
         0xA9 => self.xor(Argument.c),
         0xAA => self.xor(Argument.d),
@@ -273,7 +275,7 @@ pub fn clock(self: *Self) !void {
         0xAD => self.xor(Argument.l),
         0xAE => self.xor(Argument.phl),
         0xAF => self.xor(Argument.a),
-        0xEE => self.xor(Argument.immU8),
+        0xEE => self.xor(Argument{ .valU8 = self.immU8() }),
         0xB0 => self.orReg(Argument.b),
         0xB1 => self.orReg(Argument.c),
         0xB2 => self.orReg(Argument.d),
@@ -282,7 +284,7 @@ pub fn clock(self: *Self) !void {
         0xB5 => self.orReg(Argument.l),
         0xB6 => self.orReg(Argument.phl),
         0xB7 => self.orReg(Argument.a),
-        0xF6 => self.orReg(Argument.immU8),
+        0xF6 => self.orReg(Argument{ .valU8 = self.immU8() }),
         0xB8 => self.cp(Argument.b),
         0xB9 => self.cp(Argument.c),
         0xBA => self.cp(Argument.d),
@@ -291,7 +293,7 @@ pub fn clock(self: *Self) !void {
         0xBD => self.cp(Argument.l),
         0xBE => self.cp(Argument.phl),
         0xBF => self.cp(Argument.a),
-        0xFE => self.cp(Argument.immU8),
+        0xFE => self.cp(Argument{ .valU8 = self.immU8() }),
         0xC1 => @panic("unhandled opcode: 0xC1"),
         0xC4 => self.call(.NZ),
         0xCB => {
@@ -578,7 +580,7 @@ pub fn clock(self: *Self) !void {
         0xE1 => @panic("unhandled opcode: 0xE1"),
         0xE2 => {
             self.write("LD (0xFF00 + C), A");
-            self.bus.getAddressPtr(0xFF00 + @as(u16, self.bc.b)).* = self.af.a;
+            self.bus.writeAddress(0xFF00 + @as(u16, self.bc.b), self.af.a);
         },
         0xE8 => {
             const a = self.sp;
@@ -589,13 +591,12 @@ pub fn clock(self: *Self) !void {
             self.halfCarry(@truncate(u8, a), @truncate(u8, b));
             self.carry(a, b);
         },
-        0xC2 => self.jp(Argument.immU16, .NZ),
-        0xC3 => self.jp(Argument.immU16, null),
-        0xCA => self.jp(Argument.immU16, .Z),
-        0xD2 => self.jp(Argument.immU16, .NC),
-        0xDA => self.jp(Argument.immU16, .C),
+        0xC2 => self.jp(Argument{ .valU16 = self.immU16() }, .NZ),
+        0xC3 => self.jp(Argument{ .valU16 = self.immU16() }, null),
+        0xCA => self.jp(Argument{ .valU16 = self.immU16() }, .Z),
+        0xD2 => self.jp(Argument{ .valU16 = self.immU16() }, .NC),
+        0xDA => self.jp(Argument{ .valU16 = self.immU16() }, .C),
         0xE9 => self.jp(Argument.hl, null),
-        0xF1 => self.ldU8(Registers.A, Argument{ .offsetImmU8 = 0xFF00 }),
         0xF2 => @panic("unhandled opcode: 0xF2"),
         0xF3 => self.di(),
         0xC5 => self.push(Argument.bc),
@@ -603,7 +604,6 @@ pub fn clock(self: *Self) !void {
         0xE5 => self.push(Argument.hl),
         0xF5 => self.push(Argument.af),
         0xF8 => self.ei(),
-        0xF9 => self.ldU16(Registers.SP, Argument.hl),
         0xFA => @panic("unhandled opcode: 0xFA"),
         0xFB => @panic("unhandled opcode: 0xFB"),
         else => unreachable,
@@ -623,16 +623,15 @@ pub fn clock(self: *Self) !void {
 fn add(self: *Self, comptime field: Registers, comptime arg: Argument, comptime T: type) void {
     self.write("ADD ");
     const reg = self.getReg(field, T);
-    const old_reg = reg.*;
     const val = self.getArg(arg, T);
-    reg.* +%= val;
+    self.setReg(T, field, reg +% val);
     if (T == u8)
-        self.af.f.z = reg.* == 0
+        self.af.f.z = self.getReg(field, T) == 0
     else if (field == Registers.SP)
         self.af.a.z = false;
     self.af.f.n = false;
-    self.halfCarry(@truncate(u8, old_reg), @truncate(u8, val));
-    self.carry(old_reg, val);
+    self.halfCarry(@truncate(u8, reg), @truncate(u8, val));
+    self.carry(reg, val);
 }
 
 fn andReg(self: *Self, comptime arg: Argument) void {
@@ -670,9 +669,9 @@ fn call(self: *Self, comptime opt: ?Optional) void {
     if (opt) |o| {
         self.writeWithArg("{}, ", .{o});
         if (self.check(o)) {
-            self.bus.getAddressPtr(self.sp).* = @truncate(u8, self.pc & 0x00FF);
+            self.bus.writeAddress(self.sp, @truncate(u8, self.pc & 0x00FF));
             self.sp -%= 1;
-            self.bus.getAddressPtr(self.sp).* = @truncate(u8, (self.pc & 0xFF00) >> 8);
+            self.bus.writeAddress(self.sp, @truncate(u8, (self.pc & 0xFF00) >> 8));
             self.sp -%= 1;
 
             self.pc = addr;
@@ -704,9 +703,9 @@ fn dec(self: *Self, comptime field: Registers) void {
         .SP => self.sp -%= 1,
         else => {
             const r = self.getReg(field, u8);
-            self.halfCarry(r.*, 1);
-            r.* -%= 1;
-            self.af.f.z = r.* == 0;
+            self.halfCarry(r, 1);
+            self.setReg(u8, field, r -% 1);
+            self.af.f.z = self.getReg(field, u8) == 0;
             self.af.f.n = true;
         },
     }
@@ -722,17 +721,17 @@ fn halt(self: *Self) void {
 
 // TODO: Prints , after register
 fn inc(self: *Self, comptime field: Registers) void {
-    self.write("INC ");
+    self.writeWithArg("INC {}", .{field});
     switch (field) {
         .AF, .BC, .DE, .HL, .PC, .SP => {
             const reg = self.getReg(field, u16);
-            reg.* +%= 1;
+            self.setReg(u16, field, reg +% 1);
         },
         else => {
             const r = self.getReg(field, u8);
-            self.halfCarry(r.*, 1);
-            r.* +%= 1;
-            self.af.f.z = r.* == 0;
+            self.halfCarry(r, 1);
+            self.setReg(u8, field, r +% 1);
+            self.af.f.z = self.getReg(field, u8) == 0;
             self.af.f.n = false;
         },
     }
@@ -763,18 +762,9 @@ fn jr(self: *Self, comptime opt: ?Optional) void {
     }
 }
 
-fn ldU16(self: *Self, comptime field: Registers, comptime arg: Argument) void {
-    self.write("LD ");
-    const f = self.getReg(field, u16);
-    const a = self.getArg(arg, u16);
-    f.* = a;
-}
-
-fn ldU8(self: *Self, comptime field: Registers, comptime arg: Argument) void {
-    self.write("LD ");
-    const f = self.getReg(field, u8);
-    const a = self.getArg(arg, u8);
-    f.* = a;
+fn ld(self: *Self, comptime field: Registers, comptime arg: Argument, comptime T: type) void {
+    self.writeWithArg("LD {}, {}", .{ field, arg });
+    self.setReg(T, field, self.getArg(arg, T));
 }
 
 fn noop(_: *Self) void {}
@@ -791,7 +781,7 @@ fn orReg(self: *Self, comptime arg: Argument) void {
 
 fn res(self: *Self, comptime b: u8, comptime field: Registers) void {
     const r = self.getReg(field, u8);
-    r.* |= ~@intCast(u8, 1 << b);
+    self.setReg(u8, field, r | ~@bitCast(u8, @as(u8, 1) << b));
 }
 
 fn ret(self: *Self, comptime opt: ?Optional) void {
@@ -811,11 +801,11 @@ fn ret(self: *Self, comptime opt: ?Optional) void {
 fn rl(self: *Self, comptime field: Registers) void {
     const reg = self.getReg(field, u8);
     const c = @boolToInt(self.af.f.c);
-    self.af.f.c = (reg.* >> 7 == 1);
+    self.af.f.c = (reg >> 7 == 1);
     self.af.f.n = false;
     self.af.f.h = false;
-    reg.* = reg.* << 1 | c;
-    self.af.f.z = reg.* == 0;
+    self.setReg(u8, field, reg << 1 | c);
+    self.af.f.z = self.getReg(field, u8) == 0;
 }
 
 fn rla(self: *Self) void {
@@ -830,11 +820,11 @@ fn rla(self: *Self) void {
 
 fn rlc(self: *Self, comptime field: Registers) void {
     const reg = self.getReg(field, u8);
-    self.af.f.c = (reg.* >> 7 == 1);
+    self.af.f.c = (reg >> 7 == 1);
     self.af.f.n = false;
     self.af.f.h = false;
-    reg.* = std.math.rotl(u8, 1, reg.*);
-    self.af.f.z = reg.* == 0;
+    self.setReg(u8, field, std.math.rotl(u8, 1, reg));
+    self.af.f.z = self.getReg(field, u8) == 0;
 }
 
 fn rlca(self: *Self) void {
@@ -849,11 +839,11 @@ fn rlca(self: *Self) void {
 fn rr(self: *Self, comptime field: Registers) void {
     const reg = self.getReg(field, u8);
     const c = @boolToInt(self.af.f.c);
-    self.af.f.c = (reg.* & 0x01 == 1);
+    self.af.f.c = (reg & 0x01 == 1);
     self.af.f.n = false;
     self.af.f.h = false;
-    reg.* = @as(u8, c) << 7 | reg.* >> 1;
-    self.af.f.z = reg.* == 0;
+    self.setReg(u8, field, @as(u8, c) << 7 | reg >> 1);
+    self.af.f.z = self.getReg(field, u8) == 0;
 }
 
 fn rra(self: *Self) void {
@@ -868,11 +858,11 @@ fn rra(self: *Self) void {
 
 fn rrc(self: *Self, comptime field: Registers) void {
     const reg = self.getReg(field, u8);
-    self.af.f.c = (reg.* & 0x01 == 1);
+    self.af.f.c = (reg & 0x01 == 1);
     self.af.f.n = false;
     self.af.f.h = false;
-    reg.* = std.math.rotr(u8, 1, reg.*);
-    self.af.f.z = reg.* == 0;
+    self.setReg(u8, field, std.math.rotr(u8, 1, reg));
+    self.af.f.z = self.getReg(field, u8) == 0;
 }
 
 fn rrca(self: *Self) void {
@@ -887,41 +877,42 @@ fn rrca(self: *Self) void {
 fn rst(self: *Self, comptime addr: u16) void {
     self.writeWithArg("RST 0x{X:0>2}", .{addr});
     const b = @bitCast([2]u8, self.pc);
-    self.bus.getAddressPtr(self.sp).* = b[0];
+    self.bus.writeAddress(self.sp, b[0]);
     self.sp -%= 1;
-    self.bus.getAddressPtr(self.sp).* = b[1];
+    self.bus.writeAddress(self.sp, b[1]);
     self.sp -%= 1;
 }
 
 fn set(self: *Self, comptime b: u8, comptime field: Registers) void {
-    self.getReg(field, u8).* |= (1 << b);
+    const a = self.getReg(field, u8);
+    self.setReg(u8, field, a | (1 << b));
 }
 
 fn sla(self: *Self, comptime field: Registers) void {
     const r = self.getReg(field, u8);
-    self.af.f.c = (r.* >> 7) == 1;
+    self.af.f.c = (r >> 7) == 1;
     self.af.f.n = false;
     self.af.f.h = false;
-    r.* <<= 1;
-    self.af.f.z = r.* == 0;
+    self.setReg(u8, field, r << 1);
+    self.af.f.z = self.getReg(field, u8) == 0;
 }
 
 fn sra(self: *Self, comptime field: Registers) void {
     const r = self.getReg(field, u8);
-    self.af.f.c = (r.* & 0x01) == 1;
+    self.af.f.c = (r & 0x01) == 1;
     self.af.f.n = false;
     self.af.f.h = false;
-    r.* = (r.* >> 1) | (r.* & 0x80);
-    self.af.f.z = r.* == 0;
+    self.setReg(u8, field, (r >> 1) | (r & 0x80));
+    self.af.f.z = self.getReg(field, u8) == 0;
 }
 
 fn srl(self: *Self, comptime field: Registers) void {
     const r = self.getReg(field, u8);
-    self.af.f.c = (r.* & 0x01) == 1;
+    self.af.f.c = (r & 0x01) == 1;
     self.af.f.n = false;
     self.af.f.h = false;
-    r.* = r.* >> 1;
-    self.af.f.z = r.* == 0;
+    self.setReg(u8, field, r >> 1);
+    self.af.f.z = self.getReg(field, u8) == 0;
 }
 
 fn sub(self: *Self, comptime arg: Argument) void {
@@ -936,20 +927,21 @@ fn sub(self: *Self, comptime arg: Argument) void {
 }
 
 fn swap(self: *Self, comptime field: Registers) void {
+    self.writeWithArg("SWAP {}", .{field});
     const r = self.getReg(field, u8);
-    r.* = (r.* & 0x0F) << 4 | (r.* & 0xF0) >> 4;
+    self.setReg(u8, field, (r & 0x0F) << 4 | (r & 0xF0) >> 4);
     self.af.f.c = false;
     self.af.f.n = false;
     self.af.f.h = false;
-    self.af.f.z = r.* == 0;
+    self.af.f.z = self.getReg(field, u8) == 0;
 }
 
 fn push(self: *Self, comptime arg: Argument) void {
     self.write("PUSH ");
     const v = self.getArg(arg, u16);
-    self.bus.getAddressPtr(self.sp).* = @truncate(u8, v & 0xFF00);
+    self.bus.writeAddress(self.sp, @truncate(u8, v & 0xFF00));
     self.sp -%= 1;
-    self.bus.getAddressPtr(self.sp).* = @truncate(u8, v & 0x00FF);
+    self.bus.writeAddress(self.sp, @truncate(u8, v & 0x00FF));
     self.sp -%= 1;
 }
 
@@ -980,206 +972,101 @@ fn check(self: *Self, comptime opt: Optional) bool {
     };
 }
 
-fn getReg(self: *Self, comptime field: Registers, comptime T: type) *T {
+fn getReg(self: *Self, comptime field: Registers, comptime T: type) T {
     return blk: {
         switch (field) {
-            .A => {
-                self.write("A, ");
-                break :blk &self.af.a;
-            },
-            .F => {
-                self.write("A, ");
-                break :blk &self.af.f;
-            },
-            .B => {
-                self.write("B, ");
-                break :blk &self.bc.a;
-            },
-            .C => {
-                self.write("C, ");
-                break :blk &self.bc.b;
-            },
-            .D => {
-                self.write("D, ");
-                break :blk &self.de.a;
-            },
-            .E => {
-                self.write("E, ");
-                break :blk &self.de.b;
-            },
-            .H => {
-                self.write("H, ");
-                break :blk &self.hl.a;
-            },
-            .L => {
-                self.write("L, ");
-                break :blk &self.hl.b;
-            },
-            .PBC => {
-                self.write("(BC), ");
-                break :blk self.bus.getAddressPtr(@bitCast(u16, self.bc));
-            },
-            .PDE => {
-                self.write("(DE), ");
-                break :blk self.bus.getAddressPtr(@bitCast(u16, self.de));
-            },
-            .PHL => {
-                self.write("(HL), ");
-                break :blk self.bus.getAddressPtr(@bitCast(u16, self.hl));
-            },
+            .A => break :blk self.af.a,
+            .F => break :blk self.af.f,
+            .B => break :blk self.bc.a,
+            .C => break :blk self.bc.b,
+            .D => break :blk self.de.a,
+            .E => break :blk self.de.b,
+            .H => break :blk self.hl.a,
+            .L => break :blk self.hl.b,
+            .PBC => break :blk self.bus.getAddress(@bitCast(u16, self.bc)),
+            .PDE => break :blk self.bus.getAddress(@bitCast(u16, self.de)),
+            .PHL => break :blk self.bus.getAddress(@bitCast(u16, self.hl)),
             .PHLP => {
-                self.write("(HL+), ");
                 self.hl.add(1);
-                break :blk self.bus.getAddressPtr(@bitCast(u16, self.hl) -% 1);
+                break :blk self.bus.getAddress(@bitCast(u16, self.hl) -% 1);
             },
             .PHLM => {
-                self.write("(HL-), ");
                 self.hl.sub(1);
-                break :blk self.bus.getAddressPtr(@bitCast(u16, self.hl) +% 1);
+                break :blk self.bus.getAddress(@bitCast(u16, self.hl) +% 1);
             },
-            .AF => {
-                self.write("AF, ");
-                break :blk @ptrCast(*u16, &self.af);
-            },
-            .BC => {
-                self.write("BC, ");
-                break :blk @ptrCast(*u16, &self.bc);
-            },
-            .DE => {
-                self.write("DE, ");
-                break :blk @ptrCast(*u16, &self.de);
-            },
-            .HL => {
-                self.write("HL, ");
-                break :blk @ptrCast(*u16, &self.hl);
-            },
-            .SP => {
-                self.write("SP, ");
-                break :blk &self.sp;
-            },
-            .PC => {
-                self.write("PC, ");
-                break :blk &self.pc;
-            },
+            .AF => break :blk self.af,
+            .BC => break :blk @bitCast(u16, self.bc),
+            .DE => break :blk @bitCast(u16, self.de),
+            .HL => break :blk @bitCast(u16, self.hl),
+            .SP => break :blk @bitCast(u16, self.sp),
+            .PC => break :blk @bitCast(u16, self.pc),
         }
     };
+}
+
+fn setReg(self: *Self, comptime T: type, comptime field: Registers, n: T) void {
+    switch (field) {
+        .A => self.af.a = n,
+        .F => self.af.f = n,
+        .B => self.bc.a = n,
+        .C => self.bc.b = n,
+        .D => self.de.a = n,
+        .E => self.de.b = n,
+        .H => self.hl.a = n,
+        .L => self.hl.b = n,
+        .PBC => self.bus.writeAddress(@bitCast(u16, self.bc), n),
+        .PDE => self.bus.writeAddress(@bitCast(u16, self.de), n),
+        .PHL => self.bus.writeAddress(@bitCast(u16, self.hl), n),
+        .PHLP => {
+            self.hl.add(1);
+            self.bus.writeAddress(@bitCast(u16, self.hl) -% 1, n);
+        },
+        .PHLM => {
+            self.hl.sub(1);
+            self.bus.writeAddress(@bitCast(u16, self.hl) +% 1, n);
+        },
+        .AF => self.af = @bitCast(afreg, n),
+        .BC => self.bc = @bitCast(regu16, n),
+        .DE => self.de = @bitCast(regu16, n),
+        .HL => self.hl = @bitCast(regu16, n),
+        .SP => self.sp = n,
+        .PC => self.pc = n,
+    }
 }
 
 fn getArg(self: *Self, comptime arg: Argument, comptime T: type) T {
     return blk: {
         switch (arg) {
-            .a => {
-                self.write("A");
-                break :blk self.af.a;
-            },
-            .f => {
-                self.write("F");
-                break :blk self.af.f;
-            },
-            .b => {
-                self.write("B");
-                break :blk self.bc.a;
-            },
-            .c => {
-                self.write("C");
-                break :blk self.bc.b;
-            },
-            .d => {
-                self.write("D");
-                break :blk self.de.a;
-            },
-            .e => {
-                self.write("E");
-                break :blk self.de.b;
-            },
-            .h => {
-                self.write("H");
-                break :blk self.hl.a;
-            },
-            .l => {
-                self.write("L");
-                break :blk self.hl.b;
-            },
-            .phl => {
-                self.write("(HL)");
-                break :blk self.bus.getAddress(@bitCast(u16, self.hl));
-            },
-            .pbc => {
-                self.write("(BC)");
-                break :blk self.bus.getAddress(@bitCast(u16, self.bc));
-            },
-            .pde => {
-                self.write("(DE)");
-                break :blk self.bus.getAddress(@bitCast(u16, self.de));
-            },
+            .a => break :blk self.af.a,
+            .f => break :blk self.af.f,
+            .b => break :blk self.bc.a,
+            .c => break :blk self.bc.b,
+            .d => break :blk self.de.a,
+            .e => break :blk self.de.b,
+            .h => break :blk self.hl.a,
+            .l => break :blk self.hl.b,
+            .phl => break :blk self.bus.getAddress(@bitCast(u16, self.hl)),
+            .pbc => break :blk self.bus.getAddress(@bitCast(u16, self.bc)),
+            .pde => break :blk self.bus.getAddress(@bitCast(u16, self.de)),
             .phlp => {
-                self.write("(HL+)");
                 self.hl.add(1);
                 break :blk self.bus.getAddress(@bitCast(u16, self.hl) -% 1);
             },
             .phlm => {
-                self.write("(HL-)");
                 self.hl.sub(1);
                 break :blk self.bus.getAddress(@bitCast(u16, self.hl) +% 1);
             },
-            .p => |p| {
-                self.writeWithArg("0x{X:0>2}", .{p});
-                break :blk self.bus.getAddress(p);
-            },
-            .immU8 => {
-                const b = self.immU8();
-                self.writeWithArg("0x{X:0>2}", .{b});
-                break :blk b;
-            },
-            .valU8 => |v| {
-                self.writeWithArg("0x{X:0>2}", .{v});
-                break :blk v;
-            },
-            .af => {
-                self.write("AF");
-                break :blk @bitCast(u16, self.af);
-            },
-            .bc => {
-                self.write("BC");
-                break :blk @bitCast(u16, self.bc);
-            },
-            .de => {
-                self.write("CD");
-                break :blk @bitCast(u16, self.de);
-            },
-            .hl => {
-                self.write("DE");
-                break :blk @bitCast(u16, self.hl);
-            },
-            .sp => {
-                self.write("SP");
-                break :blk self.sp;
-            },
-            .pc => {
-                self.write("PC");
-                break :blk self.pc;
-            },
-            .immU16 => {
-                const b = self.immU16();
-                self.writeWithArg("0x{X:0>4}", .{b});
-                break :blk b;
-            },
-            .valU16 => |v| {
-                self.writeWithArg("0x{X:0>4}", .{v});
-                break :blk v;
-            },
-            .offsetImmU8 => |v| {
-                const val = self.immU8();
-                self.writeWithArg("(0x{X:0>4} + 0x{X:0>4})", .{ v, @as(u16, val) });
-                const p = v + @as(u16, val);
-                break :blk self.bus.getAddress(p);
-            },
-            .spOffsetImmI8 => {
-                const v = @bitCast(i8, self.immU8());
-                const d = self.sp + @as(u16, v);
-                self.writeWithArg("SP+0x{X:0>4}", .{d});
-                break :blk d;
-            },
+            .p => |p| break :blk self.bus.getAddress(p),
+            .valU8 => |v| break :blk v,
+            .af => break :blk @bitCast(u16, self.af),
+            .bc => break :blk @bitCast(u16, self.bc),
+            .de => break :blk @bitCast(u16, self.de),
+            .hl => break :blk @bitCast(u16, self.hl),
+            .sp => break :blk self.sp,
+            .pc => break :blk self.pc,
+            .valU16 => |v| break :blk v,
+            .addrOffset => |v| break :blk self.bus.getAddress(v.base +% v.offset),
+            .spOffset => break :blk self.sp + @as(u16, @bitCast(i8, self.immU8())),
         }
     };
 }
