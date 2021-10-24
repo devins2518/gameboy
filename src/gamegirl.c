@@ -1,9 +1,11 @@
+#include "bus.h"
 #include "cpu.h"
 #include "gamegirl.h"
 
 gamegirl gamegirl_init() {
     gamegirl g;
-    g.cpu = cpu_init();
+    g.bus = bus_init();
+    g.cpu = cpu_init(&g.bus);
     return g;
 }
 

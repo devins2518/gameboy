@@ -18,16 +18,30 @@
 
 const uint8_t arg_table[512];
 
-cpu cpu_init() {
+cpu cpu_init(bus *bus) {
     cpu c;
     memset(c.registers, 0, 8 * sizeof(uint8_t));
     c.pc = 0x0000;
     c.sp = 0xFFFE;
     c.halted = FALSE;
+    c.bus = bus;
+    c.clocks = 0x0000;
     return c;
 }
 
 uint8_t next_instruction(cpu *self) {
+    uint8_t v;
+    v = get_address(self->bus, self->pc);
+    self->clocks++;
+    return v;
+}
+
+uint8_t imm_u8(cpu *self) {
+    (void)self;
+    return 0;
+}
+
+uint16_t imm_u16(cpu *self) {
     (void)self;
     return 0;
 }
@@ -35,5 +49,5 @@ uint8_t next_instruction(cpu *self) {
 void cpu_clock(cpu *self) {
     const uint8_t opcode = next_instruction(self);
     printf("%d", arg_table[opcode]);
-    PANIC();
+    /* PANIC(); */
 }

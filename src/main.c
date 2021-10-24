@@ -6,8 +6,9 @@ int main(int argc, char **argv) {
 
     (void)argv;
     gg = gamegirl_init();
+    gamegirl_clock(&gg);
     if (argc != TRUE) {
-        printf("%d takes no arguments.\n", gg.cpu.sp);
+        printf("%X takes no arguments.\n", gg.cpu.pc);
         return 1;
     }
 

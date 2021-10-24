@@ -3,9 +3,10 @@ project('gamegirl', 'c',
   default_options : ['warning_level=3', 'c_std=c89'])
 
 src = [
-  'src/main.c',
+  'src/bus.c',
   'src/cpu.c',
   'src/gamegirl.c',
+  'src/main.c',
 ]
 
 sdl = dependency('SDL2')
