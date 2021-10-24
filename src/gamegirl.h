@@ -8,9 +8,8 @@ typedef struct gamegirl {
     cpu cpu;
 } gamegirl;
 
-gamegirl gamegirl_init() {
-    gamegirl g = {.cpu = cpu_init()};
-    return g;
-}
+gamegirl gamegirl_init();
+
+void gamegirl_clock(gamegirl *gg);
 
 #endif

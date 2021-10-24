@@ -5,6 +5,7 @@ project('gamegirl', 'c',
 src = [
   'src/main.c',
   'src/cpu.c',
+  'src/gamegirl.c',
 ]
 
 sdl = dependency('SDL2')
