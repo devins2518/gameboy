@@ -15,7 +15,7 @@ typedef struct cpu {
     uint16_t clocks;
 } cpu;
 
-cpu cpu_init();
+cpu cpu_init(bus *bus);
 
 void cpu_clock(cpu *self);
 

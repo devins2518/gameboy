@@ -8,4 +8,19 @@
 
 #define PANIC() abort()
 
+enum register_t {
+    A,
+    F,
+    B,
+    C,
+    D,
+    E,
+    H,
+    L,
+    AF,
+    BC,
+    DE,
+    HL,
+};
+
 #endif
