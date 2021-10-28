@@ -21,6 +21,8 @@ enum register_t {
     BC,
     DE,
     HL,
+    SP,
+    PC,
 };
 
 #endif

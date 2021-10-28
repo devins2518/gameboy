@@ -16,6 +16,38 @@
 #define GET_REG_DE (self->registers[4] << 8 | self->registers[5])
 #define GET_REG_HL (self->registers[6] << 8 | self->registers[7])
 
+#define SET_REG(r, n)                                                          \
+    switch (r) {                                                               \
+    case A:                                                                    \
+        SET_REG_A((n))                                                         \
+    case F:                                                                    \
+        SET_REG_F((n))                                                         \
+    case B:                                                                    \
+        SET_REG_B((n))                                                         \
+    case C:                                                                    \
+        SET_REG_C((n))                                                         \
+    case D:                                                                    \
+        SET_REG_D((n))                                                         \
+    case E:                                                                    \
+        SET_REG_E((n))                                                         \
+    case H:                                                                    \
+        SET_REG_H((n))                                                         \
+    case L:                                                                    \
+        SET_REG_L((n))                                                         \
+    case AF:                                                                   \
+        SET_REG_AF((n))                                                        \
+    case BC:                                                                   \
+        SET_REG_BC((n))                                                        \
+    case DE:                                                                   \
+        SET_REG_DE((n))                                                        \
+    case HL:                                                                   \
+        SET_REG_HL((n))                                                        \
+    case SP:                                                                   \
+        SET_REG_SP((n))                                                        \
+    case PC:                                                                   \
+        SET_REG_PC((n))                                                        \
+    }
+
 #define SET_REG_A(n) self->registers[0] = ((n));
 #define SET_REG_F(n) self->registers[1] = ((n));
 #define SET_REG_B(n) self->registers[2] = ((n));
@@ -24,29 +56,20 @@
 #define SET_REG_E(n) self->registers[5] = ((n));
 #define SET_REG_H(n) self->registers[6] = ((n));
 #define SET_REG_L(n) self->registers[7] = ((n));
+#define SET_REG_SP(n) self->sp = (n);
+#define SET_REG_PC(n) self->pc = (n);
 #define SET_REG_AF(n)                                                          \
-    GET_REG_A = n >> 8;                                                        \
-    GET_REG_F = n & 0x00FF;
+    GET_REG_A = (n) >> 8;                                                      \
+    GET_REG_F = (n)&0x00FF;
 #define SET_REG_BC(n)                                                          \
-    GET_REG_B = n >> 8;                                                        \
-    GET_REG_C = n & 0x00FF;
+    GET_REG_B = (n) >> 8;                                                      \
+    GET_REG_C = (n)&0x00FF;
 #define SET_REG_DE(n)                                                          \
-    GET_REG_D = n >> 8;                                                        \
-    GET_REG_E = n & 0x00FF;
+    GET_REG_D = (n) >> 8;                                                      \
+    GET_REG_E = (n)&0x00FF;
 #define SET_REG_HL(n)                                                          \
-    GET_REG_H = n >> 8;                                                        \
-    GET_REG_L = n & 0x00FF;
-
-void noop(cpu *self);
-void ld_u8(cpu *self, register_t reg, uint8_t val);
-void ld_u16(cpu *self, register_t reg, uint16_t val);
-
-#define FUNC(a)                                                                \
-    switch ((a)) {                                                             \
-    case 0x00:                                                                 \
-        noop(self);                                                            \
-        break;                                                                 \
-    }
+    GET_REG_H = (n) >> 8;                                                      \
+    GET_REG_L = (n)&0x00FF;
 
 cpu cpu_init(bus *bus) {
     cpu c;
@@ -76,11 +99,29 @@ uint16_t imm_u16(cpu *self) {
     return 0;
 }
 
+void noop(cpu *self) { self->clocks++; }
+
+void ld_u8(cpu *self, register_t reg, uint8_t val) { SET_REG(reg, val); }
+void ld_u16(cpu *self, register_t reg, uint16_t val) { SET_REG(reg, val); }
+
 void cpu_clock(cpu *self) {
     const uint8_t opcode = next_instruction(self);
-    FUNC(opcode);
-    printf("%X", self->pc);
+    switch (opcode) {
+    case 0x00:
+        noop(self);
+        break;
+    case 0x01:
+        ld_u16(self, BC, imm_u16(self));
+        break;
+    case 0x11:
+        ld_u16(self, DE, imm_u16(self));
+        break;
+    case 0x21:
+        ld_u16(self, HL, imm_u16(self));
+        break;
+    case 0x31:
+        ld_u16(self, SP, imm_u16(self));
+        break;
+    }
     /* PANIC(); */
 }
-
-void noop(cpu *self) { self->clocks++; }
