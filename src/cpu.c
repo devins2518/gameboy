@@ -185,15 +185,21 @@ void cpu_clock(cpu *self) {
         rhs.payload = get_imm_u16(self);
         ld(self, lhs, rhs);
         break;
-        /* case 0x11: */
-        /*     ld(self, de, get_imm_u16(self)); */
-        /*     break; */
-        /* case 0x21: */
-        /*     ld(self, hl, get_imm_u16(self)); */
-        /*     break; */
-        /* case 0x31: */
-        /*     ld(self, sp, get_imm_u16(self)); */
-        /*     break; */
+    case 0x11:
+        lhs.type = de;
+        rhs.payload = get_imm_u16(self);
+        ld(self, lhs, rhs);
+        break;
+    case 0x21:
+        lhs.type = hl;
+        rhs.payload = get_imm_u16(self);
+        ld(self, lhs, rhs);
+        break;
+    case 0x31:
+        lhs.type = sp;
+        rhs.payload = get_imm_u16(self);
+        ld(self, lhs, rhs);
+        break;
     }
     /* PANIC(); */
 }
