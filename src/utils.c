@@ -16,3 +16,8 @@ void panic_handler(int sig) {
     backtrace_symbols_fd(array, size, STDERR_FILENO);
     exit(1);
 }
+
+const char *ARGUMENT_NAME[] = {
+    "a", "f",      "b",       "c",         "d",        "e",  "h",
+    "l", "af",     "bc",      "de",        "hl",       "sp", "pc",
+    "p", "imm_u8", "imm_u16", "io_offset", "sp_offset"};

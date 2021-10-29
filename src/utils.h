@@ -63,4 +63,6 @@ typedef struct argument_t {
     uint16_t payload;
 } argument_t;
 
+const char *ARGUMENT_NAME[19];
+
 #endif

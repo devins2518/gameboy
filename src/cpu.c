@@ -65,7 +65,7 @@
         break;                                                                 \
     default:                                                                   \
         fflush(stdout);                                                        \
-        fprintf(stderr, "Could not assign to type: %s\n", (r));                \
+        fprintf(stderr, "Could not assign to type: %s\n", ARGUMENT_NAME[(r)]); \
         abort();                                                               \
     }
 #define SET_ARG_PAYLOAD(arg)                                                   \
@@ -167,8 +167,8 @@ uint16_t get_imm_u16(cpu *self) {
 
 void noop(cpu *self) { self->clocks++; }
 
+// Caller is required to set lhs.type and rhs.payload
 void ld(cpu *self, argument_t lhs, argument_t rhs) {
-    SET_ARG_PAYLOAD(rhs);
     SET_REG(lhs.type, rhs.payload);
 }
 
