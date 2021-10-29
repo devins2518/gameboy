@@ -2,18 +2,17 @@
 #include <execinfo.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-void p() {
+void panic_handler(int sig) {
     void *array[10];
-    char **strings;
-    int size, i;
+    size_t size;
 
+    // get void*'s for all entries on the stack
     size = backtrace(array, 10);
-    strings = backtrace_symbols(array, size);
-    if (strings != NULL) {
-        printf("Obtained %d stack frames.\n", size);
-        for (i = 0; i < size; i++)
-            printf("%s\n", strings[i]);
-    }
-    abort();
+
+    // print out all the frames to stderr
+    fprintf(stderr, "Error: signal %d:\n", sig);
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    exit(1);
 }

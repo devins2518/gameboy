@@ -113,8 +113,8 @@ uint16_t imm_u16(cpu *self) {
 
 void noop(cpu *self) { self->clocks++; }
 
-void ld_u8(cpu *self, register_t reg, uint8_t val) { SET_REG(reg, val); }
-void ld_u16(cpu *self, register_t reg, uint16_t val) { SET_REG(reg, val); }
+void ld_u8(cpu *self, argument_t reg, uint8_t val) { SET_REG(reg, val); }
+void ld_u16(cpu *self, argument_t reg, uint16_t val) { SET_REG(reg, val); }
 
 void cpu_clock(cpu *self) {
     const uint8_t opcode = next_instruction(self);

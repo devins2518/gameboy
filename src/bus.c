@@ -1,5 +1,7 @@
 #include "bus.h"
 #include "utils.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 const uint8_t BOOTROM_DEFAULT[BOOTROM_SIZE] = {
@@ -39,7 +41,7 @@ uint8_t get_address(bus *self, uint16_t addr) {
     if (addr <= BOOTROM_SIZE)
         val = self->bootrom[addr];
     else
-        p();
+        UNIMPLEMENTED("get_address");
 
     return val;
 }

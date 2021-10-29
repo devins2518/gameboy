@@ -4,9 +4,14 @@
 #define TRUE 1
 #define FALSE 0
 
-void p();
+#define UNIMPLEMENTED(fn)                                                      \
+    fflush(stdout);                                                            \
+    fprintf(stderr, "Unimplemented function: %s\n", (fn));                     \
+    abort();
 
-typedef enum register_t {
+void panic_handler(int sig);
+
+typedef enum argument_t {
     A,
     F,
     B,
@@ -21,6 +26,6 @@ typedef enum register_t {
     HL,
     SP,
     PC
-} register_t;
+} argument_t;
 
 #endif
