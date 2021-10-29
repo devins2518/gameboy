@@ -39,7 +39,7 @@ uint8_t get_address(bus *self, uint16_t addr) {
     if (addr <= BOOTROM_SIZE)
         val = self->bootrom[addr];
     else
-        PANIC();
+        p();
 
     return val;
 }

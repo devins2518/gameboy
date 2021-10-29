@@ -1,14 +1,12 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <stdlib.h>
-
 #define TRUE 1
 #define FALSE 0
 
-#define PANIC() abort()
+void p();
 
-enum register_t {
+typedef enum register_t {
     A,
     F,
     B,
@@ -22,7 +20,7 @@ enum register_t {
     DE,
     HL,
     SP,
-    PC,
-};
+    PC
+} register_t;
 
 #endif

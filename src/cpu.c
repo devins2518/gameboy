@@ -19,33 +19,47 @@
 #define SET_REG(r, n)                                                          \
     switch (r) {                                                               \
     case A:                                                                    \
-        SET_REG_A((n))                                                         \
+        SET_REG_A((n));                                                        \
+        break;                                                                 \
     case F:                                                                    \
-        SET_REG_F((n))                                                         \
+        SET_REG_F((n));                                                        \
+        break;                                                                 \
     case B:                                                                    \
-        SET_REG_B((n))                                                         \
+        SET_REG_B((n));                                                        \
+        break;                                                                 \
     case C:                                                                    \
-        SET_REG_C((n))                                                         \
+        SET_REG_C((n));                                                        \
+        break;                                                                 \
     case D:                                                                    \
-        SET_REG_D((n))                                                         \
+        SET_REG_D((n));                                                        \
+        break;                                                                 \
     case E:                                                                    \
-        SET_REG_E((n))                                                         \
+        SET_REG_E((n));                                                        \
+        break;                                                                 \
     case H:                                                                    \
-        SET_REG_H((n))                                                         \
+        SET_REG_H((n));                                                        \
+        break;                                                                 \
     case L:                                                                    \
-        SET_REG_L((n))                                                         \
+        SET_REG_L((n));                                                        \
+        break;                                                                 \
     case AF:                                                                   \
-        SET_REG_AF((n))                                                        \
+        SET_REG_AF((n));                                                       \
+        break;                                                                 \
     case BC:                                                                   \
-        SET_REG_BC((n))                                                        \
+        SET_REG_BC((n));                                                       \
+        break;                                                                 \
     case DE:                                                                   \
-        SET_REG_DE((n))                                                        \
+        SET_REG_DE((n));                                                       \
+        break;                                                                 \
     case HL:                                                                   \
-        SET_REG_HL((n))                                                        \
+        SET_REG_HL((n));                                                       \
+        break;                                                                 \
     case SP:                                                                   \
-        SET_REG_SP((n))                                                        \
+        SET_REG_SP((n));                                                       \
+        break;                                                                 \
     case PC:                                                                   \
-        SET_REG_PC((n))                                                        \
+        SET_REG_PC((n));                                                       \
+        break;                                                                 \
     }
 
 #define SET_REG_A(n) self->registers[0] = ((n));
@@ -89,14 +103,12 @@ uint8_t next_instruction(cpu *self) {
     return v;
 }
 
-uint8_t imm_u8(cpu *self) {
-    (void)self;
-    return 0;
-}
+uint8_t imm_u8(cpu *self) { return next_instruction(self); }
 
 uint16_t imm_u16(cpu *self) {
-    (void)self;
-    return 0;
+    uint8_t b1 = next_instruction(self);
+    uint8_t b2 = next_instruction(self);
+    return (uint16_t)(b1 << 8) | b2;
 }
 
 void noop(cpu *self) { self->clocks++; }
