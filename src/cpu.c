@@ -1,6 +1,7 @@
 #include "cpu.h"
 #include "stdio.h"
 #include "utils.h"
+#include <stdlib.h>
 #include <string.h>
 
 #define GET_REG_A self->registers[0]
@@ -15,50 +16,103 @@
 #define GET_REG_BC (self->registers[2] << 8 | self->registers[3])
 #define GET_REG_DE (self->registers[4] << 8 | self->registers[5])
 #define GET_REG_HL (self->registers[6] << 8 | self->registers[7])
+#define GET_REG_SP self->sp
+#define GET_REG_PC self->pc
 
 #define SET_REG(r, n)                                                          \
-    switch (r) {                                                               \
-    case A:                                                                    \
+    switch ((r)) {                                                             \
+    case a:                                                                    \
         SET_REG_A((n));                                                        \
         break;                                                                 \
-    case F:                                                                    \
+    case f:                                                                    \
         SET_REG_F((n));                                                        \
         break;                                                                 \
-    case B:                                                                    \
+    case b:                                                                    \
         SET_REG_B((n));                                                        \
         break;                                                                 \
-    case C:                                                                    \
+    case c:                                                                    \
         SET_REG_C((n));                                                        \
         break;                                                                 \
-    case D:                                                                    \
+    case d:                                                                    \
         SET_REG_D((n));                                                        \
         break;                                                                 \
-    case E:                                                                    \
+    case e:                                                                    \
         SET_REG_E((n));                                                        \
         break;                                                                 \
-    case H:                                                                    \
+    case h:                                                                    \
         SET_REG_H((n));                                                        \
         break;                                                                 \
-    case L:                                                                    \
+    case l:                                                                    \
         SET_REG_L((n));                                                        \
         break;                                                                 \
-    case AF:                                                                   \
+    case af:                                                                   \
         SET_REG_AF((n));                                                       \
         break;                                                                 \
-    case BC:                                                                   \
+    case bc:                                                                   \
         SET_REG_BC((n));                                                       \
         break;                                                                 \
-    case DE:                                                                   \
+    case de:                                                                   \
         SET_REG_DE((n));                                                       \
         break;                                                                 \
-    case HL:                                                                   \
+    case hl:                                                                   \
         SET_REG_HL((n));                                                       \
         break;                                                                 \
-    case SP:                                                                   \
+    case sp:                                                                   \
         SET_REG_SP((n));                                                       \
         break;                                                                 \
-    case PC:                                                                   \
+    case pc:                                                                   \
         SET_REG_PC((n));                                                       \
+        break;                                                                 \
+    default:                                                                   \
+        fflush(stdout);                                                        \
+        fprintf(stderr, "Could not assign to type: %s\n", (r));                \
+        abort();                                                               \
+    }
+#define SET_ARG_PAYLOAD(arg)                                                   \
+    switch ((arg.type)) {                                                      \
+    case a:                                                                    \
+        arg.payload = (uint16_t)GET_REG_A;                                     \
+        break;                                                                 \
+    case f:                                                                    \
+        arg.payload = (uint16_t)GET_REG_F;                                     \
+        break;                                                                 \
+    case b:                                                                    \
+        arg.payload = (uint16_t)GET_REG_B;                                     \
+        break;                                                                 \
+    case c:                                                                    \
+        arg.payload = (uint16_t)GET_REG_C;                                     \
+        break;                                                                 \
+    case d:                                                                    \
+        arg.payload = (uint16_t)GET_REG_D;                                     \
+        break;                                                                 \
+    case e:                                                                    \
+        arg.payload = (uint16_t)GET_REG_E;                                     \
+        break;                                                                 \
+    case h:                                                                    \
+        arg.payload = (uint16_t)GET_REG_H;                                     \
+        break;                                                                 \
+    case l:                                                                    \
+        arg.payload = (uint16_t)GET_REG_L;                                     \
+        break;                                                                 \
+    case af:                                                                   \
+        arg.payload = GET_REG_AF;                                              \
+        break;                                                                 \
+    case bc:                                                                   \
+        arg.payload = GET_REG_BC;                                              \
+        break;                                                                 \
+    case de:                                                                   \
+        arg.payload = GET_REG_DE;                                              \
+        break;                                                                 \
+    case hl:                                                                   \
+        arg.payload = GET_REG_HL;                                              \
+        break;                                                                 \
+    case sp:                                                                   \
+        arg.payload = GET_REG_SP;                                              \
+        break;                                                                 \
+    case pc:                                                                   \
+        arg.payload = GET_REG_PC;                                              \
+        break;                                                                 \
+    default:                                                                   \
         break;                                                                 \
     }
 
@@ -103,9 +157,9 @@ uint8_t next_instruction(cpu *self) {
     return v;
 }
 
-uint8_t imm_u8(cpu *self) { return next_instruction(self); }
+uint8_t get_imm_u8(cpu *self) { return next_instruction(self); }
 
-uint16_t imm_u16(cpu *self) {
+uint16_t get_imm_u16(cpu *self) {
     uint8_t b1 = next_instruction(self);
     uint8_t b2 = next_instruction(self);
     return (uint16_t)(b1 << 8) | b2;
@@ -113,27 +167,33 @@ uint16_t imm_u16(cpu *self) {
 
 void noop(cpu *self) { self->clocks++; }
 
-void ld_u8(cpu *self, argument_t reg, uint8_t val) { SET_REG(reg, val); }
-void ld_u16(cpu *self, argument_t reg, uint16_t val) { SET_REG(reg, val); }
+void ld(cpu *self, argument_t lhs, argument_t rhs) {
+    SET_ARG_PAYLOAD(rhs);
+    SET_REG(lhs.type, rhs.payload);
+}
 
 void cpu_clock(cpu *self) {
     const uint8_t opcode = next_instruction(self);
+    argument_t lhs;
+    argument_t rhs;
     switch (opcode) {
     case 0x00:
         noop(self);
         break;
     case 0x01:
-        ld_u16(self, BC, imm_u16(self));
+        lhs.type = bc;
+        rhs.payload = get_imm_u16(self);
+        ld(self, lhs, rhs);
         break;
-    case 0x11:
-        ld_u16(self, DE, imm_u16(self));
-        break;
-    case 0x21:
-        ld_u16(self, HL, imm_u16(self));
-        break;
-    case 0x31:
-        ld_u16(self, SP, imm_u16(self));
-        break;
+        /* case 0x11: */
+        /*     ld(self, de, get_imm_u16(self)); */
+        /*     break; */
+        /* case 0x21: */
+        /*     ld(self, hl, get_imm_u16(self)); */
+        /*     break; */
+        /* case 0x31: */
+        /*     ld(self, sp, get_imm_u16(self)); */
+        /*     break; */
     }
     /* PANIC(); */
 }
