@@ -9,12 +9,8 @@ int main(int argc, char **argv) {
     gamegirl gg;
 
     (void)argv;
-    gg = gamegirl_init();
+    gg = gamegirl_init(argv[1]);
     gamegirl_clock(&gg);
-    if (argc != TRUE) {
-        printf("%X takes no arguments.\n", gg.cpu.pc);
-        return 1;
-    }
 
     while (TRUE) {
         gamegirl_clock(&gg);

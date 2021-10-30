@@ -4,6 +4,7 @@ project('gamegirl', 'c',
 
 src = [
   'src/bus.c',
+  'src/cartridge.c',
   'src/cpu.c',
   'src/gamegirl.c',
   'src/main.c',

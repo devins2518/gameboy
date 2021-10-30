@@ -139,7 +139,7 @@
     GET_REG_H = (n) >> 8;                                                      \
     GET_REG_L = (n)&0x00FF;
 
-cpu cpu_init(bus *bus) {
+cpu cpu_new(bus *bus) {
     cpu c;
     memset(c.registers, 0, 8 * sizeof(uint8_t));
     c.pc = 0x0000;

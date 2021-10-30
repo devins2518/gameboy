@@ -29,7 +29,7 @@ const uint8_t BOOTROM_DEFAULT[BOOTROM_SIZE] = {
     0x3E, 0x01, 0xE0, 0x50,
 };
 
-bus bus_init() {
+bus bus_new() {
     bus b;
     memcpy(b.bootrom, BOOTROM_DEFAULT, BOOTROM_SIZE);
     memset(b.vram, 0, VRAM_SIZE);
@@ -78,3 +78,5 @@ uint8_t get_address(bus *self, uint16_t addr) {
 
     return val;
 }
+
+void bus_free(bus self) { cartridge_free(self.cart); }

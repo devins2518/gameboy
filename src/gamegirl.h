@@ -13,5 +13,6 @@ typedef struct gamegirl {
 gamegirl gamegirl_init();
 
 void gamegirl_clock(gamegirl *gg);
+void gamegirl_free(gamegirl gg);
 
 #endif

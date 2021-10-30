@@ -1,6 +1,7 @@
 #ifndef BUS_H
 #define BUS_H
 
+#include "cartridge.h"
 #include <stdint.h>
 
 #define BOOTROM_SIZE 0x0100
@@ -24,9 +25,11 @@ typedef struct bus {
     uint8_t hram[HRAM_SIZE];
     uint8_t ie_reg;
     uint8_t _finished_boot;
+    cartridge_t cart;
 } bus;
 
-bus bus_init();
+bus bus_new(cartridge_t cart);
 uint8_t get_address(bus *self, uint16_t addr);
+void bus_free(bus self);
 
 #endif
