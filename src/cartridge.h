@@ -7,6 +7,7 @@
 typedef struct cartridge_t {
     uint8_t *data;
     size_t size;
+    char *path;
 } cartridge_t;
 
 cartridge_t cartridge_new(char *path);

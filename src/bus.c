@@ -46,10 +46,9 @@ uint8_t get_address(bus *self, uint16_t addr) {
     uint8_t val;
     val = 0x00;
     if (addr >= 0x0000 && addr <= 0x100) {
-        val = self->bootrom[addr];
         if (!self->_finished_boot) {
             val = self->bootrom[addr];
-            if (addr == 0xFF)
+            if (addr == BOOTROM_SIZE)
                 self->_finished_boot = TRUE;
         } else
             val = get_cartridge_addr(&self->cart, addr);

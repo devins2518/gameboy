@@ -162,7 +162,7 @@ uint8_t get_imm_u8(cpu *self) { return next_instruction(self); }
 uint16_t get_imm_u16(cpu *self) {
     uint8_t b1 = next_instruction(self);
     uint8_t b2 = next_instruction(self);
-    return (uint16_t)(b1 << 8) | b2;
+    return (uint16_t)(b2 << 8) | b1;
 }
 
 void noop(cpu *self) { self->clocks++; }
@@ -200,6 +200,8 @@ void cpu_clock(cpu *self) {
         rhs.payload = get_imm_u16(self);
         ld(self, lhs, rhs);
         break;
+    default:
+        PANIC("Unhandled opcode");
+        break;
     }
-    /* PANIC(); */
 }
