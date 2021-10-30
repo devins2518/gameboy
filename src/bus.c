@@ -32,16 +32,49 @@ const uint8_t BOOTROM_DEFAULT[BOOTROM_SIZE] = {
 bus bus_init() {
     bus b;
     memcpy(b.bootrom, BOOTROM_DEFAULT, BOOTROM_SIZE);
+    memset(b.vram, 0, VRAM_SIZE);
+    memset(b.ram, 0, RAM_SIZE);
+    memset(b.sat, 0, SAT_SIZE);
+    memset(b.io, 0, IO_SIZE);
+    memset(b.hram, 0, HRAM_SIZE);
+    b.ie_reg = 0;
+    b._finished_boot = FALSE;
     return b;
 }
 
 uint8_t get_address(bus *self, uint16_t addr) {
     uint8_t val;
     val = 0x00;
-    if (addr <= BOOTROM_SIZE)
+    if (addr >= 0x0000 && addr <= 0x100) {
         val = self->bootrom[addr];
-    else
-        UNIMPLEMENTED("get_address");
+        if (addr == 0xFF)
+            self->_finished_boot = TRUE;
+        if (!self->_finished_boot)
+            val = self->bootrom[addr];
+        else
+            /*val = self.cart.getAddr(addr).*;*/
+            UNIMPLEMENTED("Attempted to read from cartridge");
+    } else if (addr >= 0x0101 && addr <= 0x7FFF)
+        /* self.cart.getAddr(addr).*; */
+        UNIMPLEMENTED("Attempted to read from cartridge")
+    else if (addr >= 0x8000 && addr <= 0x9FFF)
+        val = self->vram[addr % VRAM_START];
+    else if (addr >= 0xA000 && addr <= 0xBFFF)
+        UNIMPLEMENTED("Attempted to read from cartridge")
+    else if (addr >= 0xC000 && addr <= 0xDFFF)
+        val = self->ram[addr % RAM_START];
+    else if (addr >= 0xE000 && addr <= 0xFDFF)
+        val = self->ram[(addr - 0x2000) % RAM_START];
+    else if (addr >= 0xFE00 && addr <= 0xFE9F)
+        val = self->sat[addr % SAT_START];
+    else if (addr >= 0xFEA0 && addr <= 0xFEFF)
+        return 0x00;
+    else if (addr >= 0xFF00 && addr <= 0xFF7F)
+        val = self->io[addr % IO_START];
+    else if (addr >= 0xFF80 && addr <= 0xFFFE)
+        val = self->hram[addr % HRAM_START];
+    else if (addr >= 0xFFFF)
+        val = self->ie_reg;
 
     return val;
 }

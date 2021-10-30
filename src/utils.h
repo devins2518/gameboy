@@ -6,33 +6,13 @@
 #define FALSE 0
 
 #define UNIMPLEMENTED(fn)                                                      \
-    fflush(stdout);                                                            \
-    fprintf(stderr, "Unimplemented function: %s\n", (fn));                     \
-    abort();
+    {                                                                          \
+        fflush(stdout);                                                        \
+        fprintf(stderr, "Unimplemented function: %s\n", (fn));                 \
+        abort();                                                               \
+    }
 
 void panic_handler(int sig);
-
-/* typedef enum t_argument {
-    a,
-    f,
-    b,
-    c,
-    d,
-    e,
-    h,
-    l,
-    af,
-    bc,
-    de,
-    hl,
-    sp,
-    pc,
-    p,
-    imm_u8,
-    imm_u16,
-    io_offset,
-    sp_offset,
-} t_argument; */
 
 // Caller is responsible for ensuring that payload does not contain invalid
 // data. Only valid values with payloads is pointer, immediate values, IO
