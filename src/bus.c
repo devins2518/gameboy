@@ -47,20 +47,18 @@ uint8_t get_address(bus *self, uint16_t addr) {
     val = 0x00;
     if (addr >= 0x0000 && addr <= 0x100) {
         val = self->bootrom[addr];
-        if (addr == 0xFF)
-            self->_finished_boot = TRUE;
-        if (!self->_finished_boot)
+        if (!self->_finished_boot) {
             val = self->bootrom[addr];
-        else
-            /*val = self.cart.getAddr(addr).*;*/
-            UNIMPLEMENTED("Attempted to read from cartridge");
+            if (addr == 0xFF)
+                self->_finished_boot = TRUE;
+        } else
+            val = get_cartridge_addr(&self->cart, addr);
     } else if (addr >= 0x0101 && addr <= 0x7FFF)
-        /* self.cart.getAddr(addr).*; */
-        UNIMPLEMENTED("Attempted to read from cartridge")
+        val = get_cartridge_addr(&self->cart, addr);
     else if (addr >= 0x8000 && addr <= 0x9FFF)
         val = self->vram[addr % VRAM_START];
     else if (addr >= 0xA000 && addr <= 0xBFFF)
-        UNIMPLEMENTED("Attempted to read from cartridge")
+        val = get_cartridge_addr(&self->cart, addr);
     else if (addr >= 0xC000 && addr <= 0xDFFF)
         val = self->ram[addr % RAM_START];
     else if (addr >= 0xE000 && addr <= 0xFDFF)
