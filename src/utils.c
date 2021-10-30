@@ -2,6 +2,7 @@
 #include <execinfo.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 void panic_handler(int sig) {
@@ -12,7 +13,7 @@ void panic_handler(int sig) {
     size = backtrace(array, 10);
 
     // print out all the frames to stderr
-    fprintf(stderr, "Error: signal %d:\n", sig);
+    fprintf(stderr, "Error: signal %s\n", strsignal(sig));
     backtrace_symbols_fd(array, size, STDERR_FILENO);
     exit(1);
 }

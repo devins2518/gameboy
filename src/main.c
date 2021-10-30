@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
     signal(SIGABRT, panic_handler);
     gamegirl gg;
 
-    (void)argv;
+    (void)argc;
     gg = gamegirl_init(argv[1]);
     gamegirl_clock(&gg);
 
