@@ -34,6 +34,10 @@ typedef struct argument_t {
         e,         /* E Register */
         h,         /* H Register */
         l,         /* L Register */
+        paf,       /* Pointer to [af] */
+        pbc,       /* Pointer to [bc] */
+        pde,       /* Pointer to [de] */
+        phl,       /* Pointer to [hl] */
         af,        /* AF Register */
         bc,        /* BC Register */
         de,        /* DE Register */

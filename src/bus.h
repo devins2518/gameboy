@@ -30,6 +30,7 @@ typedef struct bus {
 
 bus bus_new(cartridge_t cart);
 uint8_t get_address(bus *self, uint16_t addr);
+void write_address(bus *self, uint16_t addr, uint8_t n);
 void bus_free(bus self);
 
 #endif

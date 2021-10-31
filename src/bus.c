@@ -76,4 +76,35 @@ uint8_t get_address(bus *self, uint16_t addr) {
     return val;
 }
 
+void write_address(bus *self, uint16_t addr, uint8_t n) {
+    if (0x0000 <= addr && addr <= 0x100) {
+        if (!self->_finished_boot)
+            self->bootrom[addr] = n;
+        else
+            PANIC("cart op");
+        /* self->cart.getAddr(addr).* = n; */
+    }
+    if (0x0101 <= addr && addr <= 0x7FFF)
+        PANIC("cart op");
+    /* self->cart.getAddr(addr).* = n; */
+    if (0x8000 <= addr && addr <= 0x9FFF)
+        self->vram[addr % VRAM_START] = n;
+    if (0xA000 <= addr && addr <= 0xBFFF)
+        PANIC("attempted to write from cartridge");
+    if (0xC000 <= addr && addr <= 0xDFFF)
+        self->ram[addr % RAM_START] = n;
+    if (0xE000 <= addr && addr <= 0xFDFF)
+        self->ram[(addr - 0x2000) % RAM_START] = n;
+    if (0xFE00 <= addr && addr <= 0xFE9F)
+        self->sat[addr % SAT_START] = n;
+    if (0xFEA0 <= addr && addr <= 0xFEFF)
+        PANIC("unhandled");
+    if (0xFF00 <= addr && addr <= 0xFF7F)
+        self->io[addr % IO_START] = n;
+    if (0xFF80 <= addr && addr <= 0xFFFE)
+        self->hram[addr % HRAM_START] = n;
+    else
+        self->ie_reg = n;
+}
+
 void bus_free(bus self) { cartridge_free(self.cart); }
