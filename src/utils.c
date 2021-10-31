@@ -7,13 +7,13 @@
 #include <unistd.h>
 
 const char *siglist[] = {
-    "",          "SIGHUP",   "SIGINT",   "SIGQUIT", "SIGILL",  "SIGTRAP",
-    "SIGABRT",   "SIGIOT",   "SIGBUS",   "SIGEMT",  "SIGFPE",  "SIGKILL",
-    "SIGUSR1",   "SIGSEGV",  "SIGUSR2",  "SIGPIPE", "SIGALRM", "SIGTERM",
-    "SIGSTKFLT", "SIGCHLD",  "SIGCLD",   "SIGCONT", "SIGSTOP", "SIGTSTP",
-    "SIGTTIN",   "SIGTTOU",  "SIGURG",   "SIGXCPU", "SIGXFSZ", "SIGVTALRM",
-    "SIGPROF",   "SIGWINCH", "SIGIO",    "SIGPOLL", "SIGPWR",  "SIGINFO",
-    "SIGLOST",   "SIGSYS",   "SIGUNUSED"};
+    "SIGHUP",   "SIGINT",   "SIGQUIT", "SIGILL",  "SIGTRAP",   "SIGABRT",
+    "SIGIOT",   "SIGBUS",   "SIGEMT",  "SIGFPE",  "SIGKILL",   "SIGUSR1",
+    "SIGSEGV",  "SIGUSR2",  "SIGPIPE", "SIGALRM", "SIGTERM",   "SIGSTKFLT",
+    "SIGCHLD",  "SIGCLD",   "SIGCONT", "SIGSTOP", "SIGTSTP",   "SIGTTIN",
+    "SIGTTOU",  "SIGURG",   "SIGXCPU", "SIGXFSZ", "SIGVTALRM", "SIGPROF",
+    "SIGWINCH", "SIGIO",    "SIGPOLL", "SIGPWR",  "SIGINFO",   "SIGLOST",
+    "SIGSYS",   "SIGUNUSED"};
 
 void panic_handler(int sig) {
     void *array[10];
@@ -23,7 +23,7 @@ void panic_handler(int sig) {
     size = backtrace(array, 10);
 
     /* print out all the frames to stderr */
-    fprintf(stderr, "Error: signal %s\n", siglist[sig]);
+    fprintf(stderr, "Error: signal %s\n", siglist[sig - 1]);
     backtrace_symbols_fd(array, size, STDERR_FILENO);
     exit(1);
 }
