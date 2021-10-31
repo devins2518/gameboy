@@ -8,10 +8,11 @@
 #include <unistd.h>
 
 int main(int argc, char **argv) {
-    signal(SIGSEGV, panic_handler);
-    signal(SIGABRT, panic_handler);
     gamegirl gg;
     char *path;
+
+    signal(SIGSEGV, panic_handler);
+    signal(SIGABRT, panic_handler);
 
     if (argc > 1) {
         path = argv[1];

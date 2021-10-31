@@ -167,7 +167,7 @@ uint16_t get_imm_u16(cpu *self) {
 
 void noop(cpu *self) { self->clocks++; }
 
-// Caller is required to set lhs.type and rhs.payload
+/* Caller is required to set lhs.type and rhs.payload */
 void ld(cpu *self, argument_t lhs, argument_t rhs) {
     SET_REG(lhs.type, rhs.payload);
 }

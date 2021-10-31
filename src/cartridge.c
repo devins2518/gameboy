@@ -12,7 +12,7 @@ cartridge_t cartridge_new(char *path) {
     cartridge_t c;
 
     c.path = path;
-    // Use embedded file
+    /* Use embedded file */
     if (path == NULL) {
         c.size = rom_len;
         c.data = malloc(c.size);

@@ -20,10 +20,10 @@
 
 void panic_handler(int sig);
 
-// Caller is responsible for ensuring that payload does not contain invalid
-// data. Only valid values with payloads is pointer, immediate values, IO
-// offset, and stack pointer offset. CALLING WITH OTHER DISCRIMINANTS WILL
-// RETURN GARBAGE.
+/* Caller is responsible for ensuring that payload does not contain invalid
+   data. Only valid values with payloads is pointer, immediate values, IO
+   offset, and stack pointer offset. CALLING WITH OTHER DISCRIMINANTS WILL
+   RETURN GARBAGE. */
 typedef struct argument_t {
     enum t_argument {
         a,         /* A Register */
@@ -44,7 +44,7 @@ typedef struct argument_t {
         imm_u8,    /* Immediate 8 bit value */
         imm_u16,   /* Immediate 16 bit value */
         io_offset, /* Offset from IO base address 0xFF00 */
-        sp_offset, /* Offset from stack pointer address */
+        sp_offset  /* Offset from stack pointer address */
     } type;
     uint16_t payload;
 } argument_t;
