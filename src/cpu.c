@@ -650,11 +650,15 @@ void cpu_clock(cpu *self) {
         rhs.payload = get_imm_u16(self);
         ld(self, lhs, rhs);
         break;
-    /* INC */
+        /* INC
+         * Ignore uninitialized rhs since we don't use it
+         */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
     case 0x03:
         lhs.type = bc;
         SET_ARG_PAYLOAD(lhs);
-        void(rhs) inc(self, lhs, rhs);
+        inc(self, lhs, rhs);
         break;
     case 0x04:
         lhs.type = b;
@@ -772,6 +776,7 @@ void cpu_clock(cpu *self) {
         SET_ARG_PAYLOAD(lhs);
         inc(self, lhs, rhs);
         break;
+#pragma GCC diagnostic pop
     default:
         PANIC("Unhandled opcode");
         break;
