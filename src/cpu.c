@@ -6,6 +6,10 @@
 
 #define GET_REG_A self->registers[0]
 #define GET_REG_F self->registers[1]
+#define GET_FLAG_Z (GET_REG_F >> 7) & 0x01
+#define GET_FLAG_N (GET_REG_F >> 6) & 0x01
+#define GET_FLAG_H (GET_REG_F >> 5) & 0x01
+#define GET_FLAG_C (GET_REG_F >> 4) & 0x01
 #define GET_REG_B self->registers[2]
 #define GET_REG_C self->registers[3]
 #define GET_REG_D self->registers[4]
@@ -70,12 +74,32 @@
     case p:                                                                    \
         write_address(self->bus, (r).payload, (n));                            \
         break;                                                                 \
+    case paf:                                                                  \
+        write_address(self->bus, GET_REG_AF, (n));                             \
+        break;                                                                 \
+    case pbc:                                                                  \
+        write_address(self->bus, GET_REG_BC, (n));                             \
+        break;                                                                 \
+    case pde:                                                                  \
+        write_address(self->bus, GET_REG_DE, (n));                             \
+        break;                                                                 \
+    case phl:                                                                  \
+        write_address(self->bus, GET_REG_HL, (n));                             \
+        break;                                                                 \
     default:                                                                   \
         fflush(stdout);                                                        \
         fprintf(stderr, "Could not assign to type: %s\n",                      \
                 ARGUMENT_NAME[(r.type)]);                                      \
         abort();                                                               \
     }
+#define SET_FLAG_Z(n) SET_REG_F(GET_REG_F &((n) << 7))
+#define SET_FLAG_N(n) SET_REG_F(GET_REG_F &((n) << 6))
+#define SET_FLAG_H(n) SET_REG_F(GET_REG_F &((n) << 5))
+#define ADD_FLAG_H(a, b)                                                       \
+    SET_REG_F(GET_REG_F &((((((a)&0xf) + ((b)&0xf)) & 0x10) == 0x10) << 5))
+#define SET_FLAG_C(n) SET_REG_F(GET_REG_F &((n) << 4))
+#define ADD_FLAG_C(a, b)                                                       \
+    SET_REG_F(GET_REG_F &(((((a)&0xf0) + ((b)&0xf0)) & 0x100) == 0x100 << 4))
 #define SET_ARG_PAYLOAD(arg)                                                   \
     switch ((arg.type)) {                                                      \
     case a:                                                                    \
@@ -155,6 +179,9 @@
     case sp_offset:                                                            \
         rhs.payload += GET_REG_SP;                                             \
         break;                                                                 \
+    case imm_u8:                                                               \
+        rhs.payload = get_imm_u8(self);                                        \
+        break;                                                                 \
     default:                                                                   \
         break;                                                                 \
     };
@@ -192,9 +219,115 @@ void ld(cpu *self, argument_t lhs, argument_t rhs) {
     SET_REG(lhs, rhs.payload);
 }
 
-void inc(cpu *self, argument_t lhs, argument_t _rhs) {
-    (void)_rhs;
-    SET_REG(lhs, lhs.payload + 1);
+void inc(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    res = lhs.payload + 1;
+    (void)rhs;
+    SET_REG(lhs, res);
+    switch (lhs.type) {
+    case bc:
+    case de:
+    case hl:
+    case sp:
+        break;
+    default:
+        SET_FLAG_Z(res == 0);
+        SET_FLAG_N(0);
+        ADD_FLAG_H(lhs.payload, 1);
+        break;
+    }
+}
+
+void add(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    res = lhs.payload + rhs.payload;
+    SET_REG(lhs, res)
+    switch (lhs.type) {
+    case a:
+        SET_FLAG_Z(res == 0)
+        break;
+    case sp:
+        SET_FLAG_Z(0)
+        break;
+    default:
+        break;
+    }
+    SET_FLAG_N(0);
+    ADD_FLAG_H(lhs.payload, rhs.payload);
+    ADD_FLAG_C(lhs.payload, rhs.payload);
+}
+
+void adc(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    res = lhs.payload + rhs.payload + GET_FLAG_C;
+    SET_REG(lhs, res);
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(0);
+    ADD_FLAG_H(lhs.payload, rhs.payload + GET_FLAG_C);
+    ADD_FLAG_C(lhs.payload, rhs.payload + GET_FLAG_C);
+}
+
+void sub(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    res = lhs.payload - rhs.payload;
+    SET_REG(lhs, res)
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(1);
+    /*
+     * TODO:
+     * I don't know if SET_FLAG_{H,C} properly handle subtraction
+     */
+    ADD_FLAG_H(lhs.payload, rhs.payload);
+    ADD_FLAG_C(lhs.payload, rhs.payload);
+}
+
+void sbc(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    res = lhs.payload - rhs.payload - GET_FLAG_C;
+    SET_REG(lhs, res)
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(1);
+    ADD_FLAG_H(lhs.payload, rhs.payload - GET_FLAG_C);
+    ADD_FLAG_C(lhs.payload, rhs.payload - GET_FLAG_C);
+}
+
+void andReg(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    res = lhs.payload & rhs.payload;
+    SET_REG(lhs, res)
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(0);
+    SET_FLAG_H(1);
+    SET_FLAG_C(0);
+}
+
+void xorReg(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    res = lhs.payload ^ rhs.payload;
+    SET_REG(lhs, res)
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(0);
+    SET_FLAG_H(0);
+    SET_FLAG_C(0);
+}
+
+void orReg(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    res = lhs.payload | rhs.payload;
+    SET_REG(lhs, res)
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(0);
+    SET_FLAG_H(0);
+    SET_FLAG_C(0);
+}
+
+void cp(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    res = lhs.payload - rhs.payload;
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(1);
+    ADD_FLAG_H(lhs.payload, rhs.payload);
+    ADD_FLAG_C(lhs.payload, rhs.payload);
 }
 
 void cpu_clock(cpu *self) {
@@ -282,7 +415,8 @@ void cpu_clock(cpu *self) {
         break;
     case 0x06:
         lhs.type = b;
-        rhs.payload = get_imm_u8(self);
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
         ld(self, lhs, rhs);
         break;
     case 0x40:
@@ -327,7 +461,8 @@ void cpu_clock(cpu *self) {
         break;
     case 0x0E:
         lhs.type = c;
-        rhs.payload = get_imm_u8(self);
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
         ld(self, lhs, rhs);
         break;
     case 0x48:
@@ -372,7 +507,8 @@ void cpu_clock(cpu *self) {
         break;
     case 0x16:
         lhs.type = d;
-        rhs.payload = get_imm_u8(self);
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
         ld(self, lhs, rhs);
         break;
     case 0x50:
@@ -417,7 +553,8 @@ void cpu_clock(cpu *self) {
         break;
     case 0x1E:
         lhs.type = e;
-        rhs.payload = get_imm_u8(self);
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
         ld(self, lhs, rhs);
         break;
     case 0x58:
@@ -462,7 +599,8 @@ void cpu_clock(cpu *self) {
         break;
     case 0x26:
         lhs.type = h;
-        rhs.payload = get_imm_u8(self);
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
         ld(self, lhs, rhs);
         break;
     case 0x60:
@@ -507,7 +645,8 @@ void cpu_clock(cpu *self) {
         break;
     case 0x2E:
         lhs.type = l;
-        rhs.payload = get_imm_u8(self);
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
         ld(self, lhs, rhs);
         break;
     case 0x68:
@@ -597,7 +736,8 @@ void cpu_clock(cpu *self) {
         break;
     case 0x36:
         lhs.type = phl;
-        rhs.payload = get_imm_u8(self);
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
         ld(self, lhs, rhs);
         break;
     case 0x22:
@@ -777,6 +917,476 @@ void cpu_clock(cpu *self) {
         inc(self, lhs, rhs);
         break;
 #pragma GCC diagnostic pop
+    /* ADD */
+    case 0x09:
+        lhs.type = hl;
+        rhs.type = bc;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0x19:
+        lhs.type = hl;
+        rhs.type = de;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0x29:
+        lhs.type = hl;
+        rhs.type = hl;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0x39:
+        lhs.type = hl;
+        rhs.type = sp;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0x80:
+        lhs.type = a;
+        rhs.type = b;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0x81:
+        lhs.type = a;
+        rhs.type = c;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0x82:
+        lhs.type = a;
+        rhs.type = d;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0x83:
+        lhs.type = a;
+        rhs.type = e;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0x84:
+        lhs.type = a;
+        rhs.type = h;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0x85:
+        lhs.type = a;
+        rhs.type = l;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0x86:
+        lhs.type = a;
+        rhs.type = phl;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0x87:
+        lhs.type = a;
+        rhs.type = a;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    case 0xC6:
+        lhs.type = a;
+        rhs.type = imm_u8;
+        SET_ARG_PAYLOAD(lhs);
+        SET_ARG_PAYLOAD(rhs);
+        add(self, lhs, rhs);
+        break;
+    /* ADC */
+    case 0x88:
+        lhs.type = a;
+        rhs.type = b;
+        RESOLVE_PAYLOAD(rhs)
+        adc(self, lhs, rhs);
+        break;
+    case 0x89:
+        lhs.type = a;
+        rhs.type = c;
+        adc(self, lhs, rhs);
+        break;
+    case 0x8A:
+        lhs.type = a;
+        rhs.type = d;
+        adc(self, lhs, rhs);
+        break;
+    case 0x8B:
+        lhs.type = a;
+        rhs.type = e;
+        adc(self, lhs, rhs);
+        break;
+    case 0x8C:
+        lhs.type = a;
+        rhs.type = h;
+        adc(self, lhs, rhs);
+        break;
+    case 0x8D:
+        lhs.type = a;
+        rhs.type = l;
+        adc(self, lhs, rhs);
+        break;
+    case 0x8E:
+        lhs.type = a;
+        rhs.type = phl;
+        adc(self, lhs, rhs);
+        break;
+    case 0x8F:
+        lhs.type = a;
+        rhs.type = a;
+        adc(self, lhs, rhs);
+        break;
+    case 0xCE:
+        lhs.type = a;
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
+        adc(self, lhs, rhs);
+        break;
+    /* SUB */
+    case 0x90:
+        lhs.type = a;
+        rhs.type = b;
+        RESOLVE_PAYLOAD(rhs);
+        sub(self, lhs, rhs);
+        break;
+    case 0x91:
+        lhs.type = a;
+        rhs.type = c;
+        RESOLVE_PAYLOAD(rhs);
+        sub(self, lhs, rhs);
+        break;
+    case 0x92:
+        lhs.type = a;
+        rhs.type = d;
+        RESOLVE_PAYLOAD(rhs);
+        sub(self, lhs, rhs);
+        break;
+    case 0x93:
+        lhs.type = a;
+        rhs.type = e;
+        RESOLVE_PAYLOAD(rhs);
+        sub(self, lhs, rhs);
+        break;
+    case 0x94:
+        lhs.type = a;
+        rhs.type = h;
+        RESOLVE_PAYLOAD(rhs);
+        sub(self, lhs, rhs);
+        break;
+    case 0x95:
+        lhs.type = a;
+        rhs.type = l;
+        RESOLVE_PAYLOAD(rhs);
+        sub(self, lhs, rhs);
+        break;
+    case 0x96:
+        lhs.type = a;
+        rhs.type = phl;
+        RESOLVE_PAYLOAD(rhs);
+        sub(self, lhs, rhs);
+        break;
+    case 0x97:
+        lhs.type = a;
+        rhs.type = a;
+        RESOLVE_PAYLOAD(rhs);
+        sub(self, lhs, rhs);
+        break;
+    case 0xD6:
+        lhs.type = a;
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
+        sub(self, lhs, rhs);
+        break;
+    /* SBC */
+    case 0x98:
+        lhs.type = a;
+        rhs.type = b;
+        RESOLVE_PAYLOAD(rhs);
+        sbc(self, lhs, rhs);
+        break;
+    case 0x99:
+        lhs.type = a;
+        rhs.type = c;
+        RESOLVE_PAYLOAD(rhs);
+        sbc(self, lhs, rhs);
+        break;
+    case 0x9A:
+        lhs.type = a;
+        rhs.type = d;
+        RESOLVE_PAYLOAD(rhs);
+        sbc(self, lhs, rhs);
+        break;
+    case 0x9B:
+        lhs.type = a;
+        rhs.type = e;
+        RESOLVE_PAYLOAD(rhs);
+        sbc(self, lhs, rhs);
+        break;
+    case 0x9C:
+        lhs.type = a;
+        rhs.type = h;
+        RESOLVE_PAYLOAD(rhs);
+        sbc(self, lhs, rhs);
+        break;
+    case 0x9D:
+        lhs.type = a;
+        rhs.type = l;
+        RESOLVE_PAYLOAD(rhs);
+        sbc(self, lhs, rhs);
+        break;
+    case 0x9E:
+        lhs.type = a;
+        rhs.type = phl;
+        RESOLVE_PAYLOAD(rhs);
+        sbc(self, lhs, rhs);
+        break;
+    case 0x9F:
+        lhs.type = a;
+        rhs.type = a;
+        RESOLVE_PAYLOAD(rhs);
+        sbc(self, lhs, rhs);
+        break;
+    case 0xDE:
+        lhs.type = a;
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
+        sbc(self, lhs, rhs);
+        break;
+    /* AND */
+    case 0xA0:
+        lhs.type = a;
+        rhs.type = b;
+        RESOLVE_PAYLOAD(rhs);
+        andReg(self, lhs, rhs);
+        break;
+    case 0xA1:
+        lhs.type = a;
+        rhs.type = c;
+        RESOLVE_PAYLOAD(rhs);
+        andReg(self, lhs, rhs);
+        break;
+    case 0xA2:
+        lhs.type = a;
+        rhs.type = d;
+        RESOLVE_PAYLOAD(rhs);
+        andReg(self, lhs, rhs);
+        break;
+    case 0xA3:
+        lhs.type = a;
+        rhs.type = e;
+        RESOLVE_PAYLOAD(rhs);
+        andReg(self, lhs, rhs);
+        break;
+    case 0xA4:
+        lhs.type = a;
+        rhs.type = h;
+        RESOLVE_PAYLOAD(rhs);
+        andReg(self, lhs, rhs);
+        break;
+    case 0xA5:
+        lhs.type = a;
+        rhs.type = l;
+        RESOLVE_PAYLOAD(rhs);
+        andReg(self, lhs, rhs);
+        break;
+    case 0xA6:
+        lhs.type = a;
+        rhs.type = phl;
+        RESOLVE_PAYLOAD(rhs);
+        andReg(self, lhs, rhs);
+        break;
+    case 0xA7:
+        lhs.type = a;
+        rhs.type = a;
+        RESOLVE_PAYLOAD(rhs);
+        andReg(self, lhs, rhs);
+        break;
+    case 0xE6:
+        lhs.type = a;
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
+        andReg(self, lhs, rhs);
+        break;
+    /* XOR */
+    case 0xA8:
+        lhs.type = a;
+        rhs.type = b;
+        RESOLVE_PAYLOAD(rhs);
+        xorReg(self, lhs, rhs);
+        break;
+    case 0xA9:
+        lhs.type = a;
+        rhs.type = c;
+        RESOLVE_PAYLOAD(rhs);
+        xorReg(self, lhs, rhs);
+        break;
+    case 0xAA:
+        lhs.type = a;
+        rhs.type = d;
+        RESOLVE_PAYLOAD(rhs);
+        xorReg(self, lhs, rhs);
+        break;
+    case 0xAB:
+        lhs.type = a;
+        rhs.type = e;
+        RESOLVE_PAYLOAD(rhs);
+        xorReg(self, lhs, rhs);
+        break;
+    case 0xAC:
+        lhs.type = a;
+        rhs.type = h;
+        RESOLVE_PAYLOAD(rhs);
+        xorReg(self, lhs, rhs);
+        break;
+    case 0xAD:
+        lhs.type = a;
+        rhs.type = l;
+        RESOLVE_PAYLOAD(rhs);
+        xorReg(self, lhs, rhs);
+        break;
+    case 0xAE:
+        lhs.type = a;
+        rhs.type = phl;
+        RESOLVE_PAYLOAD(rhs);
+        xorReg(self, lhs, rhs);
+        break;
+    case 0xAF:
+        lhs.type = a;
+        rhs.type = a;
+        RESOLVE_PAYLOAD(rhs);
+        xorReg(self, lhs, rhs);
+        break;
+    case 0xEE:
+        lhs.type = a;
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
+        xorReg(self, lhs, rhs);
+        break;
+    /* OR */
+    case 0xB0:
+        lhs.type = a;
+        rhs.type = b;
+        RESOLVE_PAYLOAD(rhs);
+        orReg(self, lhs, rhs);
+        break;
+    case 0xB1:
+        lhs.type = a;
+        rhs.type = c;
+        RESOLVE_PAYLOAD(rhs);
+        orReg(self, lhs, rhs);
+        break;
+    case 0xB2:
+        lhs.type = a;
+        rhs.type = d;
+        RESOLVE_PAYLOAD(rhs);
+        orReg(self, lhs, rhs);
+        break;
+    case 0xB3:
+        lhs.type = a;
+        rhs.type = e;
+        RESOLVE_PAYLOAD(rhs);
+        orReg(self, lhs, rhs);
+        break;
+    case 0xB4:
+        lhs.type = a;
+        rhs.type = h;
+        RESOLVE_PAYLOAD(rhs);
+        orReg(self, lhs, rhs);
+        break;
+    case 0xB5:
+        lhs.type = a;
+        rhs.type = l;
+        RESOLVE_PAYLOAD(rhs);
+        orReg(self, lhs, rhs);
+        break;
+    case 0xB6:
+        lhs.type = a;
+        rhs.type = phl;
+        RESOLVE_PAYLOAD(rhs);
+        orReg(self, lhs, rhs);
+        break;
+    case 0xB7:
+        lhs.type = a;
+        rhs.type = a;
+        RESOLVE_PAYLOAD(rhs);
+        orReg(self, lhs, rhs);
+        break;
+    case 0xF6:
+        lhs.type = a;
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
+        orReg(self, lhs, rhs);
+        break;
+    /* CP */
+    case 0xB8:
+        lhs.type = a;
+        rhs.type = b;
+        RESOLVE_PAYLOAD(rhs);
+        cp(self, lhs, rhs);
+        break;
+    case 0xB9:
+        lhs.type = a;
+        rhs.type = c;
+        RESOLVE_PAYLOAD(rhs);
+        cp(self, lhs, rhs);
+        break;
+    case 0xBA:
+        lhs.type = a;
+        rhs.type = d;
+        RESOLVE_PAYLOAD(rhs);
+        cp(self, lhs, rhs);
+        break;
+    case 0xBB:
+        lhs.type = a;
+        rhs.type = e;
+        RESOLVE_PAYLOAD(rhs);
+        cp(self, lhs, rhs);
+        break;
+    case 0xBC:
+        lhs.type = a;
+        rhs.type = h;
+        RESOLVE_PAYLOAD(rhs);
+        cp(self, lhs, rhs);
+        break;
+    case 0xBD:
+        lhs.type = a;
+        rhs.type = l;
+        RESOLVE_PAYLOAD(rhs);
+        cp(self, lhs, rhs);
+        break;
+    case 0xBE:
+        lhs.type = a;
+        rhs.type = phl;
+        RESOLVE_PAYLOAD(rhs);
+        cp(self, lhs, rhs);
+        break;
+    case 0xBF:
+        lhs.type = a;
+        rhs.type = a;
+        RESOLVE_PAYLOAD(rhs);
+        cp(self, lhs, rhs);
+        break;
+    case 0xFE:
+        lhs.type = a;
+        rhs.type = imm_u8;
+        RESOLVE_PAYLOAD(rhs);
+        cp(self, lhs, rhs);
+        break;
     default:
         PANIC("Unhandled opcode");
         break;
