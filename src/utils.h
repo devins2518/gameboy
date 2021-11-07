@@ -25,7 +25,7 @@ void panic_handler(int sig);
    offset, and stack pointer offset. CALLING WITH OTHER DISCRIMINANTS WILL
    RETURN GARBAGE. */
 typedef struct argument_t {
-    enum t_argument {
+    enum type {
         a,         /* A Register */
         f,         /* F Register */
         b,         /* B Register */
@@ -51,6 +51,7 @@ typedef struct argument_t {
         sp_offset  /* Offset from stack pointer address */
     } type;
     uint16_t payload;
+    enum cond { zero, nzero, carry, ncarry, none } cond;
 } argument_t;
 
 const char *ARGUMENT_NAME[19];
