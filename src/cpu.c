@@ -4,28 +4,28 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define GET_REG_A self->registers[0]
-#define GET_REG_F self->registers[1]
+#define GET_REG_A (self->registers[0])
+#define GET_REG_F (self->registers[1])
 #define GET_FLAG_Z ((GET_REG_F >> 7) & 0x01)
 #define GET_FLAG_N ((GET_REG_F >> 6) & 0x01)
 #define GET_FLAG_H ((GET_REG_F >> 5) & 0x01)
 #define GET_FLAG_C ((GET_REG_F >> 4) & 0x01)
-#define GET_REG_B self->registers[2]
-#define GET_REG_C self->registers[3]
-#define GET_REG_D self->registers[4]
-#define GET_REG_E self->registers[5]
-#define GET_REG_H self->registers[6]
-#define GET_REG_L self->registers[7]
-#define GET_REG_PAF get_address(self->bus, GET_REG_AF)
-#define GET_REG_PBC get_address(self->bus, GET_REG_BC)
-#define GET_REG_PDE get_address(self->bus, GET_REG_DE)
-#define GET_REG_PHL get_address(self->bus, GET_REG_HL)
+#define GET_REG_B (self->registers[2])
+#define GET_REG_C (self->registers[3])
+#define GET_REG_D (self->registers[4])
+#define GET_REG_E (self->registers[5])
+#define GET_REG_H (self->registers[6])
+#define GET_REG_L (self->registers[7])
+#define GET_REG_PAF (get_address(self->bus, GET_REG_AF))
+#define GET_REG_PBC (get_address(self->bus, GET_REG_BC))
+#define GET_REG_PDE (get_address(self->bus, GET_REG_DE))
+#define GET_REG_PHL (get_address(self->bus, GET_REG_HL))
 #define GET_REG_AF (self->registers[0] << 8 | self->registers[1])
 #define GET_REG_BC (self->registers[2] << 8 | self->registers[3])
 #define GET_REG_DE (self->registers[4] << 8 | self->registers[5])
 #define GET_REG_HL (self->registers[6] << 8 | self->registers[7])
-#define GET_REG_SP self->sp
-#define GET_REG_PC self->pc
+#define GET_REG_SP (self->sp)
+#define GET_REG_PC (self->pc)
 
 #define SET_REG(r, n)                                                          \
     switch ((r.type)) {                                                        \
@@ -148,28 +148,36 @@
         break;                                                                 \
     }
 
-#define SET_REG_A(n) self->registers[0] = ((n));
-#define SET_REG_F(n) self->registers[1] = ((n));
-#define SET_REG_B(n) self->registers[2] = ((n));
-#define SET_REG_C(n) self->registers[3] = ((n));
-#define SET_REG_D(n) self->registers[4] = ((n));
-#define SET_REG_E(n) self->registers[5] = ((n));
-#define SET_REG_H(n) self->registers[6] = ((n));
-#define SET_REG_L(n) self->registers[7] = ((n));
-#define SET_REG_SP(n) self->sp = (n);
-#define SET_REG_PC(n) self->pc = (n);
+#define SET_REG_A(n) (self->registers[0] = ((n)))
+#define SET_REG_F(n) (self->registers[1] = ((n)))
+#define SET_REG_B(n) (self->registers[2] = ((n)))
+#define SET_REG_C(n) (self->registers[3] = ((n)))
+#define SET_REG_D(n) (self->registers[4] = ((n)))
+#define SET_REG_E(n) (self->registers[5] = ((n)))
+#define SET_REG_H(n) (self->registers[6] = ((n)))
+#define SET_REG_L(n) (self->registers[7] = ((n)))
+#define SET_REG_SP(n) (self->sp = (n))
+#define SET_REG_PC(n) (self->pc = (n))
 #define SET_REG_AF(n)                                                          \
-    GET_REG_A = (n) >> 8;                                                      \
-    GET_REG_F = (n)&0x00FF;
+    {                                                                          \
+        GET_REG_A = (n) >> 8;                                                  \
+        GET_REG_F = (n)&0x00FF;                                                \
+    }
 #define SET_REG_BC(n)                                                          \
-    GET_REG_B = (n) >> 8;                                                      \
-    GET_REG_C = (n)&0x00FF;
+    {                                                                          \
+        GET_REG_B = (n) >> 8;                                                  \
+        GET_REG_C = (n)&0x00FF;                                                \
+    }
 #define SET_REG_DE(n)                                                          \
-    GET_REG_D = (n) >> 8;                                                      \
-    GET_REG_E = (n)&0x00FF;
+    {                                                                          \
+        GET_REG_D = (n) >> 8;                                                  \
+        GET_REG_E = (n)&0x00FF;                                                \
+    }
 #define SET_REG_HL(n)                                                          \
-    GET_REG_H = (n) >> 8;                                                      \
-    GET_REG_L = (n)&0x00FF;
+    {                                                                          \
+        GET_REG_H = (n) >> 8;                                                  \
+        GET_REG_L = (n)&0x00FF;                                                \
+    }
 
 #define RESOLVE_PAYLOAD(rhs)                                                   \
     switch (rhs.type) {                                                        \
@@ -182,25 +190,28 @@
     case imm_u8:                                                               \
         rhs.payload = get_imm_u8(self);                                        \
         break;                                                                 \
+    case imm_u16:                                                              \
+        rhs.payload = get_imm_u16(self);                                       \
+        break;                                                                 \
     default:                                                                   \
         break;                                                                 \
     };
 #define RESOLVE_COND(rhs)                                                      \
     switch (rhs.cond) {                                                        \
     case zero:                                                                 \
-        rhs.payload = GET_FLAG_Z == 0;                                         \
+        rhs.should_continue = GET_FLAG_Z == 0;                                 \
         break;                                                                 \
     case nzero:                                                                \
-        rhs.payload = GET_FLAG_Z != 0;                                         \
+        rhs.should_continue = GET_FLAG_Z != 0;                                 \
         break;                                                                 \
     case carry:                                                                \
-        rhs.payload = GET_FLAG_C == 0;                                         \
+        rhs.should_continue = GET_FLAG_C == 0;                                 \
         break;                                                                 \
     case ncarry:                                                               \
-        rhs.payload = GET_FLAG_C != 0;                                         \
+        rhs.should_continue = GET_FLAG_C != 0;                                 \
         break;                                                                 \
     case none:                                                                 \
-        rhs.payload = TRUE;                                                    \
+        rhs.should_continue = TRUE;                                            \
         break;                                                                 \
     default:                                                                   \
         break;                                                                 \
@@ -231,7 +242,7 @@ uint8_t get_imm_u8(cpu *self) { return next_instruction(self); }
 uint16_t get_imm_u16(cpu *self) {
     uint8_t b1 = next_instruction(self);
     uint8_t b2 = next_instruction(self);
-    return (uint16_t)(b2 << 8) | b1;
+    return (uint16_t)((b2 << 8) | b1);
 }
 
 void noop(cpu *self) { self->clocks++; }
@@ -266,10 +277,10 @@ void add(cpu *self, argument_t lhs, argument_t rhs) {
     SET_REG(lhs, res)
     switch (lhs.type) {
     case a:
-        SET_FLAG_Z(res == 0)
+        SET_FLAG_Z(res == 0);
         break;
     case sp:
-        SET_FLAG_Z(0)
+        SET_FLAG_Z(0);
         break;
     default:
         break;
@@ -371,7 +382,7 @@ void rlc(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
     (void)rhs;
     res =
-        (lhs.payload >> 1) | (lhs.payload << ((sizeof(lhs.payload) << 3) - 1));
+        (lhs.payload << 1) | (lhs.payload >> ((sizeof(lhs.payload) << 3) - 1));
     SET_REG(lhs, res);
     SET_FLAG_Z(res == 0);
     SET_FLAG_N(FALSE);
@@ -383,7 +394,7 @@ void rrc(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
     (void)rhs;
     res =
-        (lhs.payload << 1) | (lhs.payload >> ((sizeof(lhs.payload) << 3) - 1));
+        (lhs.payload >> 1) | (lhs.payload << ((sizeof(lhs.payload) << 3) - 1));
     SET_REG(lhs, res);
     SET_FLAG_Z(res == 0);
     SET_FLAG_N(FALSE);
@@ -471,10 +482,21 @@ void srl(cpu *self, argument_t lhs, argument_t rhs) {
     SET_FLAG_C(lhs.payload & 0x01);
 }
 
+void jr(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)rhs;
+    if (lhs.cond) {
+        SET_REG_PC(GET_REG_PC + (int8_t)lhs.payload);
+    }
+}
+
 void cpu_clock(cpu *self) {
-    const uint8_t opcode = next_instruction(self);
+    uint8_t opcode;
     argument_t lhs;
     argument_t rhs;
+
+    printf("pc: 0x%X\n", GET_REG_PC);
+    opcode = next_instruction(self);
+    printf("opcode: 0x%X\n", opcode);
     switch (opcode) {
     case 0x00:
         noop(self);
@@ -894,8 +916,9 @@ void cpu_clock(cpu *self) {
         SET_REG_HL(GET_REG_HL - 1);
         break;
     case 0xEA:
-        lhs.type = p;
-        lhs.payload = get_imm_u16(self);
+        lhs.type = io_offset;
+        lhs.payload = get_imm_u8(self);
+        RESOLVE_PAYLOAD(lhs);
         rhs.payload = GET_REG_A;
         ld(self, lhs, rhs);
         break;
@@ -1590,8 +1613,45 @@ void cpu_clock(cpu *self) {
         RESOLVE_PAYLOAD(lhs);
         jp(self, lhs, rhs);
         break;
+    /* CB */
     case 0xCB:
         handle_cb(self);
+        break;
+    /* JR */
+    case 0x18:
+        lhs.cond = none;
+        RESOLVE_COND(lhs);
+        lhs.type = imm_u8;
+        RESOLVE_PAYLOAD(lhs);
+        jr(self, lhs, rhs);
+        break;
+    case 0x20:
+        lhs.cond = nzero;
+        RESOLVE_COND(lhs);
+        lhs.type = imm_u8;
+        RESOLVE_PAYLOAD(lhs);
+        jr(self, lhs, rhs);
+        break;
+    case 0x28:
+        lhs.cond = zero;
+        RESOLVE_COND(lhs);
+        lhs.type = imm_u8;
+        RESOLVE_PAYLOAD(lhs);
+        jr(self, lhs, rhs);
+        break;
+    case 0x30:
+        lhs.cond = ncarry;
+        RESOLVE_COND(lhs);
+        lhs.type = imm_u8;
+        RESOLVE_PAYLOAD(lhs);
+        jr(self, lhs, rhs);
+        break;
+    case 0x38:
+        lhs.cond = carry;
+        RESOLVE_COND(lhs);
+        lhs.type = imm_u8;
+        RESOLVE_PAYLOAD(lhs);
+        jr(self, lhs, rhs);
         break;
     default:
         PANIC("Unhandled opcode");
@@ -1600,9 +1660,13 @@ void cpu_clock(cpu *self) {
 }
 
 void handle_cb(cpu *self) {
-    const uint8_t opcode = next_instruction(self);
+    uint8_t opcode;
     argument_t lhs;
     argument_t rhs;
+
+    printf("pc: 0x%X\n", GET_REG_PC);
+    opcode = next_instruction(self);
+    printf("opcode: 0x%X\n", opcode);
     switch (opcode) {
     case 0x00:
         lhs.type = b;

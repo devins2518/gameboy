@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 
     while (TRUE) {
         gamegirl_clock(&gg);
-        printf("gg.clocks %d\n", gg.cpu.clocks);
+        /* printf("gg.clocks %d\n", gg.cpu.clocks); */
     }
 
     return 0;

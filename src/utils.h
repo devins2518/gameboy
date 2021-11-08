@@ -52,6 +52,7 @@ typedef struct argument_t {
     } type;
     uint16_t payload;
     enum cond { zero, nzero, carry, ncarry, none } cond;
+    uint8_t should_continue;
 } argument_t;
 
 const char *ARGUMENT_NAME[19];
