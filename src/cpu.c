@@ -367,6 +367,110 @@ void jp(cpu *self, argument_t lhs, argument_t rhs) {
     }
 }
 
+void rlc(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    (void)rhs;
+    res =
+        (lhs.payload >> 1) | (lhs.payload << ((sizeof(lhs.payload) << 3) - 1));
+    SET_REG(lhs, res);
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(FALSE);
+    SET_FLAG_H(FALSE);
+    SET_FLAG_C(lhs.payload >> 7);
+}
+
+void rrc(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    (void)rhs;
+    res =
+        (lhs.payload << 1) | (lhs.payload >> ((sizeof(lhs.payload) << 3) - 1));
+    SET_REG(lhs, res);
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(FALSE);
+    SET_FLAG_H(FALSE);
+    SET_FLAG_C(lhs.payload & 0x01);
+}
+
+void rl(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    (void)rhs;
+    res = (lhs.payload << 1) | (GET_FLAG_C);
+    SET_REG(lhs, res);
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(FALSE);
+    SET_FLAG_H(FALSE);
+    SET_FLAG_C(lhs.payload >> 7);
+}
+
+void rr(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    (void)rhs;
+    res = (GET_FLAG_C) | (lhs.payload >> 1);
+    SET_REG(lhs, res);
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(FALSE);
+    SET_FLAG_H(FALSE);
+    SET_FLAG_C(lhs.payload & 0x01);
+}
+
+void sla(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    (void)rhs;
+    res = (lhs.payload << 1);
+    SET_REG(lhs, res);
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(FALSE);
+    SET_FLAG_H(FALSE);
+    SET_FLAG_C(lhs.payload >> 7);
+}
+
+void sra(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    (void)rhs;
+    res = (lhs.payload & 0x80) | (lhs.payload >> 1);
+    SET_REG(lhs, res);
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(FALSE);
+    SET_FLAG_H(FALSE);
+    SET_FLAG_C(lhs.payload & 0x01);
+}
+
+void bit(cpu *self, argument_t lhs, argument_t rhs) {
+    SET_FLAG_Z(((lhs.payload >> rhs.payload) & 0x01) == 0);
+    SET_FLAG_N(FALSE);
+    SET_FLAG_H(FALSE);
+}
+
+void res(cpu *self, argument_t lhs, argument_t rhs) {
+    SET_REG(lhs, lhs.payload | ~(1 << rhs.payload))
+}
+
+void set(cpu *self, argument_t lhs, argument_t rhs) {
+    SET_REG(lhs, lhs.payload | (1 << rhs.payload))
+}
+
+void swap(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    (void)rhs;
+    res = (lhs.payload & 0x0F) | (lhs.payload >> 4);
+    SET_REG(lhs, res);
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(FALSE);
+    SET_FLAG_H(FALSE);
+    SET_FLAG_C(FALSE);
+}
+
+void srl(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    (void)rhs;
+    res = (lhs.payload >> 1);
+    SET_REG(lhs, res);
+    SET_FLAG_Z(res == 0);
+    SET_FLAG_N(FALSE);
+    SET_FLAG_H(FALSE);
+    SET_FLAG_C(lhs.payload & 0x01);
+}
+
 void cpu_clock(cpu *self) {
     const uint8_t opcode = next_instruction(self);
     argument_t lhs;
@@ -1501,261 +1605,1477 @@ void handle_cb(cpu *self) {
     argument_t rhs;
     switch (opcode) {
     case 0x00:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rlc(self, lhs, rhs);
+        break;
     case 0x01:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rlc(self, lhs, rhs);
+        break;
     case 0x02:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rlc(self, lhs, rhs);
+        break;
     case 0x03:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rlc(self, lhs, rhs);
+        break;
     case 0x04:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rlc(self, lhs, rhs);
+        break;
     case 0x05:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rlc(self, lhs, rhs);
+        break;
     case 0x06:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rlc(self, lhs, rhs);
+        break;
     case 0x07:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rlc(self, lhs, rhs);
+        break;
     case 0x08:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rrc(self, lhs, rhs);
+        break;
     case 0x09:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rrc(self, lhs, rhs);
+        break;
     case 0x0A:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rrc(self, lhs, rhs);
+        break;
     case 0x0B:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rrc(self, lhs, rhs);
+        break;
     case 0x0C:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rrc(self, lhs, rhs);
+        break;
     case 0x0D:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rrc(self, lhs, rhs);
+        break;
     case 0x0E:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rrc(self, lhs, rhs);
+        break;
     case 0x0F:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rrc(self, lhs, rhs);
+        break;
     case 0x10:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rl(self, lhs, rhs);
+        break;
     case 0x11:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rl(self, lhs, rhs);
+        break;
     case 0x12:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rl(self, lhs, rhs);
+        break;
     case 0x13:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rl(self, lhs, rhs);
+        break;
     case 0x14:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rl(self, lhs, rhs);
+        break;
     case 0x15:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rl(self, lhs, rhs);
+        break;
     case 0x16:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rl(self, lhs, rhs);
+        break;
     case 0x17:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rl(self, lhs, rhs);
+        break;
     case 0x18:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rr(self, lhs, rhs);
+        break;
     case 0x19:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rr(self, lhs, rhs);
+        break;
     case 0x1A:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rr(self, lhs, rhs);
+        break;
     case 0x1B:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rr(self, lhs, rhs);
+        break;
     case 0x1C:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rr(self, lhs, rhs);
+        break;
     case 0x1D:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rr(self, lhs, rhs);
+        break;
     case 0x1E:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rr(self, lhs, rhs);
+        break;
     case 0x1F:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rr(self, lhs, rhs);
+        break;
     case 0x20:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        sla(self, lhs, rhs);
+        break;
     case 0x21:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        sla(self, lhs, rhs);
+        break;
     case 0x22:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        sla(self, lhs, rhs);
+        break;
     case 0x23:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        sla(self, lhs, rhs);
+        break;
     case 0x24:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        sla(self, lhs, rhs);
+        break;
     case 0x25:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        sla(self, lhs, rhs);
+        break;
     case 0x26:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        sla(self, lhs, rhs);
+        break;
     case 0x27:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        sla(self, lhs, rhs);
+        break;
     case 0x28:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        sra(self, lhs, rhs);
+        break;
     case 0x29:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        sra(self, lhs, rhs);
+        break;
     case 0x2A:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        sra(self, lhs, rhs);
+        break;
     case 0x2B:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        sra(self, lhs, rhs);
+        break;
     case 0x2C:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        sra(self, lhs, rhs);
+        break;
     case 0x2D:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        sra(self, lhs, rhs);
+        break;
     case 0x2E:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        sra(self, lhs, rhs);
+        break;
     case 0x2F:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        sra(self, lhs, rhs);
+        break;
     case 0x30:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        swap(self, lhs, rhs);
+        break;
     case 0x31:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        swap(self, lhs, rhs);
+        break;
     case 0x32:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        swap(self, lhs, rhs);
+        break;
     case 0x33:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        swap(self, lhs, rhs);
+        break;
     case 0x34:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        swap(self, lhs, rhs);
+        break;
     case 0x35:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        swap(self, lhs, rhs);
+        break;
     case 0x36:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        swap(self, lhs, rhs);
+        break;
     case 0x37:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        swap(self, lhs, rhs);
+        break;
     case 0x38:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        srl(self, lhs, rhs);
+        break;
     case 0x39:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        srl(self, lhs, rhs);
+        break;
     case 0x3A:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        srl(self, lhs, rhs);
+        break;
     case 0x3B:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        srl(self, lhs, rhs);
+        break;
     case 0x3C:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        srl(self, lhs, rhs);
+        break;
     case 0x3D:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        srl(self, lhs, rhs);
+        break;
     case 0x3E:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        srl(self, lhs, rhs);
+        break;
     case 0x3F:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        srl(self, lhs, rhs);
+        break;
     case 0x40:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        bit(self, lhs, rhs);
+        break;
     case 0x41:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        bit(self, lhs, rhs);
+        break;
     case 0x42:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        bit(self, lhs, rhs);
+        break;
     case 0x43:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        bit(self, lhs, rhs);
+        break;
     case 0x44:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        bit(self, lhs, rhs);
+        break;
     case 0x45:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        bit(self, lhs, rhs);
+        break;
     case 0x46:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        bit(self, lhs, rhs);
+        break;
     case 0x47:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        bit(self, lhs, rhs);
+        break;
     case 0x48:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        bit(self, lhs, rhs);
+        break;
     case 0x49:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        bit(self, lhs, rhs);
+        break;
     case 0x4A:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        bit(self, lhs, rhs);
+        break;
     case 0x4B:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        bit(self, lhs, rhs);
+        break;
     case 0x4C:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        bit(self, lhs, rhs);
+        break;
     case 0x4D:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        bit(self, lhs, rhs);
+        break;
     case 0x4E:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        bit(self, lhs, rhs);
+        break;
     case 0x4F:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        bit(self, lhs, rhs);
+        break;
     case 0x50:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        bit(self, lhs, rhs);
+        break;
     case 0x51:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        bit(self, lhs, rhs);
+        break;
     case 0x52:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        bit(self, lhs, rhs);
+        break;
     case 0x53:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        bit(self, lhs, rhs);
+        break;
     case 0x54:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        bit(self, lhs, rhs);
+        break;
     case 0x55:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        bit(self, lhs, rhs);
+        break;
     case 0x56:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        bit(self, lhs, rhs);
+        break;
     case 0x57:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        bit(self, lhs, rhs);
+        break;
     case 0x58:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        bit(self, lhs, rhs);
+        break;
     case 0x59:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        bit(self, lhs, rhs);
+        break;
     case 0x5A:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        bit(self, lhs, rhs);
+        break;
     case 0x5B:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        bit(self, lhs, rhs);
+        break;
     case 0x5C:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        bit(self, lhs, rhs);
+        break;
     case 0x5D:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        bit(self, lhs, rhs);
+        break;
     case 0x5E:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        bit(self, lhs, rhs);
+        break;
     case 0x5F:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        bit(self, lhs, rhs);
+        break;
     case 0x60:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        bit(self, lhs, rhs);
+        break;
     case 0x61:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        bit(self, lhs, rhs);
+        break;
     case 0x62:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        bit(self, lhs, rhs);
+        break;
     case 0x63:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        bit(self, lhs, rhs);
+        break;
     case 0x64:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        bit(self, lhs, rhs);
+        break;
     case 0x65:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        bit(self, lhs, rhs);
+        break;
     case 0x66:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        bit(self, lhs, rhs);
+        break;
     case 0x67:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        bit(self, lhs, rhs);
+        break;
     case 0x68:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        bit(self, lhs, rhs);
+        break;
     case 0x69:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        bit(self, lhs, rhs);
+        break;
     case 0x6A:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        bit(self, lhs, rhs);
+        break;
     case 0x6B:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        bit(self, lhs, rhs);
+        break;
     case 0x6C:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        bit(self, lhs, rhs);
+        break;
     case 0x6D:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        bit(self, lhs, rhs);
+        break;
     case 0x6E:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        bit(self, lhs, rhs);
+        break;
     case 0x6F:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        bit(self, lhs, rhs);
+        break;
     case 0x70:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        bit(self, lhs, rhs);
+        break;
     case 0x71:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        bit(self, lhs, rhs);
+        break;
     case 0x72:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        bit(self, lhs, rhs);
+        break;
     case 0x73:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        bit(self, lhs, rhs);
+        break;
     case 0x74:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        bit(self, lhs, rhs);
+        break;
     case 0x75:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        bit(self, lhs, rhs);
+        break;
     case 0x76:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        bit(self, lhs, rhs);
+        break;
     case 0x77:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        bit(self, lhs, rhs);
+        break;
     case 0x78:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        bit(self, lhs, rhs);
+        break;
     case 0x79:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        bit(self, lhs, rhs);
+        break;
     case 0x7A:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        bit(self, lhs, rhs);
+        break;
     case 0x7B:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        bit(self, lhs, rhs);
+        break;
     case 0x7C:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        bit(self, lhs, rhs);
+        break;
     case 0x7D:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        bit(self, lhs, rhs);
+        break;
     case 0x7E:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        bit(self, lhs, rhs);
+        break;
     case 0x7F:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        bit(self, lhs, rhs);
+        break;
     case 0x80:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        res(self, lhs, rhs);
+        break;
     case 0x81:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        res(self, lhs, rhs);
+        break;
     case 0x82:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        res(self, lhs, rhs);
+        break;
     case 0x83:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        res(self, lhs, rhs);
+        break;
     case 0x84:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        res(self, lhs, rhs);
+        break;
     case 0x85:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        res(self, lhs, rhs);
+        break;
     case 0x86:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        res(self, lhs, rhs);
+        break;
     case 0x87:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        res(self, lhs, rhs);
+        break;
     case 0x88:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        res(self, lhs, rhs);
+        break;
     case 0x89:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        res(self, lhs, rhs);
+        break;
     case 0x8A:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        res(self, lhs, rhs);
+        break;
     case 0x8B:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        res(self, lhs, rhs);
+        break;
     case 0x8C:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        res(self, lhs, rhs);
+        break;
     case 0x8D:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        res(self, lhs, rhs);
+        break;
     case 0x8E:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        res(self, lhs, rhs);
+        break;
     case 0x8F:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        res(self, lhs, rhs);
+        break;
     case 0x90:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        res(self, lhs, rhs);
+        break;
     case 0x91:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        res(self, lhs, rhs);
+        break;
     case 0x92:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        res(self, lhs, rhs);
+        break;
     case 0x93:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        res(self, lhs, rhs);
+        break;
     case 0x94:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        res(self, lhs, rhs);
+        break;
     case 0x95:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        res(self, lhs, rhs);
+        break;
     case 0x96:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs) rhs.payload = 2;
+        res(self, lhs, rhs);
+        ;
+        break;
     case 0x97:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        res(self, lhs, rhs);
+        break;
     case 0x98:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        res(self, lhs, rhs);
+        break;
     case 0x99:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        res(self, lhs, rhs);
+        break;
     case 0x9A:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        res(self, lhs, rhs);
+        break;
     case 0x9B:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        res(self, lhs, rhs);
+        break;
     case 0x9C:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        res(self, lhs, rhs);
+        break;
     case 0x9D:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        res(self, lhs, rhs);
+        break;
     case 0x9E:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        res(self, lhs, rhs);
+        break;
     case 0x9F:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        res(self, lhs, rhs);
+        break;
     case 0xA0:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        res(self, lhs, rhs);
+        break;
     case 0xA1:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        res(self, lhs, rhs);
+        break;
     case 0xA2:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        res(self, lhs, rhs);
+        break;
     case 0xA3:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        res(self, lhs, rhs);
+        break;
     case 0xA4:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        res(self, lhs, rhs);
+        break;
     case 0xA5:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        res(self, lhs, rhs);
+        break;
     case 0xA6:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        res(self, lhs, rhs);
+        break;
     case 0xA7:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        res(self, lhs, rhs);
+        break;
     case 0xA8:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        res(self, lhs, rhs);
+        break;
     case 0xA9:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        res(self, lhs, rhs);
+        break;
     case 0xAA:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        res(self, lhs, rhs);
+        break;
     case 0xAB:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        res(self, lhs, rhs);
+        break;
     case 0xAC:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        res(self, lhs, rhs);
+        break;
     case 0xAD:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        res(self, lhs, rhs);
+        break;
     case 0xAE:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        res(self, lhs, rhs);
+        break;
     case 0xAF:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        res(self, lhs, rhs);
+        break;
     case 0xB0:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        res(self, lhs, rhs);
+        break;
     case 0xB1:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        res(self, lhs, rhs);
+        break;
     case 0xB2:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        res(self, lhs, rhs);
+        break;
     case 0xB3:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        res(self, lhs, rhs);
+        break;
     case 0xB4:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        res(self, lhs, rhs);
+        break;
     case 0xB5:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        res(self, lhs, rhs);
+        break;
     case 0xB6:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        res(self, lhs, rhs);
+        break;
     case 0xB7:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        res(self, lhs, rhs);
+        break;
     case 0xB8:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        res(self, lhs, rhs);
+        break;
     case 0xB9:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        res(self, lhs, rhs);
+        break;
     case 0xBA:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        res(self, lhs, rhs);
+        break;
     case 0xBB:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        res(self, lhs, rhs);
+        break;
     case 0xBC:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        res(self, lhs, rhs);
+        break;
     case 0xBD:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        res(self, lhs, rhs);
+        break;
     case 0xBE:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        res(self, lhs, rhs);
+        break;
     case 0xBF:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        res(self, lhs, rhs);
+        break;
     case 0xC0:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        set(self, lhs, rhs);
+        break;
     case 0xC1:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        set(self, lhs, rhs);
+        break;
     case 0xC2:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        set(self, lhs, rhs);
+        break;
     case 0xC3:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        set(self, lhs, rhs);
+        break;
     case 0xC4:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        set(self, lhs, rhs);
+        break;
     case 0xC5:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        set(self, lhs, rhs);
+        break;
     case 0xC6:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        set(self, lhs, rhs);
+        break;
     case 0xC7:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 0;
+        set(self, lhs, rhs);
+        break;
     case 0xC8:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        set(self, lhs, rhs);
+        break;
     case 0xC9:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        set(self, lhs, rhs);
+        break;
     case 0xCA:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        set(self, lhs, rhs);
+        break;
     case 0xCB:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        set(self, lhs, rhs);
+        break;
     case 0xCC:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        set(self, lhs, rhs);
+        break;
     case 0xCD:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        set(self, lhs, rhs);
+        break;
     case 0xCE:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        set(self, lhs, rhs);
+        break;
     case 0xCF:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 1;
+        set(self, lhs, rhs);
+        break;
     case 0xD0:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        set(self, lhs, rhs);
+        break;
     case 0xD1:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        set(self, lhs, rhs);
+        break;
     case 0xD2:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        set(self, lhs, rhs);
+        break;
     case 0xD3:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        set(self, lhs, rhs);
+        break;
     case 0xD4:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        set(self, lhs, rhs);
+        break;
     case 0xD5:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        set(self, lhs, rhs);
+        break;
     case 0xD6:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        set(self, lhs, rhs);
+        break;
     case 0xD7:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 2;
+        set(self, lhs, rhs);
+        break;
     case 0xD8:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        set(self, lhs, rhs);
+        break;
     case 0xD9:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        set(self, lhs, rhs);
+        break;
     case 0xDA:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        set(self, lhs, rhs);
+        break;
     case 0xDB:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        set(self, lhs, rhs);
+        break;
     case 0xDC:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        set(self, lhs, rhs);
+        break;
     case 0xDD:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        set(self, lhs, rhs);
+        break;
     case 0xDE:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        set(self, lhs, rhs);
+        break;
     case 0xDF:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 3;
+        set(self, lhs, rhs);
+        break;
     case 0xE0:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        set(self, lhs, rhs);
+        break;
     case 0xE1:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        set(self, lhs, rhs);
+        break;
     case 0xE2:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        set(self, lhs, rhs);
+        break;
     case 0xE3:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        set(self, lhs, rhs);
+        break;
     case 0xE4:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        set(self, lhs, rhs);
+        break;
     case 0xE5:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        set(self, lhs, rhs);
+        break;
     case 0xE6:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        set(self, lhs, rhs);
+        break;
     case 0xE7:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 4;
+        set(self, lhs, rhs);
+        break;
     case 0xE8:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        set(self, lhs, rhs);
+        break;
     case 0xE9:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        set(self, lhs, rhs);
+        break;
     case 0xEA:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        set(self, lhs, rhs);
+        break;
     case 0xEB:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        set(self, lhs, rhs);
+        break;
     case 0xEC:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        set(self, lhs, rhs);
+        break;
     case 0xED:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        set(self, lhs, rhs);
+        break;
     case 0xEE:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        set(self, lhs, rhs);
+        break;
     case 0xEF:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 5;
+        set(self, lhs, rhs);
+        break;
     case 0xF0:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        set(self, lhs, rhs);
+        break;
     case 0xF1:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        set(self, lhs, rhs);
+        break;
     case 0xF2:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        set(self, lhs, rhs);
+        break;
     case 0xF3:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        set(self, lhs, rhs);
+        break;
     case 0xF4:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        set(self, lhs, rhs);
+        break;
     case 0xF5:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        set(self, lhs, rhs);
+        break;
     case 0xF6:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        set(self, lhs, rhs);
+        break;
     case 0xF7:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 6;
+        set(self, lhs, rhs);
+        break;
     case 0xF8:
+        lhs.type = b;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        set(self, lhs, rhs);
+        break;
     case 0xF9:
+        lhs.type = c;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        set(self, lhs, rhs);
+        break;
     case 0xFA:
+        lhs.type = d;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        set(self, lhs, rhs);
+        break;
     case 0xFB:
+        lhs.type = e;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        set(self, lhs, rhs);
+        break;
     case 0xFC:
+        lhs.type = h;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        set(self, lhs, rhs);
+        break;
     case 0xFD:
+        lhs.type = l;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        set(self, lhs, rhs);
+        break;
     case 0xFE:
+        lhs.type = phl;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        set(self, lhs, rhs);
+        break;
     case 0xFF:
+        lhs.type = a;
+        RESOLVE_PAYLOAD(lhs);
+        rhs.payload = 7;
+        set(self, lhs, rhs);
+        break;
     default:
         PANIC("Unhandled opcode");
         break;
