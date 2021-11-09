@@ -92,9 +92,9 @@
                 ARGUMENT_NAME[(r.type)]);                                      \
         abort();                                                               \
     }
-#define SET_FLAG_Z(n) SET_REG_F(GET_REG_F &((n) << 7))
-#define SET_FLAG_N(n) SET_REG_F(GET_REG_F &((n) << 6))
-#define SET_FLAG_H(n) SET_REG_F(GET_REG_F &((n) << 5))
+#define SET_FLAG_Z(n) SET_REG_F(GET_REG_F | (((n)&0x01) << 7))
+#define SET_FLAG_N(n) SET_REG_F(GET_REG_F | (((n)&0x01) << 6))
+#define SET_FLAG_H(n) SET_REG_F(GET_REG_F | (((n)&0x01) << 5))
 #define ADD_FLAG_H(a, b)                                                       \
     SET_REG_F(GET_REG_F &((((((a)&0xf) + ((b)&0xf)) & 0x10) == 0x10) << 5))
 #define SET_FLAG_C(n) SET_REG_F(GET_REG_F &((n) << 4))
@@ -214,6 +214,7 @@
         rhs.should_continue = TRUE;                                            \
         break;                                                                 \
     default:                                                                   \
+        rhs.should_continue = FALSE;                                           \
         break;                                                                 \
     };
 
@@ -447,7 +448,7 @@ void sra(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void bit(cpu *self, argument_t lhs, argument_t rhs) {
-    SET_FLAG_Z(((lhs.payload >> rhs.payload) & 0x01) == 0);
+    SET_FLAG_Z(~((lhs.payload >> rhs.payload) & 0x01));
     SET_FLAG_N(FALSE);
     SET_FLAG_H(FALSE);
 }
@@ -1657,6 +1658,8 @@ void cpu_clock(cpu *self) {
         PANIC("Unhandled opcode");
         break;
     }
+
+    printf("clocks: %d\n", self->clocks);
 }
 
 void handle_cb(cpu *self) {
@@ -1668,6 +1671,7 @@ void handle_cb(cpu *self) {
     opcode = next_instruction(self);
     printf("opcode: 0x%X\n", opcode);
     switch (opcode) {
+    /* RLC */
     case 0x00:
         lhs.type = b;
         RESOLVE_PAYLOAD(lhs);
@@ -1708,6 +1712,7 @@ void handle_cb(cpu *self) {
         RESOLVE_PAYLOAD(lhs);
         rlc(self, lhs, rhs);
         break;
+    /* RRC */
     case 0x08:
         lhs.type = b;
         RESOLVE_PAYLOAD(lhs);
@@ -1748,6 +1753,7 @@ void handle_cb(cpu *self) {
         RESOLVE_PAYLOAD(lhs);
         rrc(self, lhs, rhs);
         break;
+    /* RL */
     case 0x10:
         lhs.type = b;
         RESOLVE_PAYLOAD(lhs);
@@ -1788,6 +1794,7 @@ void handle_cb(cpu *self) {
         RESOLVE_PAYLOAD(lhs);
         rl(self, lhs, rhs);
         break;
+    /* RR */
     case 0x18:
         lhs.type = b;
         RESOLVE_PAYLOAD(lhs);
@@ -1828,6 +1835,7 @@ void handle_cb(cpu *self) {
         RESOLVE_PAYLOAD(lhs);
         rr(self, lhs, rhs);
         break;
+    /* SLA */
     case 0x20:
         lhs.type = b;
         RESOLVE_PAYLOAD(lhs);
@@ -1868,6 +1876,7 @@ void handle_cb(cpu *self) {
         RESOLVE_PAYLOAD(lhs);
         sla(self, lhs, rhs);
         break;
+    /* SRA */
     case 0x28:
         lhs.type = b;
         RESOLVE_PAYLOAD(lhs);
@@ -1908,6 +1917,7 @@ void handle_cb(cpu *self) {
         RESOLVE_PAYLOAD(lhs);
         sra(self, lhs, rhs);
         break;
+    /* SWAP */
     case 0x30:
         lhs.type = b;
         RESOLVE_PAYLOAD(lhs);
@@ -1948,6 +1958,7 @@ void handle_cb(cpu *self) {
         RESOLVE_PAYLOAD(lhs);
         swap(self, lhs, rhs);
         break;
+    /* SRL */
     case 0x38:
         lhs.type = b;
         RESOLVE_PAYLOAD(lhs);
@@ -1988,6 +1999,7 @@ void handle_cb(cpu *self) {
         RESOLVE_PAYLOAD(lhs);
         srl(self, lhs, rhs);
         break;
+    /* BIT */
     case 0x40:
         lhs.type = b;
         RESOLVE_PAYLOAD(lhs);
@@ -2372,6 +2384,7 @@ void handle_cb(cpu *self) {
         rhs.payload = 7;
         bit(self, lhs, rhs);
         break;
+    /* RES */
     case 0x80:
         lhs.type = b;
         RESOLVE_PAYLOAD(lhs);
@@ -2756,6 +2769,7 @@ void handle_cb(cpu *self) {
         rhs.payload = 7;
         res(self, lhs, rhs);
         break;
+    /* SET */
     case 0xC0:
         lhs.type = b;
         RESOLVE_PAYLOAD(lhs);
