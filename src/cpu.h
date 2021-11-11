@@ -19,4 +19,12 @@ cpu cpu_new(bus *bus);
 
 void cpu_clock(cpu *self);
 
+uint16_t get_sp(cpu *self);
+uint8_t get_imm_u8(cpu *self);
+uint16_t get_imm_u16(cpu *self);
+uint8_t get_flag_z(cpu *self);
+uint8_t get_flag_n(cpu *self);
+uint8_t get_flag_h(cpu *self);
+uint8_t get_flag_c(cpu *self);
+
 #endif

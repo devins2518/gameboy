@@ -29,7 +29,7 @@ const uint8_t BOOTROM_DEFAULT[BOOTROM_SIZE] = {
     0x3E, 0x01, 0xE0, 0x50,
 };
 
-bus bus_new() {
+bus bus_new(cartridge_t cart) {
     bus b;
     memcpy(b.bootrom, BOOTROM_DEFAULT, BOOTROM_SIZE);
     memset(b.vram, 0, VRAM_SIZE);
@@ -39,6 +39,7 @@ bus bus_new() {
     memset(b.hram, 0, HRAM_SIZE);
     b.ie_reg = 0;
     b._finished_boot = FALSE;
+    b.cart = cart;
     return b;
 }
 
