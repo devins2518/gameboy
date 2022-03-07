@@ -16,10 +16,6 @@ src = base_src + [ 'src/main.c' ]
 test_src = base_src + [ 'src/unit_test.c' ]
 
 
-if get_option('buildtype') == 'debug'
-  add_project_link_arguments('-rdynamic', '-no-pie', language: 'c')
-endif
-
 sdl = dependency('SDL2')
 
 exe = executable(

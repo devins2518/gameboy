@@ -1649,7 +1649,7 @@ void cpu_clock(cpu *self) {
         break;
     }
 
-    printf("clocks: %d\n", self->clocks);
+    printf("clocks: %d\n\n", self->clocks);
 }
 
 void handle_cb(cpu *self) {

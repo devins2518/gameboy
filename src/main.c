@@ -14,13 +14,12 @@ int main(int argc, char **argv) {
     signal(SIGSEGV, panic_handler);
     signal(SIGABRT, panic_handler);
 
-    if (argc > 1) {
+    if (argc > 0) {
         path = argv[1];
     } else {
         path = NULL;
     }
     gg = gamegirl_init(path);
-    free(path);
 
     while (TRUE) {
         gamegirl_clock(&gg);
