@@ -32,7 +32,6 @@ bus bus_new(cartridge_t cart) {
     memset(b.io, 0, IO_SIZE);
     memset(b.hram, 0, HRAM_SIZE);
     b.ie_reg = 0;
-    b._finished_boot = FALSE;
     b.cart = cart;
     return b;
 }
@@ -40,11 +39,9 @@ bus bus_new(cartridge_t cart) {
 uint8_t get_address(bus *self, uint16_t addr) {
     uint8_t val;
     if (addr >= 0x0000 && addr <= 0x100) {
-        if (!self->_finished_boot) {
+        if (self->io[addr % IO_START] == 0)
             val = self->bootrom[addr];
-            if (addr == BOOTROM_SIZE)
-                self->_finished_boot = TRUE;
-        } else
+        else
             val = cartridge_read(&self->cart, addr);
     } else if (addr >= 0x0101 && addr <= 0x7FFF)
         val = cartridge_read(&self->cart, addr);
@@ -72,7 +69,7 @@ uint8_t get_address(bus *self, uint16_t addr) {
 
 void write_address(bus *self, uint16_t addr, uint8_t n) {
     if (0x0000 <= addr && addr <= 0x100) {
-        if (!self->_finished_boot)
+        if (self->io[addr % IO_START] == 0)
             self->bootrom[addr] = n;
         else
             cartridge_write(&self->cart, addr, n);

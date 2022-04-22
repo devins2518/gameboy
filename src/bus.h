@@ -24,7 +24,6 @@ typedef struct bus {
     uint8_t io[IO_SIZE];
     uint8_t hram[HRAM_SIZE];
     uint8_t ie_reg;
-    uint8_t _finished_boot;
     cartridge_t cart;
 } bus;
 
