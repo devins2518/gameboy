@@ -11,24 +11,14 @@ base_src = [
   'src/utils.c',
 ]
 
-src = base_src + [ 'src/main.c' ]
-
-test_src = base_src + [ 'src/unit_test.c' ]
-
-
 sdl = dependency('SDL2')
 
-exe = executable(
-  'gamegirl',
-  src,
-  dependencies : [sdl],
-  install : true
-)
+src = base_src + 'src/main.c'
+exe = executable('gamegirl', src,
+      dependencies : [sdl], install : true)
 
-test_exe = executable(
-  'gamegirl_test',
-  test_src,
-  dependencies : [sdl]
-)
+test_src = base_src + 'src/unit_test.c'
+test_exe = executable('gamegirl_test', test_src,
+           dependencies : [sdl])
 
 test('cpu', test_exe)

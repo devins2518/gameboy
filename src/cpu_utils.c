@@ -1,5 +1,5 @@
-#include "cpu.h"
 #include "cpu_utils.h"
+#include "cpu.h"
 
 void resolve_payload(cpu *self, argument_t *arg) {
     switch (arg->type) {

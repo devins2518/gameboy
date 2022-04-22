@@ -7,13 +7,11 @@
 #include <unistd.h>
 
 const char *siglist[] = {
-    "SIGHUP",   "SIGINT",   "SIGQUIT", "SIGILL",  "SIGTRAP",   "SIGABRT",
-    "SIGIOT",   "SIGBUS",   "SIGEMT",  "SIGFPE",  "SIGKILL",   "SIGUSR1",
-    "SIGSEGV",  "SIGUSR2",  "SIGPIPE", "SIGALRM", "SIGTERM",   "SIGSTKFLT",
-    "SIGCHLD",  "SIGCLD",   "SIGCONT", "SIGSTOP", "SIGTSTP",   "SIGTTIN",
-    "SIGTTOU",  "SIGURG",   "SIGXCPU", "SIGXFSZ", "SIGVTALRM", "SIGPROF",
-    "SIGWINCH", "SIGIO",    "SIGPOLL", "SIGPWR",  "SIGINFO",   "SIGLOST",
-    "SIGSYS",   "SIGUNUSED"};
+    "SIGHUP",  "SIGINT",    "SIGQUIT", "SIGILL",  "SIGTRAP",   "SIGABRT",  "SIGIOT",   "SIGBUS",
+    "SIGEMT",  "SIGFPE",    "SIGKILL", "SIGUSR1", "SIGSEGV",   "SIGUSR2",  "SIGPIPE",  "SIGALRM",
+    "SIGTERM", "SIGSTKFLT", "SIGCHLD", "SIGCLD",  "SIGCONT",   "SIGSTOP",  "SIGTSTP",  "SIGTTIN",
+    "SIGTTOU", "SIGURG",    "SIGXCPU", "SIGXFSZ", "SIGVTALRM", "SIGPROF",  "SIGWINCH", "SIGIO",
+    "SIGPOLL", "SIGPWR",    "SIGINFO", "SIGLOST", "SIGSYS",    "SIGUNUSED"};
 
 void panic_handler(int sig) {
     void *array[10];
@@ -28,7 +26,6 @@ void panic_handler(int sig) {
     exit(1);
 }
 
-const char *ARGUMENT_NAME[] = {
-    "a", "f",      "b",       "c",         "d",        "e",  "h",
-    "l", "af",     "bc",      "de",        "hl",       "sp", "pc",
-    "p", "imm_u8", "imm_u16", "io_offset", "sp_offset"};
+const char *ARGUMENT_NAME[] = {"a", "f",      "b",       "c",         "d",        "e",  "h",
+                               "l", "af",     "bc",      "de",        "hl",       "sp", "pc",
+                               "p", "imm_u8", "imm_u16", "io_offset", "sp_offset"};

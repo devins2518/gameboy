@@ -1,7 +1,7 @@
+#include "gamegirl.h"
 #include "bus.h"
 #include "cartridge.h"
 #include "cpu.h"
-#include "gamegirl.h"
 
 gamegirl gamegirl_init(char *path) {
     gamegirl g;
