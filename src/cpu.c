@@ -80,28 +80,28 @@
 #define SET_ARG_PAYLOAD(arg)                                                                       \
     switch ((arg.type)) {                                                                          \
     case a:                                                                                        \
-        arg.payload = (uint16_t)get_reg_a(self);                                                   \
+        arg.payload = get_reg_a(self);                                                             \
         break;                                                                                     \
     case f:                                                                                        \
-        arg.payload = (uint16_t)get_reg_f(self);                                                   \
+        arg.payload = get_reg_f(self);                                                             \
         break;                                                                                     \
     case b:                                                                                        \
-        arg.payload = (uint16_t)get_reg_b(self);                                                   \
+        arg.payload = get_reg_b(self);                                                             \
         break;                                                                                     \
     case c:                                                                                        \
-        arg.payload = (uint16_t)get_reg_c(self);                                                   \
+        arg.payload = get_reg_c(self);                                                             \
         break;                                                                                     \
     case d:                                                                                        \
-        arg.payload = (uint16_t)get_reg_d(self);                                                   \
+        arg.payload = get_reg_d(self);                                                             \
         break;                                                                                     \
     case e:                                                                                        \
-        arg.payload = (uint16_t)get_reg_e(self);                                                   \
+        arg.payload = get_reg_e(self);                                                             \
         break;                                                                                     \
     case h:                                                                                        \
-        arg.payload = (uint16_t)get_reg_h(self);                                                   \
+        arg.payload = get_reg_h(self);                                                             \
         break;                                                                                     \
     case l:                                                                                        \
-        arg.payload = (uint16_t)get_reg_l;                                                         \
+        arg.payload = get_reg_l(self);                                                             \
         break;                                                                                     \
     case af:                                                                                       \
         arg.payload = get_reg_af(self);                                                            \
@@ -1631,328 +1631,392 @@ void handle_cb(cpu *self) {
     case 0x00:
         lhs.type = b;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rlc(self, lhs, rhs);
         break;
     case 0x01:
         lhs.type = c;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rlc(self, lhs, rhs);
         break;
     case 0x02:
         lhs.type = d;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rlc(self, lhs, rhs);
         break;
     case 0x03:
         lhs.type = e;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rlc(self, lhs, rhs);
         break;
     case 0x04:
         lhs.type = h;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rlc(self, lhs, rhs);
         break;
     case 0x05:
         lhs.type = l;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rlc(self, lhs, rhs);
         break;
     case 0x06:
         lhs.type = phl;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rlc(self, lhs, rhs);
         break;
     case 0x07:
         lhs.type = a;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rlc(self, lhs, rhs);
         break;
     /* RRC */
     case 0x08:
         lhs.type = b;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rrc(self, lhs, rhs);
         break;
     case 0x09:
         lhs.type = c;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rrc(self, lhs, rhs);
         break;
     case 0x0A:
         lhs.type = d;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rrc(self, lhs, rhs);
         break;
     case 0x0B:
         lhs.type = e;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rrc(self, lhs, rhs);
         break;
     case 0x0C:
         lhs.type = h;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rrc(self, lhs, rhs);
         break;
     case 0x0D:
         lhs.type = l;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rrc(self, lhs, rhs);
         break;
     case 0x0E:
         lhs.type = phl;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rrc(self, lhs, rhs);
         break;
     case 0x0F:
         lhs.type = a;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rrc(self, lhs, rhs);
         break;
     /* RL */
     case 0x10:
         lhs.type = b;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rl(self, lhs, rhs);
         break;
     case 0x11:
         lhs.type = c;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rl(self, lhs, rhs);
         break;
     case 0x12:
         lhs.type = d;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rl(self, lhs, rhs);
         break;
     case 0x13:
         lhs.type = e;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rl(self, lhs, rhs);
         break;
     case 0x14:
         lhs.type = h;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rl(self, lhs, rhs);
         break;
     case 0x15:
         lhs.type = l;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rl(self, lhs, rhs);
         break;
     case 0x16:
         lhs.type = phl;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rl(self, lhs, rhs);
         break;
     case 0x17:
         lhs.type = a;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rl(self, lhs, rhs);
         break;
     /* RR */
     case 0x18:
         lhs.type = b;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rr(self, lhs, rhs);
         break;
     case 0x19:
         lhs.type = c;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rr(self, lhs, rhs);
         break;
     case 0x1A:
         lhs.type = d;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rr(self, lhs, rhs);
         break;
     case 0x1B:
         lhs.type = e;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rr(self, lhs, rhs);
         break;
     case 0x1C:
         lhs.type = h;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rr(self, lhs, rhs);
         break;
     case 0x1D:
         lhs.type = l;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rr(self, lhs, rhs);
         break;
     case 0x1E:
         lhs.type = phl;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rr(self, lhs, rhs);
         break;
     case 0x1F:
         lhs.type = a;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         rr(self, lhs, rhs);
         break;
     /* SLA */
     case 0x20:
         lhs.type = b;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sla(self, lhs, rhs);
         break;
     case 0x21:
         lhs.type = c;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sla(self, lhs, rhs);
         break;
     case 0x22:
         lhs.type = d;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sla(self, lhs, rhs);
         break;
     case 0x23:
         lhs.type = e;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sla(self, lhs, rhs);
         break;
     case 0x24:
         lhs.type = h;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sla(self, lhs, rhs);
         break;
     case 0x25:
         lhs.type = l;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sla(self, lhs, rhs);
         break;
     case 0x26:
         lhs.type = phl;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sla(self, lhs, rhs);
         break;
     case 0x27:
         lhs.type = a;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sla(self, lhs, rhs);
         break;
     /* SRA */
     case 0x28:
         lhs.type = b;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sra(self, lhs, rhs);
         break;
     case 0x29:
         lhs.type = c;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sra(self, lhs, rhs);
         break;
     case 0x2A:
         lhs.type = d;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sra(self, lhs, rhs);
         break;
     case 0x2B:
         lhs.type = e;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sra(self, lhs, rhs);
         break;
     case 0x2C:
         lhs.type = h;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sra(self, lhs, rhs);
         break;
     case 0x2D:
         lhs.type = l;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sra(self, lhs, rhs);
         break;
     case 0x2E:
         lhs.type = phl;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sra(self, lhs, rhs);
         break;
     case 0x2F:
         lhs.type = a;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         sra(self, lhs, rhs);
         break;
     /* SWAP */
     case 0x30:
         lhs.type = b;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         swap(self, lhs, rhs);
         break;
     case 0x31:
         lhs.type = c;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         swap(self, lhs, rhs);
         break;
     case 0x32:
         lhs.type = d;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         swap(self, lhs, rhs);
         break;
     case 0x33:
         lhs.type = e;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         swap(self, lhs, rhs);
         break;
     case 0x34:
         lhs.type = h;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         swap(self, lhs, rhs);
         break;
     case 0x35:
         lhs.type = l;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         swap(self, lhs, rhs);
         break;
     case 0x36:
         lhs.type = phl;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         swap(self, lhs, rhs);
         break;
     case 0x37:
         lhs.type = a;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         swap(self, lhs, rhs);
         break;
     /* SRL */
     case 0x38:
         lhs.type = b;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         srl(self, lhs, rhs);
         break;
     case 0x39:
         lhs.type = c;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         srl(self, lhs, rhs);
         break;
     case 0x3A:
         lhs.type = d;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         srl(self, lhs, rhs);
         break;
     case 0x3B:
         lhs.type = e;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         srl(self, lhs, rhs);
         break;
     case 0x3C:
         lhs.type = h;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         srl(self, lhs, rhs);
         break;
     case 0x3D:
         lhs.type = l;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         srl(self, lhs, rhs);
         break;
     case 0x3E:
         lhs.type = phl;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         srl(self, lhs, rhs);
         break;
     case 0x3F:
         lhs.type = a;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         srl(self, lhs, rhs);
         break;
     /* BIT */

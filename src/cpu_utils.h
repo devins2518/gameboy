@@ -44,4 +44,6 @@ const char *ARGUMENT_NAME[19];
 void resolve_payload(cpu *self, argument_t *arg);
 void resolve_cond(cpu *self, argument_t *arg);
 
+void ignore_arg(argument_t *arg);
+
 #endif

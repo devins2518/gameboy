@@ -1,5 +1,5 @@
-#include "cpu_utils.h"
 #include "cpu.h"
+#include "cpu_utils.h"
 
 void resolve_payload(cpu *self, argument_t *arg) {
     switch (arg->type) {
@@ -42,3 +42,5 @@ void resolve_cond(cpu *self, argument_t *arg) {
         break;
     };
 }
+
+void ignore_arg(argument_t *arg) { (void)arg; }
