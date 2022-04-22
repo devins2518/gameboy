@@ -45,13 +45,13 @@ uint8_t get_address(bus *self, uint16_t addr) {
             if (addr == BOOTROM_SIZE)
                 self->_finished_boot = TRUE;
         } else
-            val = get_cartridge_addr(&self->cart, addr);
+            val = cartridge_read(&self->cart, addr);
     } else if (addr >= 0x0101 && addr <= 0x7FFF)
-        val = get_cartridge_addr(&self->cart, addr);
+        val = cartridge_read(&self->cart, addr);
     else if (addr >= 0x8000 && addr <= 0x9FFF)
         val = self->vram[addr % VRAM_START];
     else if (addr >= 0xA000 && addr <= 0xBFFF)
-        val = get_cartridge_addr(&self->cart, addr);
+        val = cartridge_read(&self->cart, addr);
     else if (addr >= 0xC000 && addr <= 0xDFFF)
         val = self->ram[addr % RAM_START];
     else if (addr >= 0xE000 && addr <= 0xFDFF)
@@ -64,7 +64,7 @@ uint8_t get_address(bus *self, uint16_t addr) {
         val = self->io[addr % IO_START];
     else if (addr >= 0xFF80 && addr <= 0xFFFE)
         val = self->hram[addr % HRAM_START];
-    else if (addr >= 0xFFFF)
+    else
         val = self->ie_reg;
 
     return val;
@@ -75,11 +75,9 @@ void write_address(bus *self, uint16_t addr, uint8_t n) {
         if (!self->_finished_boot)
             self->bootrom[addr] = n;
         else
-            PANIC("cart op boot");
-        /* self->cart.getAddr(addr).* = n; */
+            cartridge_write(&self->cart, addr, n);
     } else if (0x0101 <= addr && addr <= 0x7FFF)
-        PANIC("cart op outside boot")
-    /* self->cart.getAddr(addr).* = n; */
+        cartridge_write(&self->cart, addr, n);
     else if (0x8000 <= addr && addr <= 0x9FFF)
         self->vram[addr % VRAM_START] = n;
     else if (0xA000 <= addr && addr <= 0xBFFF)

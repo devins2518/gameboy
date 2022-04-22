@@ -41,4 +41,6 @@ void cartridge_free(cartridge_t self) {
         munmap(self.data, self.size);
 }
 
-uint8_t get_cartridge_addr(cartridge_t *self, uint16_t addr) { return self->data[addr]; }
+uint8_t cartridge_read(cartridge_t *self, uint16_t addr) { return self->data[addr]; }
+
+void cartridge_write(cartridge_t *self, uint16_t addr, uint8_t n) { self->data[addr] = n; }

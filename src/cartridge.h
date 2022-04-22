@@ -12,6 +12,7 @@ typedef struct cartridge_t {
 
 cartridge_t cartridge_new(char *path);
 void cartridge_free(cartridge_t self);
-uint8_t get_cartridge_addr(cartridge_t *self, uint16_t addr);
+uint8_t cartridge_read(cartridge_t *self, uint16_t addr);
+void cartridge_write(cartridge_t *self, uint16_t addr, uint8_t n);
 
 #endif
