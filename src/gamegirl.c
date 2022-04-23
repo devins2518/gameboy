@@ -1,14 +1,14 @@
 #include "gamegirl.h"
-#include "bus.h"
-#include "cartridge.h"
-#include "cpu.h"
+#include <stdlib.h>
 
-gamegirl gamegirl_init(char *path) {
-    gamegirl g;
+gamegirl *gamegirl_init(char *path) {
+    gamegirl *g = malloc(sizeof(gamegirl));
     cartridge_t cart;
     cart = cartridge_new(path);
-    g.bus = bus_new(cart);
-    g.cpu = cpu_new(&g.bus);
+    g->step = TRUE;
+    g->bus = bus_new(cart);
+    g->ppu = ppu_new(&g->bus);
+    g->cpu = cpu_new(&g->bus);
     return g;
 }
 

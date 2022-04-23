@@ -8,6 +8,7 @@ base_src = [
   'src/cpu.c',
   'src/cpu_utils.c',
   'src/gamegirl.c',
+  'src/ppu.c',
   'src/utils.c',
 ]
 

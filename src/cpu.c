@@ -230,6 +230,25 @@ void inc(cpu *self, argument_t lhs, argument_t rhs) {
     }
 }
 
+void dec(cpu *self, argument_t lhs, argument_t rhs) {
+    uint16_t res;
+    res = lhs.payload - 1;
+    (void)rhs;
+    SET_REG(lhs, res);
+    switch (lhs.type) {
+    case bc:
+    case de:
+    case hl:
+    case sp:
+        break;
+    default:
+        SET_FLAG_Z(res == 0);
+        SET_FLAG_N(0);
+        ADD_FLAG_H(lhs.payload, 1);
+        break;
+    }
+}
+
 void add(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
     res = lhs.payload + rhs.payload;
@@ -914,130 +933,151 @@ void cpu_clock(cpu *self) {
         /* INC
          * Ignore uninitialized rhs since we don't use it
          */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wuninitialized"
     case 0x03:
         lhs.type = bc;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     case 0x04:
         lhs.type = b;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     case 0x0C:
         lhs.type = c;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     case 0x13:
         lhs.type = de;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     case 0x14:
         lhs.type = d;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     case 0x1C:
         lhs.type = e;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     case 0x23:
         lhs.type = hl;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     case 0x24:
         lhs.type = h;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     case 0x2C:
         lhs.type = l;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     case 0x33:
         lhs.type = sp;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     case 0x34:
         lhs.type = phl;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     case 0x3C:
         lhs.type = a;
         SET_ARG_PAYLOAD(lhs);
+        ignore_arg(&rhs);
         inc(self, lhs, rhs);
         break;
     /* DEC */
     case 0x0B:
         lhs.type = bc;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
     case 0x05:
         lhs.type = b;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
     case 0x0D:
         lhs.type = c;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
     case 0x1B:
         lhs.type = de;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
     case 0x15:
         lhs.type = d;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
     case 0x1D:
         lhs.type = e;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
     case 0x2B:
         lhs.type = hl;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
     case 0x25:
         lhs.type = h;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
     case 0x2D:
         lhs.type = l;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
     case 0x3B:
         lhs.type = sp;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
     case 0x35:
         lhs.type = phl;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
     case 0x3D:
         lhs.type = a;
         SET_ARG_PAYLOAD(lhs);
-        inc(self, lhs, rhs);
+        ignore_arg(&rhs);
+        dec(self, lhs, rhs);
         break;
-#pragma GCC diagnostic pop
     /* ADD */
     case 0x09:
         lhs.type = hl;
@@ -1512,26 +1552,31 @@ void cpu_clock(cpu *self) {
     case 0xC0:
         lhs.cond = nzero;
         resolve_cond(self, &lhs);
+        ignore_arg(&rhs);
         ret(self, lhs, rhs);
         break;
     case 0xC8:
         lhs.cond = zero;
         resolve_cond(self, &lhs);
+        ignore_arg(&rhs);
         ret(self, lhs, rhs);
         break;
     case 0xC9:
         lhs.cond = none;
         resolve_cond(self, &lhs);
+        ignore_arg(&rhs);
         ret(self, lhs, rhs);
         break;
     case 0xD0:
         lhs.cond = ncarry;
         resolve_cond(self, &lhs);
+        ignore_arg(&rhs);
         ret(self, lhs, rhs);
         break;
     case 0xD8:
         lhs.cond = carry;
         resolve_cond(self, &lhs);
+        ignore_arg(&rhs);
         ret(self, lhs, rhs);
         break;
     /* JP */
@@ -1540,6 +1585,7 @@ void cpu_clock(cpu *self) {
         lhs.type = imm_u16;
         resolve_cond(self, &lhs);
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         jp(self, lhs, rhs);
         break;
     case 0xCA:
@@ -1547,6 +1593,7 @@ void cpu_clock(cpu *self) {
         lhs.type = imm_u16;
         resolve_cond(self, &lhs);
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         jp(self, lhs, rhs);
         break;
     case 0xC3:
@@ -1554,6 +1601,7 @@ void cpu_clock(cpu *self) {
         lhs.type = imm_u16;
         resolve_cond(self, &lhs);
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         jp(self, lhs, rhs);
         break;
     case 0xD2:
@@ -1561,6 +1609,7 @@ void cpu_clock(cpu *self) {
         lhs.type = imm_u16;
         resolve_cond(self, &lhs);
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         jp(self, lhs, rhs);
         break;
     case 0xDA:
@@ -1568,6 +1617,7 @@ void cpu_clock(cpu *self) {
         lhs.type = imm_u16;
         resolve_cond(self, &lhs);
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         jp(self, lhs, rhs);
         break;
     /* CB */
@@ -1580,6 +1630,7 @@ void cpu_clock(cpu *self) {
         resolve_cond(self, &lhs);
         lhs.type = imm_u8;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         jr(self, lhs, rhs);
         break;
     case 0x20:
@@ -1587,6 +1638,7 @@ void cpu_clock(cpu *self) {
         resolve_cond(self, &lhs);
         lhs.type = imm_u8;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         jr(self, lhs, rhs);
         break;
     case 0x28:
@@ -1594,6 +1646,7 @@ void cpu_clock(cpu *self) {
         resolve_cond(self, &lhs);
         lhs.type = imm_u8;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         jr(self, lhs, rhs);
         break;
     case 0x30:
@@ -1601,6 +1654,7 @@ void cpu_clock(cpu *self) {
         resolve_cond(self, &lhs);
         lhs.type = imm_u8;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         jr(self, lhs, rhs);
         break;
     case 0x38:
@@ -1608,6 +1662,7 @@ void cpu_clock(cpu *self) {
         resolve_cond(self, &lhs);
         lhs.type = imm_u8;
         resolve_payload(self, &lhs);
+        ignore_arg(&rhs);
         jr(self, lhs, rhs);
         break;
     default:

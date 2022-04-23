@@ -3,14 +3,16 @@
 
 #include "bus.h"
 #include "cpu.h"
-#include <stdint.h>
+#include "ppu.h"
 
 typedef struct gamegirl {
+    bool step;
     cpu cpu;
+    ppu ppu;
     bus bus;
 } gamegirl;
 
-gamegirl gamegirl_init();
+gamegirl *gamegirl_init();
 
 void gamegirl_clock(gamegirl *gg);
 void gamegirl_free(gamegirl gg);

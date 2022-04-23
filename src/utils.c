@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <SDL.h>
 #include <execinfo.h>
 #include <signal.h>
 #include <stdio.h>
@@ -23,7 +24,12 @@ void panic_handler(int sig) {
     /* print out all the frames to stderr */
     fprintf(stderr, "Error: signal %s\n", siglist[sig - 1]);
     backtrace_symbols_fd(array, size, STDERR_FILENO);
-    exit(1);
+    exit(EXIT_FAILURE);
+}
+
+void sdl_panic() {
+    printf("SDL ERROR: %s", SDL_GetError());
+    exit(EXIT_FAILURE);
 }
 
 const char *ARGUMENT_NAME[] = {"a", "f",      "b",       "c",         "d",        "e",  "h",

@@ -3,7 +3,6 @@
 
 #include "bus.h"
 #include "utils.h"
-#include <stdbool.h>
 #include <stdint.h>
 
 typedef struct cpu {

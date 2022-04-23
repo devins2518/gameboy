@@ -36,33 +36,35 @@ bus bus_new(cartridge_t cart) {
     return b;
 }
 
-uint8_t get_address(bus *self, uint16_t addr) {
-    uint8_t val;
+uint8_t get_address(bus *self, uint16_t addr) { return *get_address_ptr(self, addr); }
+
+uint8_t *get_address_ptr(bus *self, uint16_t addr) {
+    uint8_t *val;
     if (addr >= 0x0000 && addr <= 0x100) {
         if (self->io[addr % IO_START] == 0)
-            val = self->bootrom[addr];
+            val = &self->bootrom[addr];
         else
-            val = cartridge_read(&self->cart, addr);
+            val = cartridge_read_ptr(&self->cart, addr);
     } else if (addr >= 0x0101 && addr <= 0x7FFF)
-        val = cartridge_read(&self->cart, addr);
+        val = cartridge_read_ptr(&self->cart, addr);
     else if (addr >= 0x8000 && addr <= 0x9FFF)
-        val = self->vram[addr % VRAM_START];
+        val = &self->vram[addr % VRAM_START];
     else if (addr >= 0xA000 && addr <= 0xBFFF)
-        val = cartridge_read(&self->cart, addr);
+        val = cartridge_read_ptr(&self->cart, addr);
     else if (addr >= 0xC000 && addr <= 0xDFFF)
-        val = self->ram[addr % RAM_START];
+        val = &self->ram[addr % RAM_START];
     else if (addr >= 0xE000 && addr <= 0xFDFF)
-        val = self->ram[(addr - 0x2000) % RAM_START];
+        val = &self->ram[(addr - 0x2000) % RAM_START];
     else if (addr >= 0xFE00 && addr <= 0xFE9F)
-        val = self->sat[addr % SAT_START];
+        val = &self->sat[addr % SAT_START];
     else if (addr >= 0xFEA0 && addr <= 0xFEFF)
         return 0x00;
     else if (addr >= 0xFF00 && addr <= 0xFF7F)
-        val = self->io[addr % IO_START];
+        val = &self->io[addr % IO_START];
     else if (addr >= 0xFF80 && addr <= 0xFFFE)
-        val = self->hram[addr % HRAM_START];
+        val = &self->hram[addr % HRAM_START];
     else
-        val = self->ie_reg;
+        val = &self->ie_reg;
 
     return val;
 }
