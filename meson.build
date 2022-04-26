@@ -14,11 +14,15 @@ base_src = [
 
 sdl = dependency('SDL2')
 
+if get_option('buildtype').startswith('debug')
+  add_project_arguments('-DDEBUG', language : 'c')
+endif
+
 src = base_src + 'src/main.c'
 exe = executable('gamegirl', src,
       dependencies : [sdl], install : true)
 
-test_src = base_src + 'src/unit_test.c'
+test_src = base_src + 'test/test_cpu.c'
 test_exe = executable('gamegirl_test', test_src,
            dependencies : [sdl])
 

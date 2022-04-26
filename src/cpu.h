@@ -11,12 +11,12 @@ typedef struct cpu {
     uint16_t sp;
     uint8_t halted;
     bus *bus;
-    uint16_t clocks;
+    uintptr_t clocks;
 } cpu;
 
 cpu cpu_new(bus *bus);
 
-void cpu_clock(cpu *self);
+uintptr_t cpu_clock(cpu *self);
 
 uint16_t get_sp(cpu *self);
 uint8_t get_imm_u8(cpu *self);

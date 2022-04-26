@@ -50,7 +50,7 @@
         set_pc(self, (n));                                                                         \
         break;                                                                                     \
     case p:                                                                                        \
-        write_address(self->bus, (r).payload, (n));                                                \
+        bus_write(self->bus, (r).payload, (n));                                                    \
         break;                                                                                     \
     case paf:                                                                                      \
         set_reg_paf(self, n);                                                                      \
@@ -137,10 +137,10 @@ uint16_t get_reg_af(cpu *self) { return self->registers[0] << 8 | self->register
 uint16_t get_reg_bc(cpu *self) { return self->registers[2] << 8 | self->registers[3]; }
 uint16_t get_reg_de(cpu *self) { return self->registers[4] << 8 | self->registers[5]; }
 uint16_t get_reg_hl(cpu *self) { return self->registers[6] << 8 | self->registers[7]; }
-uint8_t get_reg_paf(cpu *self) { return get_address(self->bus, get_reg_af(self)); }
-uint8_t get_reg_pbc(cpu *self) { return get_address(self->bus, get_reg_bc(self)); }
-uint8_t get_reg_pde(cpu *self) { return get_address(self->bus, get_reg_de(self)); }
-uint8_t get_reg_phl(cpu *self) { return get_address(self->bus, get_reg_hl(self)); }
+uint8_t get_reg_paf(cpu *self) { return bus_read(self->bus, get_reg_af(self)); }
+uint8_t get_reg_pbc(cpu *self) { return bus_read(self->bus, get_reg_bc(self)); }
+uint8_t get_reg_pde(cpu *self) { return bus_read(self->bus, get_reg_de(self)); }
+uint8_t get_reg_phl(cpu *self) { return bus_read(self->bus, get_reg_hl(self)); }
 uint16_t get_sp(cpu *self) { return self->sp; }
 uint16_t get_pc(cpu *self) { return self->pc; }
 uint8_t get_flag_z(cpu *self) { return ((get_reg_f(self) >> 7) & 0x01); }
@@ -171,10 +171,10 @@ void set_reg_hl(cpu *self, uint16_t n) {
     self->registers[6] = n >> 8;
     self->registers[7] = n & 0xFF;
 }
-void set_reg_paf(cpu *self, uint8_t n) { write_address(self->bus, get_reg_af(self), n); }
-void set_reg_pbc(cpu *self, uint8_t n) { write_address(self->bus, get_reg_bc(self), n); }
-void set_reg_pde(cpu *self, uint8_t n) { write_address(self->bus, get_reg_de(self), n); }
-void set_reg_phl(cpu *self, uint8_t n) { write_address(self->bus, get_reg_hl(self), n); }
+void set_reg_paf(cpu *self, uint8_t n) { bus_write(self->bus, get_reg_af(self), n); }
+void set_reg_pbc(cpu *self, uint8_t n) { bus_write(self->bus, get_reg_bc(self), n); }
+void set_reg_pde(cpu *self, uint8_t n) { bus_write(self->bus, get_reg_de(self), n); }
+void set_reg_phl(cpu *self, uint8_t n) { bus_write(self->bus, get_reg_hl(self), n); }
 void set_sp(cpu *self, uint16_t n) { self->sp = n; }
 void set_pc(cpu *self, uint16_t n) { self->pc = n; }
 
@@ -193,7 +193,7 @@ cpu cpu_new(bus *bus) {
 
 uint8_t next_instruction(cpu *self) {
     uint8_t v;
-    v = get_address(self->bus, self->pc++);
+    v = bus_read(self->bus, self->pc++);
     self->clocks++;
     return v;
 }
@@ -206,7 +206,7 @@ uint16_t get_imm_u16(cpu *self) {
     return (uint16_t)((b2 << 8) | b1);
 }
 
-void noop(cpu *self) { self->clocks++; }
+void noop(cpu *self) { (void)self; }
 
 /* Caller is required to set lhs.type and rhs.payload */
 void ld(cpu *self, argument_t lhs, argument_t rhs) { SET_REG(lhs, rhs.payload); }
@@ -344,8 +344,7 @@ void cp(cpu *self, argument_t lhs, argument_t rhs) {
 void ret(cpu *self, argument_t lhs, argument_t rhs) {
     (void)rhs;
     if (lhs.cond) {
-        set_pc(self,
-               (get_address(self->bus, self->sp--) << 8) | (get_address(self->bus, self->sp--)));
+        set_pc(self, (bus_read(self->bus, self->sp--) << 8) | (bus_read(self->bus, self->sp--)));
     }
 }
 
@@ -465,14 +464,13 @@ void jr(cpu *self, argument_t lhs, argument_t rhs) {
     }
 }
 
-void cpu_clock(cpu *self) {
+uintptr_t cpu_clock(cpu *self) {
     uint8_t opcode;
     argument_t lhs;
     argument_t rhs;
+    uintptr_t old_clocks = self->clocks;
 
-    printf("pc: 0x%X\n", get_pc(self));
     opcode = next_instruction(self);
-    printf("opcode: 0x%X\n", opcode);
     switch (opcode) {
     case 0x00:
         noop(self);
@@ -1670,7 +1668,8 @@ void cpu_clock(cpu *self) {
         break;
     }
 
-    printf("clocks: %d\n\n", self->clocks);
+    printf("clocks: %ld\n", self->clocks);
+    return self->clocks - old_clocks;
 }
 
 void handle_cb(cpu *self) {

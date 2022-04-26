@@ -36,12 +36,42 @@ typedef struct {
         uint8_t mode1_int : 1;
         uint8_t mode0_int : 1;
         uint8_t lyc_eq_ly : 1;
-        enum { hblank_state_e, vblank_state_e, oam_state_e, draw_state_e } state : 1;
+        enum { hblank_state_e, vblank_state_e, oam_state_e, draw_state_e } state : 2;
     } * lcds;
+    struct __attribute((packed)) palette {
+        uint8_t index_3 : 2;
+        uint8_t index_2 : 2;
+        uint8_t index_1 : 2;
+        uint8_t index_0 : 2;
+    } * palette;
+    uint8_t *scroll_y;
+    uint8_t *scroll_x;
+    uint8_t *ly;
+    uint8_t *lyc;
+    uint8_t *window_y;
+    uint8_t *window_x;
+    struct __attribute((packed)) sprite {
+        uint8_t ypos;
+        uint8_t xpos;
+        uint8_t tile_idx;
+        struct __attribute((packed)) {
+            uint8_t bg_over : 1;
+            uint8_t yflip : 1;
+            uint8_t xflip : 1;
+            enum {
+                obp0_palette_e, /* 0xFF48 */
+                obp1_palette_e  /* 0xFF49 */
+            } palette : 1;
+            uint8_t _ : 4;
+        } attrs;
+    } * objs;
     SDL_Window *window;
     SDL_Renderer *renderer;
+    uintptr_t clocks;
+    uintptr_t mode_clocks;
 } ppu;
 
 ppu ppu_new(bus *bus);
+uintptr_t ppu_clock(ppu *ppu);
 void ppu_free(ppu ppu);
 #endif

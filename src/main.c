@@ -6,6 +6,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#define FRAMES_PER_SEC 60
+#define CYCLES_PER_SEC 4194304
+#define CYCLES_PER_FRAME (CYCLES_PER_SEC / FRAMES_PER_SEC)
+
 int main(int argc, char **argv) {
     gamegirl *gg;
     struct timespec req;
@@ -24,7 +28,7 @@ int main(int argc, char **argv) {
     gg = gamegirl_init(path);
 
     req.tv_sec = 0;
-    req.tv_nsec = 16670000;
+    req.tv_nsec = CYCLES_PER_FRAME;
     while (!quit) {
         while (SDL_PollEvent(&e)) {
             switch (e.type) {

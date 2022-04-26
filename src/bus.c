@@ -36,9 +36,9 @@ bus bus_new(cartridge_t cart) {
     return b;
 }
 
-uint8_t get_address(bus *self, uint16_t addr) { return *get_address_ptr(self, addr); }
+uint8_t bus_read(bus *self, uint16_t addr) { return *bus_read_ptr(self, addr); }
 
-uint8_t *get_address_ptr(bus *self, uint16_t addr) {
+uint8_t *bus_read_ptr(bus *self, uint16_t addr) {
     uint8_t *val;
     if (addr >= 0x0000 && addr <= 0x100) {
         if (self->io[addr % IO_START] == 0)
@@ -69,7 +69,7 @@ uint8_t *get_address_ptr(bus *self, uint16_t addr) {
     return val;
 }
 
-void write_address(bus *self, uint16_t addr, uint8_t n) {
+void bus_write(bus *self, uint16_t addr, uint8_t n) {
     if (0x0000 <= addr && addr <= 0x100) {
         if (self->io[addr % IO_START] == 0)
             self->bootrom[addr] = n;
