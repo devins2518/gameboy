@@ -29,8 +29,9 @@ typedef struct argument_t {
         sp,        /* SP Register */
         pc,        /* PC Register */
         p,         /* Pointer */
-        imm_u8,    /* Immediate 8 bit value */
-        imm_u16,   /* Immediate 16 bit value */
+        imm_u8,    /* Immediate unsigned 8 bit value */
+        imm_i8,    /* Immediate signed 8 bit value */
+        imm_u16,   /* Immediate unsigned 16 bit value */
         io_offset, /* Offset from IO base address 0xFF00 */
         sp_offset  /* Offset from stack pointer address */
     } type;
@@ -41,7 +42,6 @@ typedef struct argument_t {
 
 const char *ARGUMENT_NAME[19];
 
-void resolve_payload(cpu *self, argument_t *arg);
 void resolve_cond(cpu *self, argument_t *arg);
 
 void ignore_arg(argument_t *arg);
