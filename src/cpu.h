@@ -11,7 +11,7 @@
 #endif
 
 typedef struct cpu {
-    union {
+    union __attribute((packed)) {
         struct __attribute((packed)) {
             uint8_t a;
             union {
@@ -27,7 +27,7 @@ typedef struct cpu {
         } u8;
         uint16_t u16;
     } af;
-    union {
+    union __attribute((packed)) {
         struct __attribute((packed)) {
 #if BIG_ENDIAN == 1
             uint8_t b;
@@ -39,7 +39,7 @@ typedef struct cpu {
         } u8;
         uint16_t u16;
     } bc;
-    union {
+    union __attribute((packed)) {
         struct __attribute((packed)) {
 #if BIG_ENDIAN == 1
             uint8_t d;
@@ -51,7 +51,7 @@ typedef struct cpu {
         } u8;
         uint16_t u16;
     } de;
-    union {
+    union __attribute((packed)) {
         struct __attribute((packed)) {
 #if BIG_ENDIAN == 1
             uint8_t h;

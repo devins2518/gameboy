@@ -290,6 +290,10 @@ void add(cpu *self, argument_t lhs, argument_t rhs) {
     case sp:
         set_flag_z(self, 0);
         break;
+    case hl:
+        self->clocks++;
+        printf("hl %x\n", self->hl.u16);
+        break;
     default:
         break;
     }
@@ -958,9 +962,18 @@ uintptr_t cpu_clock(cpu *self) {
         rhs.payload = cpu_get_imm_u16(self);
         ld(self, lhs, rhs);
         break;
-        /* INC
-         * Ignore uninitialized rhs since we don't use it
-         */
+    case 0x08:
+        lhs.type = p;
+        lhs.payload = cpu_get_imm_u16(self);
+        rhs.payload = get_sp(self) & 0xFF;
+        ld(self, lhs, rhs);
+        lhs.payload++;
+        rhs.payload = (get_sp(self) >> 8) & 0xFF;
+        ld(self, lhs, rhs);
+        break;
+    /* INC
+     * Ignore uninitialized rhs since we don't use it
+     */
     case 0x03:
         lhs.type = bc;
         set_arg_payload(self, &lhs);
@@ -1113,6 +1126,8 @@ uintptr_t cpu_clock(cpu *self) {
         set_arg_payload(self, &lhs);
         set_arg_payload(self, &rhs);
         add(self, lhs, rhs);
+        printf("left add\n");
+        printf("hl %x\n", self->hl.u16);
         break;
     case 0x19:
         lhs.type = hl;
