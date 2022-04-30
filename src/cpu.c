@@ -50,10 +50,10 @@ void set_flag_n(cpu *self, bool z) { self->af.u8.f.bits.n = z; }
 void set_flag_h(cpu *self, bool z) { self->af.u8.f.bits.h = z; }
 void set_flag_c(cpu *self, bool z) { self->af.u8.f.bits.c = z; }
 void set_flag_h_add(cpu *self, uint16_t a, uint16_t b) {
-    set_reg_h(self, (get_reg_f(self) & ((((a & 0xf0) + (b & 0xf0)) & 0x100) == 0x100 << 4)) == 1);
+    set_flag_h(self, (get_reg_f(self) & ((((a & 0xf0) + (b & 0xf0)) & 0x100) == 0x100 << 4)) == 1);
 }
 void set_flag_c_add(cpu *self, uint16_t a, uint16_t b) {
-    set_reg_c(self, (get_reg_f(self) & ((((a & 0xf) + (b & 0xf)) & 0x10) == 0x10)) == 1);
+    set_flag_c(self, (get_reg_f(self) & ((((a & 0xf) + (b & 0xf)) & 0x10) == 0x10)) == 1);
 }
 void set_sp(cpu *self, uint16_t n) { self->sp = n; }
 void set_pc(cpu *self, uint16_t n) { self->pc = n; }
@@ -292,7 +292,6 @@ void add(cpu *self, argument_t lhs, argument_t rhs) {
         break;
     case hl:
         self->clocks++;
-        printf("hl %x\n", self->hl.u16);
         break;
     default:
         break;
@@ -1126,8 +1125,6 @@ uintptr_t cpu_clock(cpu *self) {
         set_arg_payload(self, &lhs);
         set_arg_payload(self, &rhs);
         add(self, lhs, rhs);
-        printf("left add\n");
-        printf("hl %x\n", self->hl.u16);
         break;
     case 0x19:
         lhs.type = hl;
