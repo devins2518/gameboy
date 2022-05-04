@@ -3,18 +3,37 @@
 
 /* clang-format off */
 const uint8_t TEST_BOOTROM[256] = {
-    0x00, /* NOOP 1m */
-    0x01, 0xFE, 0xCA, /* LD BC, u16 3m */
-    0x02, /* LD (BC), A 2m */
-    0x03, /* INC BC 2m */
-    0x04, /* INC B 1m */
-    0x05, /* DEC B 1m */
-    0x06, 0xAA, /* LD B, u8 2m */
-    0x08, 0xFE, 0xCA, /* LD {u16}, SP 5m */
-    0x09, /* ADD HL, BC 2m */
-    0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, /* NOOP 1m 1 */
+    0x01, 0xFE, 0xCA, /* LD BC, u16 3m 4 */
+    0x02, /* LD (BC), A 2m 6 */
+    0x03, /* INC BC 2m 8 */
+    0x04, /* INC B 1m  9 */
+    0x05, /* DEC B 1m 10 */
+    0x06, 0xAA, /* LD B, u8 2m 12 */
+    /* 0x07, RLCA 1m */
+    0x08, 0xFE, 0xCA, /* LD {u16}, SP 5m 17 */
+    0x09, /* ADD HL, BC 2m 19 */
+    0x0A, /* LD A, (BC) 2m 21 */
+    0x0B, /* DEC BC 2m 23 */
+    0x0C, /* INC C 1m 24 */
+    0x0D, /* DEC C 1m 25 */
+    0x0E, 0xAA, /* LD C, u8 2m 27 */
+    /* 0x0F, RRCA 1m */
+    /* 0x10, STOP 1m */
+    0x11, 0xFE, 0xCA, /* LD DE, u16 3m 30 */
+    0x12, /* LD (DE), A 2m 32 */
+    0x13, /* INC DE 2m 34 */
+    0x14, /* INC D 1m 35 */
+    0x15, /* DEC D 1m 36 */
+    0x16, 0xAA, /* LD D, u8 2m 38 */
+    /* 0x17, RLA 1m */
+    /* 0x18, JR i8, 3m */
+    0x19, /* ADD HL, DE 2m 40 */
+    0x1A, /* LD A, (DE) 2m 42 */
+    0x1B, /* DEC DE 2m 44 */
+    0x1C, /* INC E 1m 45 */
+    0x1D, /* DEC E 1m 46 */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -63,4 +82,42 @@ int main() {
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 19);
     assert(gg->cpu.hl.u16 == 0xAAFF);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 21);
+    assert(gg->cpu.af.u8.a == bus_read(&gg->bus, 0xAAFF));
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 23);
+    assert(gg->cpu.bc.u16 == 0xAAFE);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 24);
+    assert(gg->cpu.bc.u8.c == 0xFF);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 25);
+    assert(gg->cpu.bc.u8.c == 0xFE);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 27);
+    assert(gg->cpu.bc.u8.c == 0xAA);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 30);
+    assert(gg->cpu.de.u16 == 0xCAFE);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 32);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 34);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 35);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 36);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 38);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 40);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 42);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 44);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 45);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 46);
 }

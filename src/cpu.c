@@ -6,6 +6,7 @@
 #include <string.h>
 
 void cpu_write_bus(cpu *self, uint16_t addr, uint8_t n);
+uint8_t cpu_read_bus(cpu *self, uint16_t addr);
 
 __attribute((always_inline)) uint8_t get_reg_a(cpu *self) { return self->af.u8.a; }
 __attribute((always_inline)) uint8_t get_reg_f(cpu *self) { return self->af.u8.f.u8; }
@@ -19,10 +20,10 @@ uint16_t get_reg_af(cpu *self) { return self->af.u16; }
 uint16_t get_reg_bc(cpu *self) { return self->bc.u16; }
 uint16_t get_reg_de(cpu *self) { return self->de.u16; }
 uint16_t get_reg_hl(cpu *self) { return self->hl.u16; }
-uint8_t get_reg_paf(cpu *self) { return bus_read(self->bus, get_reg_af(self)); }
-uint8_t get_reg_pbc(cpu *self) { return bus_read(self->bus, get_reg_bc(self)); }
-uint8_t get_reg_pde(cpu *self) { return bus_read(self->bus, get_reg_de(self)); }
-uint8_t get_reg_phl(cpu *self) { return bus_read(self->bus, get_reg_hl(self)); }
+uint8_t get_reg_paf(cpu *self) { return cpu_read_bus(self, get_reg_af(self)); }
+uint8_t get_reg_pbc(cpu *self) { return cpu_read_bus(self, get_reg_bc(self)); }
+uint8_t get_reg_pde(cpu *self) { return cpu_read_bus(self, get_reg_de(self)); }
+uint8_t get_reg_phl(cpu *self) { return cpu_read_bus(self, get_reg_hl(self)); }
 uint16_t get_sp(cpu *self) { return self->sp; }
 uint16_t get_pc(cpu *self) { return self->pc; }
 uint8_t get_flag_z(cpu *self) { return ((get_reg_f(self) >> 7) & 0x01); }
@@ -102,7 +103,13 @@ void set_reg(cpu *self, argument_t r, uint16_t n) {
         set_pc(self, n);
         break;
     case p:
-        cpu_write_bus(self, r.payload, n);
+        if (r.payload <= 0xFF)
+            cpu_write_bus(self, r.payload, n);
+        else {
+            cpu_write_bus(self, r.payload, n & 0xFF);
+            cpu_write_bus(self, r.payload + 1, (n >> 8) & 0xFF);
+        }
+
         break;
     case paf:
         set_reg_paf(self, n);
@@ -116,9 +123,17 @@ void set_reg(cpu *self, argument_t r, uint16_t n) {
     case phl:
         set_reg_phl(self, n);
         break;
+    case phli:
+        set_reg_phl(self, n);
+        self->hl.u16++;
+        break;
+    case phld:
+        set_reg_phl(self, n);
+        self->hl.u16--;
+        break;
     default:
         fflush(stdout);
-        fprintf(stderr, "Could not assign to type: %s\n", ARGUMENT_NAME[(r.type)]);
+        fprintf(stderr, "Could not assign to type: %s\n", ARGUMENT_NAME[r.type]);
         abort();
     }
 }
@@ -149,16 +164,22 @@ void set_arg_payload(cpu *self, argument_t *arg) {
         arg->payload = get_reg_l(self);
         break;
     case paf:
-        arg->payload = bus_read(self->bus, *(uint16_t *)&self->af);
+        arg->payload = bus_read(self->bus, self->af.u16);
         break;
     case pbc:
-        arg->payload = bus_read(self->bus, *(uint16_t *)&self->bc);
+        arg->payload = bus_read(self->bus, self->bc.u16);
         break;
     case pde:
-        arg->payload = bus_read(self->bus, *(uint16_t *)&self->de);
+        arg->payload = bus_read(self->bus, self->de.u16);
         break;
     case phl:
-        arg->payload = bus_read(self->bus, *(uint16_t *)&self->hl);
+        arg->payload = bus_read(self->bus, self->hl.u16);
+        break;
+    case phld:
+        arg->payload = bus_read(self->bus, self->hl.u16--);
+        break;
+    case phli:
+        arg->payload = bus_read(self->bus, self->hl.u16++);
         break;
     case af:
         arg->payload = get_reg_af(self);
@@ -194,7 +215,7 @@ void set_arg_payload(cpu *self, argument_t *arg) {
         arg->payload = cpu_get_imm_u16(self);
         break;
     case p:
-        PANIC("Unreachable");
+        arg->payload = cpu_get_imm_u16(self);
         break;
     }
 }
@@ -218,7 +239,9 @@ cpu cpu_new(bus *bus) {
 uint8_t next_instruction(cpu *self) {
     uint8_t v;
     v = bus_read(self->bus, self->pc++);
+#ifndef DEBUG
     self->clocks++;
+#endif
     return v;
 }
 
@@ -232,16 +255,38 @@ uint16_t cpu_get_imm_u16(cpu *self) {
 
 void cpu_write_bus(cpu *self, uint16_t addr, uint8_t n) {
     bus_write(self->bus, addr, n);
+#ifndef DEBUG
     self->clocks++;
+#endif
 }
 
-void noop(cpu *self) { (void)self; }
+uint8_t cpu_read_bus(cpu *self, uint16_t addr) {
+#ifndef DEBUG
+    self->clocks++;
+#endif
+    return bus_read(self->bus, addr);
+}
+
+void noop(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+}
 
 /* Caller is required to set lhs.type and rhs.payload */
-void ld(cpu *self, argument_t lhs, argument_t rhs) { set_reg(self, lhs, rhs.payload); }
+void ld(cpu *self, argument_t lhs, argument_t rhs) {
+#ifdef DEBUG
+    set_arg_payload(self, &lhs);
+    set_arg_payload(self, &rhs);
+#endif
+    set_reg(self, lhs, rhs.payload);
+}
 
 void inc(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
+#ifdef DEBUG
+    set_arg_payload(self, &lhs);
+#endif
     res = lhs.payload + 1;
     (void)rhs;
     set_reg(self, lhs, res);
@@ -250,7 +295,9 @@ void inc(cpu *self, argument_t lhs, argument_t rhs) {
     case de:
     case hl:
     case sp:
+#ifndef DEBUG
         self->clocks++;
+#endif
         break;
     default:
         set_flag_z(self, res == 0);
@@ -262,6 +309,9 @@ void inc(cpu *self, argument_t lhs, argument_t rhs) {
 
 void dec(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
+#ifdef DEBUG
+    set_arg_payload(self, &lhs);
+#endif
     res = lhs.payload - 1;
     (void)rhs;
     set_reg(self, lhs, res);
@@ -270,6 +320,9 @@ void dec(cpu *self, argument_t lhs, argument_t rhs) {
     case de:
     case hl:
     case sp:
+#ifndef DEBUG
+        self->clocks++;
+#endif
         break;
     default:
         set_flag_z(self, res == 0);
@@ -281,6 +334,10 @@ void dec(cpu *self, argument_t lhs, argument_t rhs) {
 
 void add(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
+#ifdef DEBUG
+    set_arg_payload(self, &lhs);
+    set_arg_payload(self, &rhs);
+#endif
     res = lhs.payload + rhs.payload;
     set_reg(self, lhs, res);
     switch (lhs.type) {
@@ -291,7 +348,9 @@ void add(cpu *self, argument_t lhs, argument_t rhs) {
         set_flag_z(self, 0);
         break;
     case hl:
+#ifndef DEBUG
         self->clocks++;
+#endif
         break;
     default:
         break;
@@ -497,16 +556,267 @@ void jr(cpu *self, argument_t lhs, argument_t rhs) {
     }
 }
 
+void push(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("push");
+}
+
+void pop(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("pop");
+}
+
+void rla(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("rla");
+}
+
+void di(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("di");
+}
+
+void ei(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("ei");
+}
+
+void halt(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("halt");
+}
+
+void rlca(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("rlca");
+}
+
+void rra(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("rra");
+}
+
+void rrca(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("rrca");
+}
+
+void rst(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("rst");
+}
+
+void call(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("call");
+}
+
+void ccf(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("ccf");
+}
+
+void cpl(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("cpl");
+}
+
+void stop(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("stop");
+}
+
+void daa(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("daa");
+}
+
+void scf(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("scf");
+}
+
 uintptr_t cpu_clock(cpu *self) {
     uint8_t opcode;
     argument_t lhs;
+    instr instr;
     argument_t rhs;
     uintptr_t old_clocks = self->clocks;
-
     opcode = next_instruction(self);
+#ifdef DEBUG
+    (void)lhs;
+    (void)rhs;
+    if (self->sp == 0x100) {
+        PANIC("finished boot")
+    }
+    instr = OPCODE_TABLE[opcode];
+
+    switch (instr.instr) {
+    case adc_instr:
+        adc(self, instr.lhs, instr.rhs);
+        break;
+    case add_instr:
+        add(self, instr.lhs, instr.rhs);
+        break;
+    case and_instr:
+        andReg(self, instr.lhs, instr.rhs);
+        break;
+    case bit_instr:
+        bit(self, instr.lhs, instr.rhs);
+        break;
+    case call_instr:
+        call(self, instr.lhs, instr.rhs);
+        break;
+    case ccf_instr:
+        ccf(self, instr.lhs, instr.rhs);
+        break;
+    case cp_instr:
+        cp(self, instr.lhs, instr.rhs);
+        break;
+    case cpl_instr:
+        cpl(self, instr.lhs, instr.rhs);
+        break;
+    case daa_instr:
+        daa(self, instr.lhs, instr.rhs);
+        break;
+    case dec_instr:
+        dec(self, instr.lhs, instr.rhs);
+        break;
+    case di_instr:
+        di(self, instr.lhs, instr.rhs);
+        break;
+    case ei_instr:
+        ei(self, instr.lhs, instr.rhs);
+        break;
+    case halt_instr:
+        halt(self, instr.lhs, instr.rhs);
+        break;
+    case inc_instr:
+        inc(self, instr.lhs, instr.rhs);
+        break;
+    case jp_instr:
+        jp(self, instr.lhs, instr.rhs);
+        break;
+    case jr_instr:
+        jr(self, instr.lhs, instr.rhs);
+        break;
+    case ld_instr:
+        ld(self, instr.lhs, instr.rhs);
+        break;
+    case noop_instr:
+        noop(self, instr.lhs, instr.rhs);
+        break;
+    case or_instr:
+        orReg(self, instr.lhs, instr.rhs);
+        break;
+    case pop_instr:
+        pop(self, instr.lhs, instr.rhs);
+        break;
+    case push_instr:
+        push(self, instr.lhs, instr.rhs);
+        break;
+    case res_instr:
+        res(self, instr.lhs, instr.rhs);
+        break;
+    case ret_instr:
+        ret(self, instr.lhs, instr.rhs);
+        break;
+    case rl_instr:
+        rl(self, instr.lhs, instr.rhs);
+        break;
+    case rla_instr:
+        rla(self, instr.lhs, instr.rhs);
+        break;
+    case rlca_instr:
+        rlca(self, instr.lhs, instr.rhs);
+        break;
+    case rr_instr:
+        rr(self, instr.lhs, instr.rhs);
+        break;
+    case rra_instr:
+        rra(self, instr.lhs, instr.rhs);
+        break;
+    case rrca_instr:
+        rrca(self, instr.lhs, instr.rhs);
+        break;
+    case rst_instr:
+        rst(self, instr.lhs, instr.rhs);
+        break;
+    case sbc_instr:
+        sbc(self, instr.lhs, instr.rhs);
+        break;
+    case scf_instr:
+        scf(self, instr.lhs, instr.rhs);
+        break;
+    case set_instr:
+        set(self, instr.lhs, instr.rhs);
+        break;
+    case sla_instr:
+        sla(self, instr.lhs, instr.rhs);
+        break;
+    case sra_instr:
+        sra(self, instr.lhs, instr.rhs);
+        break;
+    case srl_instr:
+        srl(self, instr.lhs, instr.rhs);
+        break;
+    case stop_instr:
+        stop(self, instr.lhs, instr.rhs);
+        break;
+    case sub_instr:
+        sub(self, instr.lhs, instr.rhs);
+        break;
+    case swap_instr:
+        swap(self, instr.lhs, instr.rhs);
+        break;
+    case xor_instr:
+        xorReg(self, instr.lhs, instr.rhs);
+        break;
+    case illegal_instr:
+        PANIC("Illegal instruction encountered");
+        break;
+    }
+    self->clocks += instr.clocks;
+
+#else
+    (void)instr;
     switch (opcode) {
     case 0x00:
-        noop(self);
+        ignore_arg(&lhs);
+        ignore_arg(&rhs);
+        noop(self, lhs, rhs);
         break;
     /* LD */
     case 0x0A:
@@ -1717,8 +2027,8 @@ uintptr_t cpu_clock(cpu *self) {
         PANIC("Unhandled opcode");
         break;
     }
+#endif
 
-    printf("clocks: %ld\n", self->clocks);
     return self->clocks - old_clocks;
 }
 
@@ -1727,9 +2037,7 @@ void handle_cb(cpu *self) {
     argument_t lhs;
     argument_t rhs;
 
-    printf("pc: 0x%X\n", get_pc(self));
     opcode = next_instruction(self);
-    printf("opcode: 0x%X\n", opcode);
     switch (opcode) {
     /* RLC */
     case 0x00:

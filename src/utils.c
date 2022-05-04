@@ -31,7 +31,3 @@ void sdl_panic() {
     printf("SDL ERROR: %s", SDL_GetError());
     exit(EXIT_FAILURE);
 }
-
-const char *ARGUMENT_NAME[] = {"a", "f",      "b",       "c",         "d",        "e",  "h",
-                               "l", "af",     "bc",      "de",        "hl",       "sp", "pc",
-                               "p", "imm_u8", "imm_u16", "io_offset", "sp_offset"};

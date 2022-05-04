@@ -56,7 +56,6 @@ int main(int argc, char **argv) {
             gamegirl_clock(gg);
         }
         nanosleep(&req, NULL);
-        /* printf("gg.clocks %d\n", gg.cpu.clocks); */
     }
 
     return 0;

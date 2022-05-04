@@ -18,6 +18,5 @@ void gamegirl_clock(gamegirl *gg) {
         gg->schedule_clocks -= (cpu_clock(&gg->cpu) * 2); /* Convert m-cycles to t-cycles */
     else
         gg->schedule_clocks += ppu_clock(&gg->ppu);
-    printf("gg clocks: %ld\n\n", gg->schedule_clocks);
 }
 void gamegirl_free(gamegirl gg) { bus_free(gg.bus); }
