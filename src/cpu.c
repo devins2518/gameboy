@@ -230,7 +230,7 @@ cpu cpu_new(bus *bus) {
     c.hl.u16 = 0x0000;
     c.pc = 0x0000;
     c.sp = 0xFFFE;
-    c.halted = FALSE;
+    c.halted = false;
     c.bus = bus;
     c.clocks = 0x0000;
     return c;
@@ -453,8 +453,8 @@ void rlc(cpu *self, argument_t lhs, argument_t rhs) {
     res = (lhs.payload << 1) | (lhs.payload >> ((sizeof(lhs.payload) << 3) - 1));
     set_reg(self, lhs, res);
     set_flag_z(self, res == 0);
-    set_flag_n(self, FALSE);
-    set_flag_h(self, FALSE);
+    set_flag_n(self, false);
+    set_flag_h(self, false);
     set_flag_c(self, lhs.payload >> 7);
 }
 
@@ -464,8 +464,8 @@ void rrc(cpu *self, argument_t lhs, argument_t rhs) {
     res = (lhs.payload >> 1) | (lhs.payload << ((sizeof(lhs.payload) << 3) - 1));
     set_reg(self, lhs, res);
     set_flag_z(self, res == 0);
-    set_flag_n(self, FALSE);
-    set_flag_h(self, FALSE);
+    set_flag_n(self, false);
+    set_flag_h(self, false);
     set_flag_c(self, lhs.payload & 0x01);
 }
 
@@ -475,8 +475,8 @@ void rl(cpu *self, argument_t lhs, argument_t rhs) {
     res = (lhs.payload << 1) | (get_flag_c(self));
     set_reg(self, lhs, res);
     set_flag_z(self, res == 0);
-    set_flag_n(self, FALSE);
-    set_flag_h(self, FALSE);
+    set_flag_n(self, false);
+    set_flag_h(self, false);
     set_flag_c(self, lhs.payload >> 7);
 }
 
@@ -486,8 +486,8 @@ void rr(cpu *self, argument_t lhs, argument_t rhs) {
     res = (get_flag_c(self)) | (lhs.payload >> 1);
     set_reg(self, lhs, res);
     set_flag_z(self, res == 0);
-    set_flag_n(self, FALSE);
-    set_flag_h(self, FALSE);
+    set_flag_n(self, false);
+    set_flag_h(self, false);
     set_flag_c(self, lhs.payload & 0x01);
 }
 
@@ -497,8 +497,8 @@ void sla(cpu *self, argument_t lhs, argument_t rhs) {
     res = (lhs.payload << 1);
     set_reg(self, lhs, res);
     set_flag_z(self, res == 0);
-    set_flag_n(self, FALSE);
-    set_flag_h(self, FALSE);
+    set_flag_n(self, false);
+    set_flag_h(self, false);
     set_flag_c(self, lhs.payload >> 7);
 }
 
@@ -508,15 +508,15 @@ void sra(cpu *self, argument_t lhs, argument_t rhs) {
     res = (lhs.payload & 0x80) | (lhs.payload >> 1);
     set_reg(self, lhs, res);
     set_flag_z(self, res == 0);
-    set_flag_n(self, FALSE);
-    set_flag_h(self, FALSE);
+    set_flag_n(self, false);
+    set_flag_h(self, false);
     set_flag_c(self, lhs.payload & 0x01);
 }
 
 void bit(cpu *self, argument_t lhs, argument_t rhs) {
     set_flag_z(self, ~((lhs.payload >> rhs.payload) & 0x01));
-    set_flag_n(self, FALSE);
-    set_flag_h(self, FALSE);
+    set_flag_n(self, false);
+    set_flag_h(self, false);
 }
 
 void res(cpu *self, argument_t lhs, argument_t rhs) {
@@ -533,9 +533,9 @@ void swap(cpu *self, argument_t lhs, argument_t rhs) {
     res = (lhs.payload & 0x0F) | (lhs.payload >> 4);
     set_reg(self, lhs, res);
     set_flag_z(self, res == 0);
-    set_flag_n(self, FALSE);
-    set_flag_h(self, FALSE);
-    set_flag_c(self, FALSE);
+    set_flag_n(self, false);
+    set_flag_h(self, false);
+    set_flag_c(self, false);
 }
 
 void srl(cpu *self, argument_t lhs, argument_t rhs) {
@@ -544,8 +544,8 @@ void srl(cpu *self, argument_t lhs, argument_t rhs) {
     res = (lhs.payload >> 1);
     set_reg(self, lhs, res);
     set_flag_z(self, res == 0);
-    set_flag_n(self, FALSE);
-    set_flag_h(self, FALSE);
+    set_flag_n(self, false);
+    set_flag_h(self, false);
     set_flag_c(self, lhs.payload & 0x01);
 }
 

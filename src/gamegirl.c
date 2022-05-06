@@ -5,7 +5,7 @@ gamegirl *gamegirl_init(char *path) {
     gamegirl *gg = malloc(sizeof(gamegirl));
     cartridge_t cart;
     cart = cartridge_new(path);
-    gg->step = TRUE;
+    gg->step = true;
     gg->bus = bus_new(cart);
     gg->ppu = ppu_new(&gg->bus);
     gg->cpu = cpu_new(&gg->bus);

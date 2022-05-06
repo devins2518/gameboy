@@ -130,7 +130,7 @@ void ppu_render_obj(ppu *ppu) {
 }
 
 void ppu_render_bg(ppu *ppu) {
-    bool use_window = FALSE;
+    bool use_window = false;
     bool signed_tile;
     uint16_t tile_mem_idx;
     uint16_t bg_mem_idx;
@@ -139,13 +139,13 @@ void ppu_render_bg(ppu *ppu) {
     uint8_t pixel;
 
     if (ppu->lcdc->window_enable && ppu->window_y <= ppu->ly)
-        use_window = TRUE;
+        use_window = true;
     if (ppu->lcdc->wdata == first_wdata_e) {
         tile_mem_idx = 0x8800;
-        signed_tile = FALSE;
+        signed_tile = false;
     } else {
         tile_mem_idx = 0x8000;
-        signed_tile = TRUE;
+        signed_tile = true;
     }
 
     /* Determine which bank to use */

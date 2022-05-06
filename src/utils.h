@@ -2,8 +2,8 @@
 #define UTILS_H
 
 #define bool int
-#define TRUE 1
-#define FALSE 0
+#define true 1
+#define false 0
 #include <stdint.h>
 
 #define UNIMPLEMENTED(fn)                                                                          \

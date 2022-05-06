@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     struct timespec req;
     char *path;
     SDL_Event e;
-    bool quit = FALSE;
+    bool quit = false;
 
     signal(SIGSEGV, panic_handler);
     signal(SIGABRT, panic_handler);
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
                 }
                 break;
             case SDL_QUIT:
-                quit = TRUE;
+                quit = true;
                 break;
             default:
                 break;
