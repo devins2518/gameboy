@@ -199,9 +199,6 @@ void set_arg_payload(cpu *self, argument_t *arg) {
     case pc:
         arg->payload = get_pc(self);
         break;
-    case io_offset:
-        arg->payload += 0xFF00;
-        break;
     case sp_offset:
         arg->payload += get_sp(self);
         break;
@@ -598,6 +595,13 @@ void halt(cpu *self, argument_t lhs, argument_t rhs) {
     UNIMPLEMENTED("halt");
 }
 
+void reti(cpu *self, argument_t lhs, argument_t rhs) {
+    (void)self;
+    (void)lhs;
+    (void)rhs;
+    UNIMPLEMENTED("reti");
+}
+
 void rlca(cpu *self, argument_t lhs, argument_t rhs) {
     (void)self;
     (void)lhs;
@@ -699,6 +703,9 @@ uintptr_t cpu_clock(cpu *self) {
     case call_instr:
         call(self, instr.lhs, instr.rhs);
         break;
+    case cb_instr:
+        handle_cb(self);
+        break;
     case ccf_instr:
         ccf(self, instr.lhs, instr.rhs);
         break;
@@ -752,6 +759,9 @@ uintptr_t cpu_clock(cpu *self) {
         break;
     case ret_instr:
         ret(self, instr.lhs, instr.rhs);
+        break;
+    case reti_instr:
+        reti(self, instr.lhs, instr.rhs);
         break;
     case rl_instr:
         rl(self, instr.lhs, instr.rhs);
@@ -888,8 +898,7 @@ uintptr_t cpu_clock(cpu *self) {
         break;
     case 0xF0:
         lhs.type = a;
-        rhs.type = io_offset;
-        rhs.payload = cpu_get_imm_u8(self);
+        rhs.payload = cpu_get_imm_u8(self) + IO_START;
         set_arg_payload(self, &rhs);
         ld(self, lhs, rhs);
         break;
@@ -1233,8 +1242,7 @@ uintptr_t cpu_clock(cpu *self) {
         set_reg_hl(self, get_reg_hl(self) - 1);
         break;
     case 0xEA:
-        lhs.type = io_offset;
-        lhs.payload = cpu_get_imm_u8(self);
+        lhs.payload = cpu_get_imm_u8(self) + IO_START;
         set_arg_payload(self, &lhs);
         rhs.payload = get_reg_a(self);
         ld(self, lhs, rhs);
@@ -1255,8 +1263,7 @@ uintptr_t cpu_clock(cpu *self) {
         ld(self, lhs, rhs);
         break;
     case 0xE0:
-        lhs.type = io_offset;
-        lhs.payload = cpu_get_imm_u8(self);
+        lhs.payload = cpu_get_imm_u8(self) + IO_START;
         set_arg_payload(self, &lhs);
         rhs.payload = get_reg_a(self);
         ld(self, lhs, rhs);
@@ -1908,38 +1915,38 @@ uintptr_t cpu_clock(cpu *self) {
         break;
     /* RET */
     case 0xC0:
-        lhs.cond = nzero;
+        lhs.cond = nzero_cond;
         resolve_cond(self, &lhs);
         ignore_arg(&rhs);
         ret(self, lhs, rhs);
         break;
     case 0xC8:
-        lhs.cond = zero;
+        lhs.cond = zero_cond;
         resolve_cond(self, &lhs);
         ignore_arg(&rhs);
         ret(self, lhs, rhs);
         break;
     case 0xC9:
-        lhs.cond = none;
+        lhs.cond = none_cond;
         resolve_cond(self, &lhs);
         ignore_arg(&rhs);
         ret(self, lhs, rhs);
         break;
     case 0xD0:
-        lhs.cond = ncarry;
+        lhs.cond = ncarry_cond;
         resolve_cond(self, &lhs);
         ignore_arg(&rhs);
         ret(self, lhs, rhs);
         break;
     case 0xD8:
-        lhs.cond = carry;
+        lhs.cond = carry_cond;
         resolve_cond(self, &lhs);
         ignore_arg(&rhs);
         ret(self, lhs, rhs);
         break;
     /* JP */
     case 0xC2:
-        lhs.cond = nzero;
+        lhs.cond = nzero_cond;
         lhs.type = imm_u16;
         resolve_cond(self, &lhs);
         set_arg_payload(self, &lhs);
@@ -1947,7 +1954,7 @@ uintptr_t cpu_clock(cpu *self) {
         jp(self, lhs, rhs);
         break;
     case 0xCA:
-        lhs.cond = zero;
+        lhs.cond = zero_cond;
         lhs.type = imm_u16;
         resolve_cond(self, &lhs);
         set_arg_payload(self, &lhs);
@@ -1955,7 +1962,7 @@ uintptr_t cpu_clock(cpu *self) {
         jp(self, lhs, rhs);
         break;
     case 0xC3:
-        lhs.cond = none;
+        lhs.cond = none_cond;
         lhs.type = imm_u16;
         resolve_cond(self, &lhs);
         set_arg_payload(self, &lhs);
@@ -1963,7 +1970,7 @@ uintptr_t cpu_clock(cpu *self) {
         jp(self, lhs, rhs);
         break;
     case 0xD2:
-        lhs.cond = ncarry;
+        lhs.cond = ncarry_cond;
         lhs.type = imm_u16;
         resolve_cond(self, &lhs);
         set_arg_payload(self, &lhs);
@@ -1971,7 +1978,7 @@ uintptr_t cpu_clock(cpu *self) {
         jp(self, lhs, rhs);
         break;
     case 0xDA:
-        lhs.cond = carry;
+        lhs.cond = carry_cond;
         lhs.type = imm_u16;
         resolve_cond(self, &lhs);
         set_arg_payload(self, &lhs);
@@ -1984,7 +1991,7 @@ uintptr_t cpu_clock(cpu *self) {
         break;
     /* JR */
     case 0x18:
-        lhs.cond = none;
+        lhs.cond = none_cond;
         resolve_cond(self, &lhs);
         lhs.type = imm_u8;
         set_arg_payload(self, &lhs);
@@ -1992,7 +1999,7 @@ uintptr_t cpu_clock(cpu *self) {
         jr(self, lhs, rhs);
         break;
     case 0x20:
-        lhs.cond = nzero;
+        lhs.cond = nzero_cond;
         resolve_cond(self, &lhs);
         lhs.type = imm_u8;
         set_arg_payload(self, &lhs);
@@ -2000,7 +2007,7 @@ uintptr_t cpu_clock(cpu *self) {
         jr(self, lhs, rhs);
         break;
     case 0x28:
-        lhs.cond = zero;
+        lhs.cond = zero_cond;
         resolve_cond(self, &lhs);
         lhs.type = imm_u8;
         set_arg_payload(self, &lhs);
@@ -2008,7 +2015,7 @@ uintptr_t cpu_clock(cpu *self) {
         jr(self, lhs, rhs);
         break;
     case 0x30:
-        lhs.cond = ncarry;
+        lhs.cond = ncarry_cond;
         resolve_cond(self, &lhs);
         lhs.type = imm_u8;
         set_arg_payload(self, &lhs);
@@ -2016,7 +2023,7 @@ uintptr_t cpu_clock(cpu *self) {
         jr(self, lhs, rhs);
         break;
     case 0x38:
-        lhs.cond = carry;
+        lhs.cond = carry_cond;
         resolve_cond(self, &lhs);
         lhs.type = imm_u8;
         set_arg_payload(self, &lhs);

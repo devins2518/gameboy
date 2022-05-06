@@ -9,37 +9,37 @@
    offset, and stack pointer offset. CALLING WITH OTHER DISCRIMINANTS WILL
    RETURN GARBAGE. */
 typedef struct {
-    enum type {
-        a,         /* A Register */
-        f,         /* F Register */
-        b,         /* B Register */
-        c,         /* C Register */
-        d,         /* D Register */
-        e,         /* E Register */
-        h,         /* H Register */
-        l,         /* L Register */
-        paf,       /* Pointer to [af] */
-        pbc,       /* Pointer to [bc] */
-        pde,       /* Pointer to [de] */
-        phl,       /* Pointer to [hl] */
-        phli,      /* Pointer to [hl+] */
-        phld,      /* Pointer to [hl-] */
-        af,        /* AF Register */
-        bc,        /* BC Register */
-        de,        /* DE Register */
-        hl,        /* HL Register */
-        sp,        /* SP Register */
-        pc,        /* PC Register */
-        p,         /* LHS u16 */
-        imm_u8,    /* Immediate unsigned 8 bit value */
-        imm_i8,    /* Immediate signed 8 bit value */
-        imm_u16,   /* Immediate unsigned 16 bit value */
-        io_offset, /* Offset from IO base address 0xFF00 */
-        sp_offset  /* Offset from stack pointer address */
+    enum {
+        a,        /* A Register */
+        f,        /* F Register */
+        b,        /* B Register */
+        c,        /* C Register */
+        d,        /* D Register */
+        e,        /* E Register */
+        h,        /* H Register */
+        l,        /* L Register */
+        paf,      /* Pointer to [af] */
+        pbc,      /* Pointer to [bc] */
+        pde,      /* Pointer to [de] */
+        phl,      /* Pointer to [hl] */
+        phli,     /* Pointer to [hl+] */
+        phld,     /* Pointer to [hl-] */
+        af,       /* AF Register */
+        bc,       /* BC Register */
+        de,       /* DE Register */
+        hl,       /* HL Register */
+        sp,       /* SP Register */
+        pc,       /* PC Register */
+        p,        /* LHS u16 */
+        imm_u8,   /* Immediate unsigned 8 bit value */
+        imm_i8,   /* Immediate signed 8 bit value */
+        imm_u16,  /* Immediate unsigned 16 bit value */
+        sp_offset /* Offset from stack pointer address */
     } type;
+    bool is_io_offset;
     uint16_t payload;
-    enum cond { zero, nzero, carry, ncarry, none } cond;
-    uint8_t should_continue;
+    enum { zero_cond, nzero_cond, carry_cond, ncarry_cond, none_cond } cond;
+    bool should_branch;
 } argument_t;
 
 typedef struct {
@@ -51,6 +51,7 @@ typedef struct {
         and_instr,
         bit_instr,
         call_instr,
+        cb_instr,
         ccf_instr,
         cp_instr,
         cpl_instr,
@@ -69,6 +70,7 @@ typedef struct {
         push_instr,
         res_instr,
         ret_instr,
+        reti_instr,
         rl_instr,
         rla_instr,
         rlca_instr,
@@ -92,7 +94,7 @@ typedef struct {
 } instr;
 
 const char *ARGUMENT_NAME[26];
-const instr OPCODE_TABLE[0x40];
+const instr OPCODE_TABLE[0x100];
 
 void resolve_cond(cpu *self, argument_t *arg);
 
