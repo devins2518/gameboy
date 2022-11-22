@@ -1,4 +1,4 @@
-#include "src/gamegirl.h"
+#include "src/gameboy.h"
 #include <assert.h>
 
 /* clang-format off */

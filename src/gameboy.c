@@ -1,4 +1,4 @@
-#include "gamegirl.h"
+#include "gameboy.h"
 #include <stdlib.h>
 
 gamegirl *gamegirl_init(char *path) {

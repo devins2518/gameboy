@@ -1,4 +1,4 @@
-#include "gamegirl.h"
+#include "gameboy.h"
 #include "utils.h"
 #include <signal.h>
 #include <stdio.h>
