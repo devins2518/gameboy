@@ -58,6 +58,7 @@ uint8_t ppu_get_color(ppu *ppu, uint16_t addr, uint8_t idx) {
         res = pal->index_3;
         break;
     default:
+        res = 0; /* Ignore in case of panic */
         PANIC("invalid color index");
     }
     return res;
@@ -228,11 +229,11 @@ void ppu_render_bg(ppu *ppu) {
 }
 
 void ppu_draw_scanline(ppu *ppu) {
-    LOG("PPU", "Drawing scanline");
-    LOG("PPU", "BG Enabled: %d", ppu->lcdc->bg_win_enable);
+    /* LOG("PPU", "Drawing scanline"); */
+    /* LOG("PPU", "BG Enabled: %d", ppu->lcdc->bg_win_enable); */
     if (ppu->lcdc->bg_win_enable)
         ppu_render_bg(ppu);
-    LOG("PPU", "OBJ Enabled: %d", ppu->lcdc->obj_enable);
+    /* LOG("PPU", "OBJ Enabled: %d", ppu->lcdc->obj_enable); */
     if (ppu->lcdc->obj_enable)
         ppu_render_obj(ppu);
 }
@@ -245,7 +246,7 @@ uintptr_t ppu_clock(ppu *ppu) {
         if (ppu->mode_clocks >= CLOCKS_PER_OAM) {
             ppu->mode_clocks %= CLOCKS_PER_OAM;
             ppu->lcds->state = draw_state_e;
-            LOG("PPU", "Switched to draw state from oam");
+            /* LOG("PPU", "Switched to draw state from oam"); */
         }
         break;
     case hblank_state_e:
@@ -254,11 +255,11 @@ uintptr_t ppu_clock(ppu *ppu) {
             (*ppu->ly)++;
             if (*ppu->ly == HEIGHT - 1) {
                 ppu->lcds->state = vblank_state_e;
-                LOG("PPU", "Switched to vblank state from hblank");
+                /* LOG("PPU", "Switched to vblank state from hblank"); */
                 SDL_RenderPresent(ppu->renderer);
             } else {
                 ppu->lcds->state = oam_state_e;
-                LOG("PPU", "Switched to oam state from hblank");
+                /* LOG("PPU", "Switched to oam state from hblank"); */
             }
         }
         break;
@@ -270,7 +271,7 @@ uintptr_t ppu_clock(ppu *ppu) {
             if (*ppu->ly > 153) {
                 ppu->lcds->state = oam_state_e;
                 *ppu->ly = 0;
-                LOG("PPU", "Switched to oam state from vblank");
+                /* LOG("PPU", "Switched to oam state from vblank"); */
             }
         }
         break;
@@ -278,7 +279,7 @@ uintptr_t ppu_clock(ppu *ppu) {
         if (ppu->mode_clocks >= CLOCKS_PER_DRAW) {
             ppu->mode_clocks %= CLOCKS_PER_DRAW;
             ppu->lcds->state = hblank_state_e;
-            LOG("PPU", "Switched to hblank state from draw");
+            /* LOG("PPU", "Switched to hblank state from draw"); */
 
             ppu_draw_scanline(ppu);
         }

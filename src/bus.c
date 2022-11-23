@@ -80,7 +80,7 @@ void bus_write(bus *self, uint16_t addr, uint8_t n) {
     else if (0x8000 <= addr && addr <= 0x9FFF)
         self->vram[addr % VRAM_START] = n;
     else if (0xA000 <= addr && addr <= 0xBFFF)
-        PANIC("attempted to write from cartridge")
+        PANIC("attempted to write from cartridge");
     else if (0xC000 <= addr && addr <= 0xDFFF)
         self->ram[addr % RAM_START] = n;
     else if (0xE000 <= addr && addr <= 0xFDFF)
@@ -88,7 +88,7 @@ void bus_write(bus *self, uint16_t addr, uint8_t n) {
     else if (0xFE00 <= addr && addr <= 0xFE9F)
         self->sat[addr % SAT_START] = n;
     else if (0xFEA0 <= addr && addr <= 0xFEFF)
-        PANIC("unhandled")
+        PANIC("unhandled");
     else if (0xFF00 <= addr && addr <= 0xFF7F)
         self->io[addr % IO_START] = n;
     else if (0xFF80 <= addr && addr <= 0xFFFE)

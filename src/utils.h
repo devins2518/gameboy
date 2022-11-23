@@ -12,13 +12,8 @@
         fprintf(stderr, "Unimplemented function: %s\n", (fn));                                     \
         abort();                                                                                   \
     }
-#define PANIC(str)                                                                                 \
-    {                                                                                              \
-        fflush(stdout);                                                                            \
-        fprintf(stderr, "%s\n", (str));                                                            \
-        abort();                                                                                   \
-    }
 
+void PANIC(char *msg, ...);
 void panic_handler(int sig);
 void sdl_panic();
 void LOG(char *name, char *msg, ...);

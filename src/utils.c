@@ -14,6 +14,15 @@ const char *siglist[] = {
     "SIGTTOU", "SIGURG",    "SIGXCPU", "SIGXFSZ", "SIGVTALRM", "SIGPROF",  "SIGWINCH", "SIGIO",
     "SIGPOLL", "SIGPWR",    "SIGINFO", "SIGLOST", "SIGSYS",    "SIGUNUSED"};
 
+void PANIC(char *msg, ...) {
+    va_list arglist;
+    va_start(arglist, msg);
+    fflush(stdout);
+    vfprintf(stderr, msg, arglist);
+    fprintf(stderr, "\n");
+    abort();
+}
+
 void panic_handler(int sig) {
     void *array[10];
     size_t size;

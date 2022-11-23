@@ -65,7 +65,7 @@ typedef struct cpu {
     } hl;
     uint16_t pc;
     uint16_t sp;
-    uint8_t halted;
+    enum { cpu_running_mode_e, cpu_halted_mode_e, cpu_stop_mode_e } mode;
     bus *bus;
     uintptr_t clocks;
 } cpu;
