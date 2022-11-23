@@ -1,1 +1,3 @@
-# Ziggyboy
+# Gameboy
+
+It emulates. Kinda.
