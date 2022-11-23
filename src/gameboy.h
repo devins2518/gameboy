@@ -10,7 +10,7 @@ typedef struct gamegirl {
     cpu cpu;
     ppu ppu;
     bus bus;
-    intptr_t schedule_clocks;
+    int32_t schedule_clocks;
 } gamegirl;
 
 gamegirl *gamegirl_init();

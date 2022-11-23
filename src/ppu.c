@@ -4,9 +4,9 @@
 #define HEIGHT 144
 #define WIDTH 160
 
-#define CLOCKS_PER_HBLANK 204
-#define CLOCKS_PER_DRAW 172
-#define CLOCKS_PER_OAM 80
+#define CLOCKS_PER_HBLANK 51
+#define CLOCKS_PER_DRAW 43
+#define CLOCKS_PER_OAM 20
 #define CLOCKS_PER_VBLANK (CLOCKS_PER_OAM + CLOCKS_PER_DRAW + CLOCKS_PER_HBLANK)
 
 /* TODO: SDL_SetPaletteColor doesn't work */
@@ -221,59 +221,64 @@ void ppu_render_bg(ppu *ppu) {
         }
         SDL_SetRenderDrawColor(ppu->renderer, GB_PALETTE[color].r, GB_PALETTE[color].g,
                                GB_PALETTE[color].b, GB_PALETTE[color].a);
-        SDL_RenderDrawPoint(ppu->renderer, pixel, *ppu->ly);
+        SDL_RenderDrawPoint(ppu->renderer, pixel, pixel);
     }
 
     UNIMPLEMENTED("ppu_render_bg")
 }
 
 void ppu_draw_scanline(ppu *ppu) {
+    LOG("PPU", "Drawing scanline");
+    LOG("PPU", "BG Enabled: %d", ppu->lcdc->bg_win_enable);
     if (ppu->lcdc->bg_win_enable)
         ppu_render_bg(ppu);
+    LOG("PPU", "OBJ Enabled: %d", ppu->lcdc->obj_enable);
     if (ppu->lcdc->obj_enable)
         ppu_render_obj(ppu);
 }
 
 uintptr_t ppu_clock(ppu *ppu) {
     uintptr_t old_clocks = ppu->clocks++;
+    ppu->mode_clocks++;
     switch (ppu->lcds->state) {
     case oam_state_e:
         if (ppu->mode_clocks >= CLOCKS_PER_OAM) {
             ppu->mode_clocks %= CLOCKS_PER_OAM;
-            ppu->lcds->state = hblank_state_e;
-            printf("PPU: Switched to draw state");
+            ppu->lcds->state = draw_state_e;
+            LOG("PPU", "Switched to draw state from oam");
         }
         break;
     case hblank_state_e:
         if (ppu->mode_clocks >= CLOCKS_PER_HBLANK) {
             ppu->mode_clocks %= CLOCKS_PER_HBLANK;
+            (*ppu->ly)++;
             if (*ppu->ly == HEIGHT - 1) {
                 ppu->lcds->state = vblank_state_e;
-                printf("PPU: Switched to vblank state");
+                LOG("PPU", "Switched to vblank state from hblank");
                 SDL_RenderPresent(ppu->renderer);
             } else {
                 ppu->lcds->state = oam_state_e;
-                printf("PPU: Switched to oam state");
+                LOG("PPU", "Switched to oam state from hblank");
             }
         }
         break;
     case vblank_state_e:
         if (ppu->mode_clocks >= CLOCKS_PER_VBLANK) {
             ppu->mode_clocks %= CLOCKS_PER_VBLANK;
-            ppu->ly++;
+            (*ppu->ly)++;
 
             if (*ppu->ly > 153) {
                 ppu->lcds->state = oam_state_e;
-                printf("PPU: Switched to oam state");
-                ppu->ly = 0;
+                *ppu->ly = 0;
+                LOG("PPU", "Switched to oam state from vblank");
             }
         }
         break;
     case draw_state_e:
         if (ppu->mode_clocks >= CLOCKS_PER_DRAW) {
             ppu->mode_clocks %= CLOCKS_PER_DRAW;
-            ppu->lcds->state = oam_state_e;
-            printf("PPU: Switched to oam state");
+            ppu->lcds->state = hblank_state_e;
+            LOG("PPU", "Switched to hblank state from draw");
 
             ppu_draw_scanline(ppu);
         }

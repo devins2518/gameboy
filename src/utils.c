@@ -31,3 +31,11 @@ void sdl_panic() {
     printf("SDL ERROR: %s", SDL_GetError());
     exit(EXIT_FAILURE);
 }
+
+void LOG(char *name, char *msg, ...) {
+    va_list arglist;
+    va_start(arglist, msg);
+    printf("%s: ", name);
+    vprintf(msg, arglist);
+    printf("\n");
+}

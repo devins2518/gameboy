@@ -14,9 +14,15 @@ gamegirl *gamegirl_init(char *path) {
 }
 
 void gamegirl_clock(gamegirl *gg) {
-    if (gg->schedule_clocks >= 0)
-        gg->schedule_clocks -= (cpu_clock(&gg->cpu) * 2); /* Convert m-cycles to t-cycles */
-    else
+    /* LOG("Scheduler", "CPU clocks: %lu", gg->cpu.clocks); */
+    /* LOG("Scheduler", "PPU clocks: %lu", gg->ppu.clocks); */
+    if (gg->schedule_clocks >= 0) {
+        /* LOG("Scheduler", "Clocking CPU"); */
+        gg->schedule_clocks -= cpu_clock(&gg->cpu);
+    } else {
+        /* LOG("Scheduler", "Clocking PPU"); */
         gg->schedule_clocks += ppu_clock(&gg->ppu);
+        gg->schedule_clocks += ppu_clock(&gg->ppu);
+    }
 }
 void gamegirl_free(gamegirl gg) { bus_free(gg.bus); }

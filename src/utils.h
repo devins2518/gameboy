@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#define bool int
+#define bool uint8_t
 #define true 1
 #define false 0
 #include <stdint.h>
@@ -21,5 +21,6 @@
 
 void panic_handler(int sig);
 void sdl_panic();
+void LOG(char *name, char *msg, ...);
 
 #endif
