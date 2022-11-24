@@ -59,6 +59,14 @@ uint8_t get_reg_phl(cpu *self) {
 uint16_t get_sp(cpu *self) {
     return self->sp;
 }
+uint8_t get_sp_u8(cpu *self) {
+    return cpu_read_bus(self, self->sp++);
+}
+uint16_t get_sp_u16(cpu *self) {
+    uint8_t lo = get_sp_u8(self);
+    uint8_t hi = get_sp_u8(self);
+    return hi << 8 | lo;
+}
 uint16_t get_pc(cpu *self) {
     return self->pc;
 }
@@ -142,6 +150,13 @@ void set_flag_c_add(cpu *self, uint16_t a, uint16_t b) {
 }
 void set_sp(cpu *self, uint16_t n) {
     self->sp = n;
+}
+void set_sp_u8(cpu *self, uint8_t n) {
+    cpu_write_bus(self, --self->sp, n);
+}
+void set_sp_u16(cpu *self, uint16_t n) {
+    cpu_write_bus(self, --self->sp, (n >> 8) & 0x00FF);
+    cpu_write_bus(self, --self->sp, n & 0x00FF);
 }
 void set_pc(cpu *self, uint16_t n) {
     self->pc = n;
@@ -360,9 +375,7 @@ void noop(cpu *self, argument_t lhs, argument_t rhs) {
     (void)rhs;
 }
 
-/* Caller is required to set lhs.type and rhs.payload */
 void ld(cpu *self, argument_t lhs, argument_t rhs) {
-    set_arg_payload(self, &lhs);
     set_arg_payload(self, &rhs);
     set_reg(self, lhs, rhs.payload);
 }
@@ -504,7 +517,7 @@ void cp(cpu *self, argument_t lhs, argument_t rhs) {
 void ret(cpu *self, argument_t lhs, argument_t rhs) {
     (void)rhs;
     if (lhs.cond) {
-        set_pc(self, (bus_read(self->bus, self->sp--) << 8) | (bus_read(self->bus, self->sp--)));
+        set_pc(self, get_sp_u16(self));
     }
 }
 
@@ -629,17 +642,15 @@ void jr(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void push(cpu *self, argument_t lhs, argument_t rhs) {
-    (void)self;
-    (void)lhs;
     (void)rhs;
-    UNIMPLEMENTED("push");
+    set_arg_payload(self, &lhs);
+    set_sp_u16(self, lhs.payload);
 }
 
 void pop(cpu *self, argument_t lhs, argument_t rhs) {
-    (void)self;
-    (void)lhs;
+    uint16_t n = get_sp_u16(self);
     (void)rhs;
-    UNIMPLEMENTED("pop");
+    set_reg(self, lhs, n);
 }
 
 void rla(cpu *self, argument_t lhs, argument_t rhs) {
@@ -729,10 +740,14 @@ void rst(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void call(cpu *self, argument_t lhs, argument_t rhs) {
-    (void)self;
-    (void)lhs;
-    (void)rhs;
-    UNIMPLEMENTED("call");
+    uint16_t pc = get_pc(self);
+    resolve_cond(self, &lhs);
+    set_arg_payload(self, &rhs);
+    if (lhs.should_branch) {
+        set_sp_u16(self, pc);
+        set_pc(self, rhs.payload);
+        self->clocks += 3;
+    }
 }
 
 void ccf(cpu *self, argument_t lhs, argument_t rhs) {
@@ -796,6 +811,7 @@ uintptr_t cpu_clock(cpu *self) {
     uintptr_t old_clocks;
     if (self->mode != cpu_running_mode_e)
         return 0;
+    LOG("CPU", "Reading address %#04x", self->pc);
     opcode = next_instruction(self);
     old_clocks = self->clocks;
     if (self->sp == 0x100) {
@@ -803,135 +819,177 @@ uintptr_t cpu_clock(cpu *self) {
     }
     instr = OPCODE_TABLE[opcode];
 
-    LOG("CPU", "CPU Instr: %#x", opcode);
+    LOG("CPU", "Instr: %#04x", opcode);
     switch (instr.instr) {
     case adc_instr:
+        LOG("CPU", "adc");
         adc(self, instr.lhs, instr.rhs);
         break;
     case add_instr:
+        LOG("CPU", "add");
         add(self, instr.lhs, instr.rhs);
         break;
     case and_instr:
+        LOG("CPU", "and");
         andReg(self, instr.lhs, instr.rhs);
         break;
     case bit_instr:
+        LOG("CPU", "bit");
         bit(self, instr.lhs, instr.rhs);
         break;
     case call_instr:
+        LOG("CPU", "call");
         call(self, instr.lhs, instr.rhs);
         break;
     case cb_instr:
         handle_cb(self);
         break;
     case ccf_instr:
+        LOG("CPU", "ccf");
         ccf(self, instr.lhs, instr.rhs);
         break;
     case cp_instr:
+        LOG("CPU", "cp");
         cp(self, instr.lhs, instr.rhs);
         break;
     case cpl_instr:
+        LOG("CPU", "cpl");
         cpl(self, instr.lhs, instr.rhs);
         break;
     case daa_instr:
+        LOG("CPU", "daa");
         daa(self, instr.lhs, instr.rhs);
         break;
     case dec_instr:
+        LOG("CPU", "dec");
         dec(self, instr.lhs, instr.rhs);
         break;
     case di_instr:
+        LOG("CPU", "di");
         di(self, instr.lhs, instr.rhs);
         break;
     case ei_instr:
+        LOG("CPU", "ei");
         ei(self, instr.lhs, instr.rhs);
         break;
     case halt_instr:
+        LOG("CPU", "halt");
         halt(self, instr.lhs, instr.rhs);
         break;
     case inc_instr:
+        LOG("CPU", "inc");
         inc(self, instr.lhs, instr.rhs);
         break;
     case jp_instr:
+        LOG("CPU", "jp");
         jp(self, instr.lhs, instr.rhs);
         break;
     case jr_instr:
+        LOG("CPU", "jr");
         jr(self, instr.lhs, instr.rhs);
         break;
     case ld_instr:
+        LOG("CPU", "ld");
         ld(self, instr.lhs, instr.rhs);
         break;
     case noop_instr:
+        LOG("CPU", "noop");
         noop(self, instr.lhs, instr.rhs);
         break;
     case or_instr:
+        LOG("CPU", "or");
         orReg(self, instr.lhs, instr.rhs);
         break;
     case pop_instr:
+        LOG("CPU", "pop");
         pop(self, instr.lhs, instr.rhs);
         break;
     case push_instr:
+        LOG("CPU", "push");
         push(self, instr.lhs, instr.rhs);
         break;
     case res_instr:
+        LOG("CPU", "res");
         res(self, instr.lhs, instr.rhs);
         break;
     case ret_instr:
+        LOG("CPU", "ret");
         ret(self, instr.lhs, instr.rhs);
         break;
     case reti_instr:
+        LOG("CPU", "reti");
         reti(self, instr.lhs, instr.rhs);
         break;
     case rl_instr:
+        LOG("CPU", "rl");
         rl(self, instr.lhs, instr.rhs);
         break;
     case rla_instr:
+        LOG("CPU", "rla");
         rla(self, instr.lhs, instr.rhs);
         break;
     case rlca_instr:
+        LOG("CPU", "rlca");
         rlca(self, instr.lhs, instr.rhs);
         break;
     case rr_instr:
+        LOG("CPU", "rr");
         rr(self, instr.lhs, instr.rhs);
         break;
     case rra_instr:
+        LOG("CPU", "rra");
         rra(self, instr.lhs, instr.rhs);
         break;
     case rrca_instr:
+        LOG("CPU", "rrca");
         rrca(self, instr.lhs, instr.rhs);
         break;
     case rst_instr:
+        LOG("CPU", "rst");
         rst(self, instr.lhs, instr.rhs);
         break;
     case sbc_instr:
+        LOG("CPU", "sbc");
         sbc(self, instr.lhs, instr.rhs);
         break;
     case scf_instr:
+        LOG("CPU", "scf");
         scf(self, instr.lhs, instr.rhs);
         break;
     case set_instr:
+        LOG("CPU", "set");
         set(self, instr.lhs, instr.rhs);
         break;
     case sla_instr:
+        LOG("CPU", "sla");
         sla(self, instr.lhs, instr.rhs);
         break;
     case sra_instr:
+        LOG("CPU", "sra");
         sra(self, instr.lhs, instr.rhs);
         break;
     case srl_instr:
+        LOG("CPU", "srl");
         srl(self, instr.lhs, instr.rhs);
         break;
     case stop_instr:
+        LOG("CPU", "stop");
         stop(self, instr.lhs, instr.rhs);
         break;
     case sub_instr:
+        LOG("CPU", "sub");
         sub(self, instr.lhs, instr.rhs);
         break;
     case swap_instr:
+        LOG("CPU", "swap");
         swap(self, instr.lhs, instr.rhs);
         break;
     case xor_instr:
+        LOG("CPU", "xor");
         xorReg(self, instr.lhs, instr.rhs);
         break;
     case illegal_instr:
+        LOG("CPU", "illegal");
         PANIC("Illegal instruction encountered");
         break;
     }

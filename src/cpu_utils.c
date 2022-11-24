@@ -1141,7 +1141,7 @@ const instr OPCODE_TABLE[0x100] = {
     /* 0xCC */
     {COND_ARG(zero_cond), IMM_U16_ARG, call_instr, 6},
     /* 0xCD */
-    {IMM_U16_ARG, NULL_ARG, call_instr, 6},
+    {COND_ARG(none_cond), IMM_U16_ARG, call_instr, 6},
     /* 0xCE */
     {A_ARG, IMM_U8_ARG, adc_instr, 2},
     /* 0xCF */
