@@ -24,6 +24,8 @@ typedef struct {
         phl,      /* Pointer to [hl] */
         phli,     /* Pointer to [hl+] */
         phld,     /* Pointer to [hl-] */
+        pio_u8,   /* Pointer to [IO_START + u8] */
+        pio_c,    /* Pointer to [IO_START + c] */
         af,       /* AF Register */
         bc,       /* BC Register */
         de,       /* DE Register */
@@ -36,7 +38,6 @@ typedef struct {
         imm_u16,  /* Immediate unsigned 16 bit value */
         sp_offset /* Offset from stack pointer address */
     } type;
-    bool is_io_offset;
     uint16_t payload;
     enum { zero_cond, nzero_cond, carry_cond, ncarry_cond, none_cond } cond;
     bool should_branch;

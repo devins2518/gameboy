@@ -197,7 +197,6 @@ void set_reg(cpu *self, argument_t r, uint16_t n) {
             cpu_write_bus(self, r.payload, n & 0xFF);
             cpu_write_bus(self, r.payload + 1, (n >> 8) & 0xFF);
         }
-
         break;
     case paf:
         set_reg_paf(self, n);
@@ -218,6 +217,10 @@ void set_reg(cpu *self, argument_t r, uint16_t n) {
     case phld:
         set_reg_phl(self, n);
         self->hl.u16--;
+        break;
+    case pio_c:
+    case pio_u8:
+        cpu_write_bus(self, r.payload, n);
         break;
     default:
         fflush(stdout);
@@ -301,6 +304,12 @@ void set_arg_payload(cpu *self, argument_t *arg) {
         break;
     case p:
         arg->payload = cpu_get_imm_u16(self);
+        break;
+    case pio_u8:
+        arg->payload = IO_START + cpu_get_imm_u8(self);
+        break;
+    case pio_c:
+        arg->payload = IO_START + get_reg_c(self);
         break;
     }
 }

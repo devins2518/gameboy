@@ -1,62 +1,64 @@
-#include "cpu_utils.h"
 #include "cpu.h"
+#include "cpu_utils.h"
 
 #define NULL_ARG                                                                                   \
-    { a, false, 0x0000, none_cond, false }
+    { a, 0x0000, none_cond, false }
 #define COND_ARG(cond)                                                                             \
-    { a, false, 0x0000, cond, false }
+    { a, 0x0000, cond, false }
 #define A_ARG                                                                                      \
-    { a, false, 0x0000, none_cond, false }
+    { a, 0x0000, none_cond, false }
 #define B_ARG                                                                                      \
-    { b, false, 0x0000, none_cond, false }
+    { b, 0x0000, none_cond, false }
 #define C_ARG                                                                                      \
-    { c, false, 0x0000, none_cond, false }
+    { c, 0x0000, none_cond, false }
 #define D_ARG                                                                                      \
-    { d, false, 0x0000, none_cond, false }
+    { d, 0x0000, none_cond, false }
 #define E_ARG                                                                                      \
-    { e, false, 0x0000, none_cond, false }
+    { e, 0x0000, none_cond, false }
 #define H_ARG                                                                                      \
-    { h, false, 0x0000, none_cond, false }
+    { h, 0x0000, none_cond, false }
 #define L_ARG                                                                                      \
-    { l, false, 0x0000, none_cond, false }
+    { l, 0x0000, none_cond, false }
 #define AF_ARG                                                                                     \
-    { af, false, 0x0000, none_cond, false }
+    { af, 0x0000, none_cond, false }
 #define BC_ARG                                                                                     \
-    { bc, false, 0x0000, none_cond, false }
+    { bc, 0x0000, none_cond, false }
 #define DE_ARG                                                                                     \
-    { de, false, 0x0000, none_cond, false }
+    { de, 0x0000, none_cond, false }
 #define HL_ARG                                                                                     \
-    { hl, false, 0x0000, none_cond, false }
+    { hl, 0x0000, none_cond, false }
 #define SP_ARG                                                                                     \
-    { sp, false, 0x0000, none_cond, false }
+    { sp, 0x0000, none_cond, false }
 #define PC_ARG                                                                                     \
-    { pc, false, 0x0000, none_cond, false }
+    { pc, 0x0000, none_cond, false }
 #define P_ARG                                                                                      \
-    { p, false, 0x0000, none_cond, false }
+    { p, 0x0000, none_cond, false }
 #define IMM_I8_ARG(cond)                                                                           \
-    { imm_i8, false, 0x0000, cond, false }
+    { imm_i8, 0x0000, cond, false }
 #define IMM_U8_ARG                                                                                 \
-    { imm_u8, false, 0x0000, none_cond, false }
+    { imm_u8, 0x0000, none_cond, false }
 #define IMM_U16_ARG                                                                                \
-    { imm_u16, false, 0x0000, none_cond, false }
-#define IO_OFFSET_ARG(type)                                                                        \
-    { type, true, 0x0000, none_cond, false }
+    { imm_u16, 0x0000, none_cond, false }
+#define IO_OFFSET_U8_ARG                                                                           \
+    { pio_u8, 0x0000, none_cond, false }
+#define IO_OFFSET_C_ARG                                                                            \
+    { pio_c, 0x0000, none_cond, false }
 #define SP_OFFSET_ARG                                                                              \
-    { imm_i8, false, 0x0000, none_cond, false }
+    { imm_i8, 0x0000, none_cond, false }
 #define PAF_ARG                                                                                    \
-    { paf, false, 0x0000, none_cond, false }
+    { paf, 0x0000, none_cond, false }
 #define PBC_ARG                                                                                    \
-    { pbc, false, 0x0000, none_cond, false }
+    { pbc, 0x0000, none_cond, false }
 #define PDE_ARG                                                                                    \
-    { pde, false, 0x0000, none_cond, false }
+    { pde, 0x0000, none_cond, false }
 #define PHL_ARG                                                                                    \
-    { phl, false, 0x0000, none_cond, false }
+    { phl, 0x0000, none_cond, false }
 #define PHLI_ARG                                                                                   \
-    { phli, false, 0x0000, none_cond, false }
+    { phli, 0x0000, none_cond, false }
 #define PHLD_ARG                                                                                   \
-    { phld, false, 0x0000, none_cond, false }
+    { phld, 0x0000, none_cond, false }
 #define FIXED_PAYLOAD_ARG(payload)                                                                 \
-    { a, false, payload, none_cond, false }
+    { a, payload, none_cond, false }
 
 const char *ARGUMENT_NAME[26] = {
     "a",         /* A Register */
@@ -1177,11 +1179,11 @@ const instr OPCODE_TABLE[0x100] = {
     /* 0xDF */
     {FIXED_PAYLOAD_ARG(0x0018), NULL_ARG, rst_instr, 4},
     /* 0xE0 */
-    {IO_OFFSET_ARG(imm_i8), A_ARG, ld_instr, 3},
+    {IO_OFFSET_U8_ARG, A_ARG, ld_instr, 3},
     /* 0xE1 */
     {HL_ARG, NULL_ARG, pop_instr, 3},
     /* 0xE2 */
-    {IO_OFFSET_ARG(c), A_ARG, ld_instr, 3},
+    {IO_OFFSET_C_ARG, A_ARG, ld_instr, 2},
     /* 0xE3 */
     {NULL_ARG, NULL_ARG, illegal_instr, 0},
     /* 0xE4 */
@@ -1210,11 +1212,11 @@ const instr OPCODE_TABLE[0x100] = {
     /* 0xEF */
     {FIXED_PAYLOAD_ARG(0x0028), NULL_ARG, rst_instr, 4},
     /* 0xF0 */
-    {A_ARG, IO_OFFSET_ARG(imm_i8), ld_instr, 3},
+    {A_ARG, IO_OFFSET_U8_ARG, ld_instr, 3},
     /* 0xF1 */
     {AF_ARG, NULL_ARG, pop_instr, 3},
     /* 0xF2 */
-    {A_ARG, IO_OFFSET_ARG(c), ld_instr, 2},
+    {A_ARG, IO_OFFSET_C_ARG, ld_instr, 2},
     /* 0xF3 */
     {NULL_ARG, NULL_ARG, di_instr, 1},
     /* 0xF4 */
