@@ -339,15 +339,9 @@ uint16_t cpu_get_imm_u16(cpu *self) {
 
 void cpu_write_bus(cpu *self, uint16_t addr, uint8_t n) {
     bus_write(self->bus, addr, n);
-#ifndef DEBUG
-    self->clocks++;
-#endif
 }
 
 uint8_t cpu_read_bus(cpu *self, uint16_t addr) {
-#ifndef DEBUG
-    self->clocks++;
-#endif
     return bus_read(self->bus, addr);
 }
 
@@ -359,18 +353,14 @@ void noop(cpu *self, argument_t lhs, argument_t rhs) {
 
 /* Caller is required to set lhs.type and rhs.payload */
 void ld(cpu *self, argument_t lhs, argument_t rhs) {
-#ifdef DEBUG
     set_arg_payload(self, &lhs);
     set_arg_payload(self, &rhs);
-#endif
     set_reg(self, lhs, rhs.payload);
 }
 
 void inc(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
-#ifdef DEBUG
     set_arg_payload(self, &lhs);
-#endif
     res = lhs.payload + 1;
     (void)rhs;
     set_reg(self, lhs, res);
@@ -379,9 +369,6 @@ void inc(cpu *self, argument_t lhs, argument_t rhs) {
     case de:
     case hl:
     case sp:
-#ifndef DEBUG
-        self->clocks++;
-#endif
         break;
     default:
         set_flag_z(self, res == 0);
@@ -393,9 +380,7 @@ void inc(cpu *self, argument_t lhs, argument_t rhs) {
 
 void dec(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
-#ifdef DEBUG
     set_arg_payload(self, &lhs);
-#endif
     res = lhs.payload - 1;
     (void)rhs;
     set_reg(self, lhs, res);
@@ -404,9 +389,6 @@ void dec(cpu *self, argument_t lhs, argument_t rhs) {
     case de:
     case hl:
     case sp:
-#ifndef DEBUG
-        self->clocks++;
-#endif
         break;
     default:
         set_flag_z(self, res == 0);
@@ -418,10 +400,8 @@ void dec(cpu *self, argument_t lhs, argument_t rhs) {
 
 void add(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
-#ifdef DEBUG
     set_arg_payload(self, &lhs);
     set_arg_payload(self, &rhs);
-#endif
     res = lhs.payload + rhs.payload;
     set_reg(self, lhs, res);
     switch (lhs.type) {
@@ -430,11 +410,6 @@ void add(cpu *self, argument_t lhs, argument_t rhs) {
         break;
     case sp:
         set_flag_z(self, 0);
-        break;
-    case hl:
-#ifndef DEBUG
-        self->clocks++;
-#endif
         break;
     default:
         break;

@@ -14,16 +14,12 @@ base_src = [
 
 sdl = dependency('SDL2')
 
-if get_option('buildtype').startswith('debug')
-  add_project_arguments('-DDEBUG', language : 'c')
-endif
-
 src = base_src + 'src/main.c'
 exe = executable('gameboy', src,
       dependencies : [sdl], install : true)
 
 test_src = base_src + 'test/test_cpu.c'
 test_exe = executable('gameboy_test', test_src,
-           dependencies : [sdl])
+           dependencies : [sdl], c_args : '-DDEBUG')
 
 test('cpu', test_exe)
