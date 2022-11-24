@@ -20,6 +20,6 @@ exe = executable('gameboy', src,
 
 test_src = base_src + 'test/test_cpu.c'
 test_exe = executable('gameboy_test', test_src,
-           dependencies : [sdl], c_args : '-DDEBUG')
+           dependencies : [sdl], c_args : '-DTESTING')
 
 test('cpu', test_exe)

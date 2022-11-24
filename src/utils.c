@@ -42,9 +42,14 @@ void sdl_panic() {
 }
 
 void LOG(char *name, char *msg, ...) {
+#ifndef TESTING
     va_list arglist;
     va_start(arglist, msg);
     printf("%s: ", name);
     vprintf(msg, arglist);
     printf("\n");
+#else
+    (void)name;
+    (void)msg;
+#endif
 }
