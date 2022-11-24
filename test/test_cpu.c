@@ -132,10 +132,70 @@ const uint8_t TEST_BOOTROM[256] = {
     0x7D,             /* LD A, L      |     1m |            190 */
     0x7E,             /* LD A, (HL)   |     2m |            192 */
     0x7F,             /* LD A, A      |     1m |            193 */
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x80,             /* ADD A, B     |     1m |            194 */
+    0x81,             /* ADD A, C     |     1m |            195 */
+    0x82,             /* ADD A, D     |     1m |            196 */
+    0x83,             /* ADD A, E     |     1m |            197 */
+    0x84,             /* ADD A, H     |     1m |            198 */
+    0x85,             /* ADD A, L     |     1m |            199 */
+    0x86,             /* ADD A, (HL)  |     2m |            201 */
+    0x87,             /* ADD A, A     |     1m |            202 */
+    0x88,             /* ADC A, B     |     1m |            203 */
+    0x89,             /* ADC A, C     |     1m |            204 */
+    0x8A,             /* ADC A, D     |     1m |            205 */
+    0x8B,             /* ADC A, E     |     1m |            206 */
+    0x8C,             /* ADC A, H     |     1m |            207 */
+    0x8D,             /* ADC A, L     |     1m |            208 */
+    0x8E,             /* ADC A, (HL)  |     2m |            210 */
+    0x8F,             /* ADC A, A     |     1m |            211 */
+    0x90,             /* SUB A, B     |     1m |            212 */
+    0x91,             /* SUB A, C     |     1m |            213 */
+    0x92,             /* SUB A, D     |     1m |            214 */
+    0x93,             /* SUB A, E     |     1m |            215 */
+    0x94,             /* SUB A, H     |     1m |            216 */
+    0x95,             /* SUB A, L     |     1m |            217 */
+    0x96,             /* SUB A, (HL)  |     2m |            219 */
+    0x97,             /* SUB A, A     |     1m |            220 */
+    0x98,             /* SBC A, B     |     1m |            221 */
+    0x99,             /* SBC A, C     |     1m |            222 */
+    0x9A,             /* SBC A, D     |     1m |            223 */
+    0x9B,             /* SBC A, E     |     1m |            224 */
+    0x9C,             /* SBC A, H     |     1m |            225 */
+    0x9D,             /* SBC A, L     |     1m |            226 */
+    0x9E,             /* SBC A, (HL)  |     2m |            228 */
+    0x9F,             /* SBC A, A     |     1m |            229 */
+    0xA0,             /* AND A, B     |     1m |            230 */
+    0xA1,             /* AND A, C     |     1m |            231 */
+    0xA2,             /* AND A, D     |     1m |            232 */
+    0xA3,             /* AND A, E     |     1m |            233 */
+    0xA4,             /* AND A, H     |     1m |            234 */
+    0xA5,             /* AND A, L     |     1m |            235 */
+    0xA6,             /* AND A, (HL)  |     2m |            237 */
+    0xA7,             /* AND A, A     |     1m |            238 */
+    0xA8,             /* XOR A, B     |     1m |            239 */
+    0xA9,             /* XOR A, C     |     1m |            240 */
+    0xAA,             /* XOR A, D     |     1m |            241 */
+    0xAB,             /* XOR A, E     |     1m |            242 */
+    0xAC,             /* XOR A, H     |     1m |            243 */
+    0xAD,             /* XOR A, L     |     1m |            244 */
+    0xAE,             /* XOR A, (HL)  |     2m |            246 */
+    0xAF,             /* XOR A, A     |     1m |            247 */
+    0xB0,             /* OR A, B      |     1m |            248 */
+    0xB1,             /* OR A, C      |     1m |            249 */
+    0xB2,             /* OR A, D      |     1m |            250 */
+    0xB3,             /* OR A, E      |     1m |            251 */
+    0xB4,             /* OR A, H      |     1m |            252 */
+    0xB5,             /* OR A, L      |     1m |            253 */
+    0xB6,             /* OR A, (HL)   |     2m |            255 */
+    0xB7,             /* OR A, A      |     1m |            256 */
+    0xB8,             /* CP A, B      |     1m |            257 */
+    0xB9,             /* CP A, C      |     1m |            258 */
+    0xBA,             /* CP A, D      |     1m |            259 */
+    0xBB,             /* CP A, E      |     1m |            260 */
+    0xBC,             /* CP A, H      |     1m |            261 */
+    0xBD,             /* CP A, L      |     1m |            262 */
+    0xBE,             /* CP A, (HL)   |     2m |            264 */
+    0xBF,             /* CP A, A      |     1m |            265 */
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -457,6 +517,134 @@ int main() {
     assert(gg->cpu.clocks == 192);
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 193);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 194);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 195);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 196);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 197);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 198);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 199);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 201);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 202);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 203);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 204);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 205);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 206);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 207);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 208);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 210);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 211);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 212);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 213);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 214);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 215);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 216);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 217);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 219);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 220);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 221);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 222);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 223);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 224);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 225);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 226);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 228);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 229);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 230);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 231);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 232);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 233);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 234);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 235);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 237);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 238);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 239);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 240);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 241);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 242);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 243);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 244);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 246);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 247);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 248);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 249);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 250);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 251);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 252);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 253);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 255);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 256);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 257);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 258);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 259);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 260);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 261);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 262);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 264);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 265);
 
     LOG("Test", "test_cpu passed!");
 }
