@@ -596,10 +596,9 @@ void ei(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void halt(cpu *self, argument_t lhs, argument_t rhs) {
-    (void)self;
     (void)lhs;
     (void)rhs;
-    UNIMPLEMENTED("halt");
+    self->mode = cpu_halted_mode_e;
 }
 
 void reti(cpu *self, argument_t lhs, argument_t rhs) {
