@@ -547,9 +547,12 @@ void srl(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void jr(cpu *self, argument_t lhs, argument_t rhs) {
+    int8_t offset;
     (void)rhs;
-    if (lhs.cond) {
-        set_pc(self, get_pc(self) + (int8_t)lhs.payload);
+    resolve_cond(self, &lhs);
+    offset = (int8_t)cpu_get_imm_u8(self);
+    if (lhs.should_branch) {
+        set_pc(self, get_pc(self) + offset);
     }
 }
 
@@ -622,10 +625,16 @@ void rlca(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void rra(cpu *self, argument_t lhs, argument_t rhs) {
-    (void)self;
+    uint8_t res;
+    uint8_t a = get_reg_a(self);
     (void)lhs;
     (void)rhs;
-    UNIMPLEMENTED("rra");
+    res = (get_flag_c(self) << 7) | (a >> 1);
+    set_reg_a(self, res);
+    set_flag_z(self, res == 0);
+    set_flag_n(self, false);
+    set_flag_h(self, false);
+    set_flag_c(self, a & 0x1);
 }
 
 void rrca(cpu *self, argument_t lhs, argument_t rhs) {
@@ -702,6 +711,7 @@ uintptr_t cpu_clock(cpu *self) {
     }
     instr = OPCODE_TABLE[opcode];
 
+    LOG("CPU", "CPU Instr: %#x", opcode);
     switch (instr.instr) {
     case adc_instr:
         adc(self, instr.lhs, instr.rhs);
