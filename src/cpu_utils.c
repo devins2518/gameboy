@@ -261,7 +261,7 @@ const instr OPCODE_TABLE[0x100] = {
         IMM_I8_ARG(none_cond),
         NULL_ARG,
         jr_instr,
-        3,
+        2,
     },
     /* 0x19 */
     {
@@ -317,7 +317,7 @@ const instr OPCODE_TABLE[0x100] = {
         IMM_I8_ARG(nzero_cond),
         NULL_ARG,
         jr_instr,
-        /* TODO: branching */ 3,
+        2,
     },
     /* 0x21 */
     {
@@ -373,7 +373,7 @@ const instr OPCODE_TABLE[0x100] = {
         IMM_I8_ARG(zero_cond),
         NULL_ARG,
         jr_instr,
-        /* TODO: Branching */ 3,
+        2,
     },
     /* 0x29 */
     {
@@ -1246,19 +1246,19 @@ const instr OPCODE_TABLE[0x100] = {
 void resolve_cond(cpu *self, argument_t *arg) {
     switch (arg->cond) {
     case zero_cond:
-        arg->should_branch = get_flag_z(self) == 0;
+        arg->should_branch = get_flag_z(self) == 1;
         break;
     case nzero_cond:
-        arg->should_branch = get_flag_z(self) != 0;
+        arg->should_branch = get_flag_z(self) == 0;
         break;
     case carry_cond:
-        arg->should_branch = get_flag_c(self) == 0;
+        arg->should_branch = get_flag_c(self) == 1;
         break;
     case ncarry_cond:
-        arg->should_branch = get_flag_c(self) != 0;
+        arg->should_branch = get_flag_c(self) == 0;
         break;
     case none_cond:
-        arg->should_branch = false;
+        arg->should_branch = true;
         break;
     };
 }

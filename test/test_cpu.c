@@ -3,54 +3,55 @@
 
 /* clang-format off */
 const uint8_t TEST_BOOTROM[256] = {
-    0x00,             /* NOOP         1m  1 */
-    0x01, 0xFE, 0xCA, /* LD BC, u16   3m  4 */
-    0x02,             /* LD (BC), A   2m  6 */
-    0x03,             /* INC BC       2m  8 */
-    0x04,             /* INC B        1m  9 */
-    0x05,             /* DEC B        1m 10 */
-    0x06, 0xAA,       /* LD B, u8     2m 12 */
-    0x07,             /* RLCA         1m 13 */
-    0x08, 0xFE, 0xCA, /* LD {u16}, SP 5m 18 */
-    0x09,             /* ADD HL, BC   2m 20 */
-    0x0A,             /* LD A, (BC)   2m 22 */
-    0x0B,             /* DEC BC       2m 24 */
-    0x0C,             /* INC C        1m 25 */
-    0x0D,             /* DEC C        1m 26 */
-    0x0E, 0xAA,       /* LD C, u8     2m 28 */
-    0x0F,             /* RRCA         1m 29 */
-    0x10,             /* STOP         1m 30 */
-    0x11, 0xFE, 0xCA, /* LD DE, u16   3m 33 */
-    0x12,             /* LD (DE), A   2m 35 */
-    0x13,             /* INC DE       2m 37 */
-    0x14,             /* INC D        1m 38 */
-    0x15,             /* DEC D        1m 39 */
-    0x16, 0xAA,       /* LD D, u8     2m 41 */
-    0x17,             /* RLA          1m 42 */
-    0x18, 0x00,       /* JR i8        3m 45 */
-    0x19,             /* ADD HL, DE   2m 47 */
-    0x1A,             /* LD A, (DE)   2m 49 */
-    0x1B,             /* DEC DE       2m 51 */
-    0x1C,             /* INC E        1m 52 */
-    0x1D,             /* DEC E        1m 53 */
-    0x1E, 0xCA,       /* LD E, u8     2m 55 */
-    0x1F,             /* RRA          1m 56 */
-    /* 0x20, 0x00,       JR NZ, i8    2m-3m */
-    /* 0x21,             LD HL, u16   3m 61 */
-    /* 0x22,             LD (HL+), A  2m 63 */
-    /* 0x23,             INC HL,      2m 65 */
-    /* 0x24,             INC H        1m 66 */
-    /* 0x25,             DEC H        1m 67 */
-    /* 0x26,             LD H, u8     2m 69 */
-    /* 0x27,             DAA          1m 70 */
-    /* 0x28,             JR Z, i8     2m-3m */
-    /* 0x29,             ADD  HL, HL  2m 74 */
-    /* 0x2A,             LD A, (HL+)  2m 76 */
-    /* 0x2B,             DEC HL       2m 78 */
-    /* 0x2C,             INC L        1m 79 */
-    /* 0x2D,             DEC L        1m 80 */
-    /* 0x2E,             LD L, u8     2m 82 */
-    /* 0x2F,             CPL          1m 83 */
+                      /* MNEMONIC     | TIMING | CURRENT CYCLES */
+    0x00,             /* NOOP         |     1m |              1 */
+    0x01, 0xFE, 0xCA, /* LD BC, u16   |     3m |              4 */
+    0x02,             /* LD (BC), A   |     2m |              6 */
+    0x03,             /* INC BC       |     2m |              8 */
+    0x04,             /* INC B        |     1m |              9 */
+    0x05,             /* DEC B        |     1m |             10 */
+    0x06, 0xAA,       /* LD B, u8     |     2m |             12 */
+    0x07,             /* RLCA         |     1m |             13 */
+    0x08, 0xFE, 0xCA, /* LD {u16}, SP |     5m |             18 */
+    0x09,             /* ADD HL, BC   |     2m |             20 */
+    0x0A,             /* LD A, (BC)   |     2m |             22 */
+    0x0B,             /* DEC BC       |     2m |             24 */
+    0x0C,             /* INC C        |     1m |             25 */
+    0x0D,             /* DEC C        |     1m |             26 */
+    0x0E, 0xAA,       /* LD C, u8     |     2m |             28 */
+    0x0F,             /* RRCA         |     1m |             29 */
+    0x10,             /* STOP         |     1m |             30 */
+    0x11, 0xFE, 0xCA, /* LD DE, u16   |     3m |             33 */
+    0x12,             /* LD (DE), A   |     2m |             35 */
+    0x13,             /* INC DE       |     2m |             37 */
+    0x14,             /* INC D        |     1m |             38 */
+    0x15,             /* DEC D        |     1m |             39 */
+    0x16, 0xAA,       /* LD D, u8     |     2m |             41 */
+    0x17,             /* RLA          |     1m |             42 */
+    0x18, 0x00,       /* JR i8        |     3m |             45 */
+    0x19,             /* ADD HL, DE   |     2m |             47 */
+    0x1A,             /* LD A, (DE)   |     2m |             49 */
+    0x1B,             /* DEC DE       |     2m |             51 */
+    0x1C,             /* INC E        |     1m |             52 */
+    0x1D,             /* DEC E        |     1m |             53 */
+    0x1E, 0xAA,       /* LD E, u8     |     2m |             55 */
+    0x1F,             /* RRA          |     1m |             56 */
+    0x20, 0x00,       /* JR NZ, i8    |  2m-3m |             58 */
+    0x21, 0xFE, 0xCA, /* LD HL, u16   |     3m |             61 */
+    0x22,             /* LD (HL+), A  |     2m |             63 */
+    0x23,             /* INC HL,      |     2m |             65 */
+    0x24,             /* INC H        |     1m |             66 */
+    0x25,             /* DEC H        |     1m |             67 */
+    0x26, 0xAA,       /* LD H, u8     |     2m |             69 */
+    0x27,             /* DAA          |     1m |             70 */
+    0x28, 0x00,       /* JR Z, i8     |  2m-3m |             72 */
+    0x29,             /* ADD  HL, HL  |     2m |             74 */
+    0x2A,             /* LD A, (HL+)  |     2m |             76 */
+    0x2B,             /* DEC HL       |     2m |             78 */
+    0x2C,             /* INC L        |     1m |             79 */
+    0x2D,             /* DEC L        |     1m |             80 */
+    0x2E, 0xAA,       /* LD L, u8     |     2m |             82 */
+    0x2F,             /* CPL          |     1m |             83 */
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -62,8 +63,7 @@ const uint8_t TEST_BOOTROM[256] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     /* TODO: test instrs where branch is taken */
 };
 /* clang-format on */
@@ -172,6 +172,44 @@ int main() {
     assert(gg->cpu.clocks == 55);
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 56);
+
+    gg->cpu.af.u8.f.bits.z = true;
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 58);
+
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 61);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 63);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 65);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 66);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 67);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 69);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 70);
+
+    gg->cpu.af.u8.f.bits.z = false;
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 72);
+
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 74);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 76);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 78);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 79);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 80);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 82);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 83);
 
     LOG("Test", "test_cpu passed!");
 }

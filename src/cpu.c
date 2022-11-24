@@ -236,9 +236,6 @@ cpu cpu_new(bus *bus) {
 uint8_t next_instruction(cpu *self) {
     uint8_t v;
     v = bus_read(self->bus, self->pc++);
-#ifndef DEBUG
-    self->clocks++;
-#endif
     return v;
 }
 
@@ -552,6 +549,7 @@ void jr(cpu *self, argument_t lhs, argument_t rhs) {
     resolve_cond(self, &lhs);
     offset = (int8_t)cpu_get_imm_u8(self);
     if (lhs.should_branch) {
+        self->clocks++;
         set_pc(self, get_pc(self) + offset);
     }
 }
@@ -672,10 +670,12 @@ void ccf(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void cpl(cpu *self, argument_t lhs, argument_t rhs) {
-    (void)self;
+    uint8_t a = get_reg_a(self);
     (void)lhs;
     (void)rhs;
-    UNIMPLEMENTED("cpl");
+    set_reg_a(self, ~a);
+    set_flag_n(self, true);
+    set_flag_h(self, true);
 }
 
 void stop(cpu *self, argument_t lhs, argument_t rhs) {
@@ -684,11 +684,27 @@ void stop(cpu *self, argument_t lhs, argument_t rhs) {
     self->mode = cpu_stop_mode_e;
 }
 
+/* https://forums.nesdev.org/viewtopic.php?t=15944 */
 void daa(cpu *self, argument_t lhs, argument_t rhs) {
-    (void)self;
+    uint8_t a = get_reg_a(self);
     (void)lhs;
     (void)rhs;
-    UNIMPLEMENTED("daa");
+    if (!get_flag_n(self)) {
+        if (get_flag_c(self) || a > 0x99) {
+            set_reg_a(self, a + 0x60);
+            set_flag_c(self, true);
+        }
+        if (get_flag_h(self) || (a & 0x0f) > 0x09) {
+            set_reg_a(self, a + 0x06);
+        }
+    } else {
+        if (get_flag_c(self))
+            set_reg_a(self, a - 0x60);
+        if (get_flag_h(self))
+            set_reg_a(self, a - 0x06);
+    }
+    set_flag_z(self, get_reg_a(self) == 0x00);
+    set_flag_h(self, false);
 }
 
 void scf(cpu *self, argument_t lhs, argument_t rhs) {
