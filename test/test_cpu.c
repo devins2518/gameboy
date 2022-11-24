@@ -52,6 +52,22 @@ const uint8_t TEST_BOOTROM[256] = {
     0x2D,             /* DEC L        |     1m |             80 */
     0x2E, 0xAA,       /* LD L, u8     |     2m |             82 */
     0x2F,             /* CPL          |     1m |             83 */
+    0x30, 0x00,       /* JR NC, i8    |  2m-3m |             85 */
+    0x31, 0xFE, 0xCA, /* LD SP, u16   |     3m |             88 */
+    0x32,             /* LD (HL-), A  |     2m |             90 */
+    0x33,             /* INC SP       |     2m |             92 */
+    0x34,             /* INC (HL)     |     3m |             95 */
+    0x35,             /* DEC (HL)     |     3m |             98 */
+    0x36, 0xAA,       /* LD (HL), u8  |     3m |            101 */
+    0x37,             /* SCF          |     1m |            102 */
+    0x38, 0x00,       /* JR C, i8     |  2m-3m |            104 */
+    0x39,             /* ADD HL, SP   |     2m |            106 */
+    0x3A,             /* LD A, (HL-)  |     2m |            108 */
+    0x3B,             /* DEC SP       |     2m |            110 */
+    0x3C,             /* INC A        |     1m |            111 */
+    0x3D,             /* DEC A        |     1m |            112 */
+    0x3E, 0xAA,       /* LD A, u8     |     2m |            114 */
+    0x3F,             /* CCF          |     1m |            115 */
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -62,8 +78,7 @@ const uint8_t TEST_BOOTROM[256] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     /* TODO: test instrs where branch is taken */
 };
 /* clang-format on */
@@ -210,6 +225,44 @@ int main() {
     assert(gg->cpu.clocks == 82);
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 83);
+
+    gg->cpu.af.u8.f.bits.c = true;
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 85);
+
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 88);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 90);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 92);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 95);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 98);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 101);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 102);
+
+    gg->cpu.af.u8.f.bits.c = false;
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 104);
+
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 106);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 108);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 110);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 111);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 112);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 114);
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 115);
 
     LOG("Test", "test_cpu passed!");
 }

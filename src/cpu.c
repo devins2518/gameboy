@@ -663,10 +663,12 @@ void call(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void ccf(cpu *self, argument_t lhs, argument_t rhs) {
-    (void)self;
+    uint8_t c = get_flag_c(self);
     (void)lhs;
     (void)rhs;
-    UNIMPLEMENTED("ccf");
+    set_flag_n(self, false);
+    set_flag_h(self, false);
+    set_flag_c(self, (~c) & 0x1);
 }
 
 void cpl(cpu *self, argument_t lhs, argument_t rhs) {
@@ -708,10 +710,11 @@ void daa(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void scf(cpu *self, argument_t lhs, argument_t rhs) {
-    (void)self;
     (void)lhs;
     (void)rhs;
-    UNIMPLEMENTED("scf");
+    set_flag_n(self, false);
+    set_flag_h(self, false);
+    set_flag_c(self, true);
 }
 
 uintptr_t cpu_clock(cpu *self) {

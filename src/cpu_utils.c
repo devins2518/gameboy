@@ -429,7 +429,7 @@ const instr OPCODE_TABLE[0x100] = {
         IMM_I8_ARG(ncarry_cond),
         NULL_ARG,
         jr_instr,
-        3,
+        2,
     },
     /* 0x31 */
     {
@@ -485,7 +485,7 @@ const instr OPCODE_TABLE[0x100] = {
         IMM_I8_ARG(carry_cond),
         NULL_ARG,
         jr_instr,
-        3,
+        2,
     },
     /* 0x39 */
     {
