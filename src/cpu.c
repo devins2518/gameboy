@@ -376,6 +376,7 @@ void noop(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void ld(cpu *self, argument_t lhs, argument_t rhs) {
+    set_arg_payload(self, &lhs);
     set_arg_payload(self, &rhs);
     set_reg(self, lhs, rhs.payload);
 }

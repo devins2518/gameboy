@@ -646,5 +646,5 @@ int main() {
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 265);
 
-    LOG("Test", "test_cpu passed!");
+    printf("Test: test_cpu passed!\n");
 }
