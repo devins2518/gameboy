@@ -8,56 +8,144 @@
 void cpu_write_bus(cpu *self, uint16_t addr, uint8_t n);
 uint8_t cpu_read_bus(cpu *self, uint16_t addr);
 
-__attribute((always_inline)) uint8_t get_reg_a(cpu *self) { return self->af.u8.a; }
-__attribute((always_inline)) uint8_t get_reg_f(cpu *self) { return self->af.u8.f.u8; }
-__attribute((always_inline)) uint8_t get_reg_b(cpu *self) { return self->bc.u8.b; }
-__attribute((always_inline)) uint8_t get_reg_c(cpu *self) { return self->bc.u8.c; }
-__attribute((always_inline)) uint8_t get_reg_d(cpu *self) { return self->de.u8.d; }
-__attribute((always_inline)) uint8_t get_reg_e(cpu *self) { return self->de.u8.e; }
-__attribute((always_inline)) uint8_t get_reg_h(cpu *self) { return self->hl.u8.h; }
-__attribute((always_inline)) uint8_t get_reg_l(cpu *self) { return self->hl.u8.l; }
-uint16_t get_reg_af(cpu *self) { return self->af.u16; }
-uint16_t get_reg_bc(cpu *self) { return self->bc.u16; }
-uint16_t get_reg_de(cpu *self) { return self->de.u16; }
-uint16_t get_reg_hl(cpu *self) { return self->hl.u16; }
-uint8_t get_reg_paf(cpu *self) { return cpu_read_bus(self, get_reg_af(self)); }
-uint8_t get_reg_pbc(cpu *self) { return cpu_read_bus(self, get_reg_bc(self)); }
-uint8_t get_reg_pde(cpu *self) { return cpu_read_bus(self, get_reg_de(self)); }
-uint8_t get_reg_phl(cpu *self) { return cpu_read_bus(self, get_reg_hl(self)); }
-uint16_t get_sp(cpu *self) { return self->sp; }
-uint16_t get_pc(cpu *self) { return self->pc; }
-uint8_t get_flag_z(cpu *self) { return ((get_reg_f(self) >> 7) & 0x01); }
-uint8_t get_flag_n(cpu *self) { return ((get_reg_f(self) >> 6) & 0x01); }
-uint8_t get_flag_h(cpu *self) { return ((get_reg_f(self) >> 5) & 0x01); }
-uint8_t get_flag_c(cpu *self) { return ((get_reg_f(self) >> 4) & 0x01); }
-void set_reg_a(cpu *self, uint8_t n) { self->af.u8.a = n; }
-void set_reg_f(cpu *self, uint8_t n) { self->af.u8.f.u8 = n; }
-void set_reg_b(cpu *self, uint8_t n) { self->bc.u8.b = n; }
-void set_reg_c(cpu *self, uint8_t n) { self->bc.u8.c = n; }
-void set_reg_d(cpu *self, uint8_t n) { self->de.u8.d = n; }
-void set_reg_e(cpu *self, uint8_t n) { self->de.u8.e = n; }
-void set_reg_h(cpu *self, uint8_t n) { self->hl.u8.h = n; }
-void set_reg_l(cpu *self, uint8_t n) { self->hl.u8.l = n; }
-void set_reg_af(cpu *self, uint16_t n) { self->af.u16 = n; }
-void set_reg_bc(cpu *self, uint16_t n) { self->bc.u16 = n; }
-void set_reg_de(cpu *self, uint16_t n) { self->de.u16 = n; }
-void set_reg_hl(cpu *self, uint16_t n) { self->hl.u16 = n; }
-void set_reg_paf(cpu *self, uint8_t n) { cpu_write_bus(self, get_reg_af(self), n); }
-void set_reg_pbc(cpu *self, uint8_t n) { cpu_write_bus(self, get_reg_bc(self), n); }
-void set_reg_pde(cpu *self, uint8_t n) { cpu_write_bus(self, get_reg_de(self), n); }
-void set_reg_phl(cpu *self, uint8_t n) { cpu_write_bus(self, get_reg_hl(self), n); }
-void set_flag_z(cpu *self, bool z) { self->af.u8.f.bits.z = z; }
-void set_flag_n(cpu *self, bool z) { self->af.u8.f.bits.n = z; }
-void set_flag_h(cpu *self, bool z) { self->af.u8.f.bits.h = z; }
-void set_flag_c(cpu *self, bool z) { self->af.u8.f.bits.c = z; }
+__attribute((always_inline)) uint8_t get_reg_a(cpu *self) {
+    return self->af.u8.a;
+}
+__attribute((always_inline)) uint8_t get_reg_f(cpu *self) {
+    return self->af.u8.f.u8;
+}
+__attribute((always_inline)) uint8_t get_reg_b(cpu *self) {
+    return self->bc.u8.b;
+}
+__attribute((always_inline)) uint8_t get_reg_c(cpu *self) {
+    return self->bc.u8.c;
+}
+__attribute((always_inline)) uint8_t get_reg_d(cpu *self) {
+    return self->de.u8.d;
+}
+__attribute((always_inline)) uint8_t get_reg_e(cpu *self) {
+    return self->de.u8.e;
+}
+__attribute((always_inline)) uint8_t get_reg_h(cpu *self) {
+    return self->hl.u8.h;
+}
+__attribute((always_inline)) uint8_t get_reg_l(cpu *self) {
+    return self->hl.u8.l;
+}
+uint16_t get_reg_af(cpu *self) {
+    return self->af.u16;
+}
+uint16_t get_reg_bc(cpu *self) {
+    return self->bc.u16;
+}
+uint16_t get_reg_de(cpu *self) {
+    return self->de.u16;
+}
+uint16_t get_reg_hl(cpu *self) {
+    return self->hl.u16;
+}
+uint8_t get_reg_paf(cpu *self) {
+    return cpu_read_bus(self, get_reg_af(self));
+}
+uint8_t get_reg_pbc(cpu *self) {
+    return cpu_read_bus(self, get_reg_bc(self));
+}
+uint8_t get_reg_pde(cpu *self) {
+    return cpu_read_bus(self, get_reg_de(self));
+}
+uint8_t get_reg_phl(cpu *self) {
+    return cpu_read_bus(self, get_reg_hl(self));
+}
+uint16_t get_sp(cpu *self) {
+    return self->sp;
+}
+uint16_t get_pc(cpu *self) {
+    return self->pc;
+}
+uint8_t get_flag_z(cpu *self) {
+    return ((get_reg_f(self) >> 7) & 0x01);
+}
+uint8_t get_flag_n(cpu *self) {
+    return ((get_reg_f(self) >> 6) & 0x01);
+}
+uint8_t get_flag_h(cpu *self) {
+    return ((get_reg_f(self) >> 5) & 0x01);
+}
+uint8_t get_flag_c(cpu *self) {
+    return ((get_reg_f(self) >> 4) & 0x01);
+}
+void set_reg_a(cpu *self, uint8_t n) {
+    self->af.u8.a = n;
+}
+void set_reg_f(cpu *self, uint8_t n) {
+    self->af.u8.f.u8 = n;
+}
+void set_reg_b(cpu *self, uint8_t n) {
+    self->bc.u8.b = n;
+}
+void set_reg_c(cpu *self, uint8_t n) {
+    self->bc.u8.c = n;
+}
+void set_reg_d(cpu *self, uint8_t n) {
+    self->de.u8.d = n;
+}
+void set_reg_e(cpu *self, uint8_t n) {
+    self->de.u8.e = n;
+}
+void set_reg_h(cpu *self, uint8_t n) {
+    self->hl.u8.h = n;
+}
+void set_reg_l(cpu *self, uint8_t n) {
+    self->hl.u8.l = n;
+}
+void set_reg_af(cpu *self, uint16_t n) {
+    self->af.u16 = n;
+}
+void set_reg_bc(cpu *self, uint16_t n) {
+    self->bc.u16 = n;
+}
+void set_reg_de(cpu *self, uint16_t n) {
+    self->de.u16 = n;
+}
+void set_reg_hl(cpu *self, uint16_t n) {
+    self->hl.u16 = n;
+}
+void set_reg_paf(cpu *self, uint8_t n) {
+    cpu_write_bus(self, get_reg_af(self), n);
+}
+void set_reg_pbc(cpu *self, uint8_t n) {
+    cpu_write_bus(self, get_reg_bc(self), n);
+}
+void set_reg_pde(cpu *self, uint8_t n) {
+    cpu_write_bus(self, get_reg_de(self), n);
+}
+void set_reg_phl(cpu *self, uint8_t n) {
+    cpu_write_bus(self, get_reg_hl(self), n);
+}
+void set_flag_z(cpu *self, bool z) {
+    self->af.u8.f.bits.z = z;
+}
+void set_flag_n(cpu *self, bool z) {
+    self->af.u8.f.bits.n = z;
+}
+void set_flag_h(cpu *self, bool z) {
+    self->af.u8.f.bits.h = z;
+}
+void set_flag_c(cpu *self, bool z) {
+    self->af.u8.f.bits.c = z;
+}
 void set_flag_h_add(cpu *self, uint16_t a, uint16_t b) {
     set_flag_h(self, (get_reg_f(self) & ((((a & 0xf0) + (b & 0xf0)) & 0x100) == 0x100 << 4)) == 1);
 }
 void set_flag_c_add(cpu *self, uint16_t a, uint16_t b) {
     set_flag_c(self, (get_reg_f(self) & ((((a & 0xf) + (b & 0xf)) & 0x10) == 0x10)) == 1);
 }
-void set_sp(cpu *self, uint16_t n) { self->sp = n; }
-void set_pc(cpu *self, uint16_t n) { self->pc = n; }
+void set_sp(cpu *self, uint16_t n) {
+    self->sp = n;
+}
+void set_pc(cpu *self, uint16_t n) {
+    self->pc = n;
+}
 void set_reg(cpu *self, argument_t r, uint16_t n) {
     switch (r.type) {
     case a:
@@ -239,7 +327,9 @@ uint8_t next_instruction(cpu *self) {
     return v;
 }
 
-uint8_t cpu_get_imm_u8(cpu *self) { return next_instruction(self); }
+uint8_t cpu_get_imm_u8(cpu *self) {
+    return next_instruction(self);
+}
 
 uint16_t cpu_get_imm_u16(cpu *self) {
     uint8_t b1 = next_instruction(self);

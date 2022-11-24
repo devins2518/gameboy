@@ -36,7 +36,9 @@ bus bus_new(cartridge_t cart) {
     return b;
 }
 
-uint8_t bus_read(bus *self, uint16_t addr) { return *bus_read_ptr(self, addr); }
+uint8_t bus_read(bus *self, uint16_t addr) {
+    return *bus_read_ptr(self, addr);
+}
 
 uint8_t *bus_read_ptr(bus *self, uint16_t addr) {
     uint8_t *val;
@@ -97,4 +99,6 @@ void bus_write(bus *self, uint16_t addr, uint8_t n) {
         self->ie_reg = n;
 }
 
-void bus_free(bus self) { cartridge_free(self.cart); }
+void bus_free(bus self) {
+    cartridge_free(self.cart);
+}

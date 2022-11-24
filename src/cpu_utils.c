@@ -1,5 +1,5 @@
-#include "cpu.h"
 #include "cpu_utils.h"
+#include "cpu.h"
 
 #define NULL_ARG                                                                                   \
     { a, false, 0x0000, none_cond, false }
@@ -1263,4 +1263,6 @@ void resolve_cond(cpu *self, argument_t *arg) {
     };
 }
 
-void ignore_arg(argument_t *arg) { (void)arg; }
+void ignore_arg(argument_t *arg) {
+    (void)arg;
+}

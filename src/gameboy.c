@@ -25,4 +25,6 @@ void gamegirl_clock(gamegirl *gg) {
         gg->schedule_clocks += ppu_clock(&gg->ppu);
     }
 }
-void gamegirl_free(gamegirl gg) { bus_free(gg.bus); }
+void gamegirl_free(gamegirl gg) {
+    bus_free(gg.bus);
+}
