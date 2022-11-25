@@ -38,7 +38,7 @@ bus bus_new(cartridge_t cart) {
 
 uint8_t bus_read(bus *self, uint16_t addr) {
     uint8_t ret = *bus_read_ptr(self, addr);
-    LOG("BUS", "Reading value %#04x from address %#06x", ret, addr);
+    /* LOG("BUS", "Reading value %#04x from address %#06x", ret, addr); */
     return ret;
 }
 
@@ -74,7 +74,7 @@ uint8_t *bus_read_ptr(bus *self, uint16_t addr) {
 }
 
 void bus_write(bus *self, uint16_t addr, uint8_t n) {
-    LOG("BUS", "Writing value %#04x to address %#06x", n, addr);
+    /* LOG("BUS", "Writing value %#04x to address %#06x", n, addr); */
     if (0x0000 <= addr && addr <= 0x100) {
         if (self->io[addr % IO_START] == 0)
             self->bootrom[addr] = n;

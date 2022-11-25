@@ -196,9 +196,11 @@ const uint8_t TEST_BOOTROM[256] = {
     0xBD,             /* CP A, L      |     1m |            262 */
     0xBE,             /* CP A, (HL)   |     2m |            264 */
     0xBF,             /* CP A, A      |     1m |            265 */
+    0xC5,             /* PUSH BC      |     4m |            269 */
+    0xD1,             /* POP BC       |     3m |            272 */
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     /* TODO: test instrs where branch is taken */
 };
 /* clang-format on */
@@ -645,6 +647,20 @@ int main() {
     assert(gg->cpu.clocks == 264);
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 265);
+
+    gg->cpu.bc.u16 = 0xCAFE;
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 269);
+    assert(gg->cpu.bc.u8.b == 0xCA);
+    assert(gg->cpu.bc.u8.c == 0xFE);
+    assert(bus_read(&gg->bus, gg->cpu.sp) == gg->cpu.bc.u8.b);
+    assert(bus_read(&gg->bus, gg->cpu.sp + 1) == gg->cpu.bc.u8.c);
+
+    gg->cpu.de.u16 = 0x0000;
+    cpu_clock(&gg->cpu);
+    assert(gg->cpu.clocks == 272);
+    assert(gg->cpu.de.u8.d == gg->cpu.bc.u8.b);
+    assert(gg->cpu.de.u8.e == gg->cpu.bc.u8.c);
 
     printf("Test: test_cpu passed!\n");
 }

@@ -1,10 +1,13 @@
 #include "cpu.h"
 #include "cpu_utils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define NULL_ARG                                                                                   \
-    { a, 0x0000, none_cond, false }
+    { none, 0x0000, none_cond, false }
 #define COND_ARG(cond)                                                                             \
-    { a, 0x0000, cond, false }
+    { none, 0x0000, cond, false }
 #define A_ARG                                                                                      \
     { a, 0x0000, none_cond, false }
 #define B_ARG                                                                                      \
@@ -33,8 +36,8 @@
     { pc, 0x0000, none_cond, false }
 #define P_ARG                                                                                      \
     { p, 0x0000, none_cond, false }
-#define IMM_I8_ARG(cond)                                                                           \
-    { imm_i8, 0x0000, cond, false }
+#define IMM_I8_ARG                                                                                 \
+    { imm_i8, 0x0000, none_cond, false }
 #define IMM_U8_ARG                                                                                 \
     { imm_u8, 0x0000, none_cond, false }
 #define IMM_U16_ARG                                                                                \
@@ -58,35 +61,36 @@
 #define PHLD_ARG                                                                                   \
     { phld, 0x0000, none_cond, false }
 #define FIXED_PAYLOAD_ARG(payload)                                                                 \
-    { a, payload, none_cond, false }
+    { none, payload, none_cond, false }
 
-const char *ARGUMENT_NAME[26] = {
-    "a",         /* A Register */
-    "f",         /* F Register */
-    "b",         /* B Register */
-    "c",         /* C Register */
-    "d",         /* D Register */
-    "e",         /* E Register */
-    "h",         /* H Register */
-    "l",         /* L Register */
-    "paf",       /* Pointer to [af] */
-    "pbc",       /* Pointer to [bc] */
-    "pde",       /* Pointer to [de] */
-    "phl",       /* Pointer to [hl] */
-    "phli",      /* Pointer to [hl+] */
-    "phld",      /* Pointer to [hl-] */
-    "af",        /* AF Register */
-    "bc",        /* BC Register */
-    "de",        /* DE Register */
-    "hl",        /* HL Register */
-    "sp",        /* SP Register */
-    "pc",        /* PC Register */
-    "p",         /* LHS u16 */
-    "imm_u8",    /* Immediate unsigned 8 bit value */
-    "imm_i8",    /* Immediate signed 8 bit value */
-    "imm_u16",   /* Immediate unsigned 16 bit value */
-    "io_offset", /* Offset from IO base address 0xFF00 */
-    "sp_offset"  /* Offset from stack pointer address */
+const char *ARGUMENT_NAME[27] = {
+    "a",             /* A Register */
+    "f",             /* F Register */
+    "b",             /* B Register */
+    "c",             /* C Register */
+    "d",             /* D Register */
+    "e",             /* E Register */
+    "h",             /* H Register */
+    "l",             /* L Register */
+    "(af)",          /* Pointer to [af] */
+    "(bc)",          /* Pointer to [bc] */
+    "(de)",          /* Pointer to [de] */
+    "(hl)",          /* Pointer to [hl] */
+    "(hl+)",         /* Pointer to [hl+] */
+    "(hl-)",         /* Pointer to [hl-] */
+    "(0xFF00 + u8)", /* Pointer to (0xFF00 + u8) */
+    "(0xFF00 + c)",  /* Pointer to (0xFF00 + c) */
+    "af",            /* AF Register */
+    "bc",            /* BC Register */
+    "de",            /* DE Register */
+    "hl",            /* HL Register */
+    "sp",            /* SP Register */
+    "pc",            /* PC Register */
+    "p",             /* LHS u16 */
+    "imm_u8",        /* Immediate unsigned 8 bit value */
+    "imm_i8",        /* Immediate signed 8 bit value */
+    "imm_u16",       /* Immediate unsigned 16 bit value */
+    "sp_offset"      /* Offset from stack pointer address */
 };
 
 const instr OPCODE_TABLE[0x100] = {
@@ -260,8 +264,8 @@ const instr OPCODE_TABLE[0x100] = {
     },
     /* 0x18 */
     {
-        IMM_I8_ARG(none_cond),
-        NULL_ARG,
+        COND_ARG(none_cond),
+        IMM_I8_ARG,
         jr_instr,
         2,
     },
@@ -316,8 +320,8 @@ const instr OPCODE_TABLE[0x100] = {
     },
     /* 0x20 */
     {
-        IMM_I8_ARG(nzero_cond),
-        NULL_ARG,
+        COND_ARG(nzero_cond),
+        IMM_I8_ARG,
         jr_instr,
         2,
     },
@@ -372,8 +376,8 @@ const instr OPCODE_TABLE[0x100] = {
     },
     /* 0x28 */
     {
-        IMM_I8_ARG(zero_cond),
-        NULL_ARG,
+        COND_ARG(zero_cond),
+        IMM_I8_ARG,
         jr_instr,
         2,
     },
@@ -428,8 +432,8 @@ const instr OPCODE_TABLE[0x100] = {
     },
     /* 0x30 */
     {
-        IMM_I8_ARG(ncarry_cond),
-        NULL_ARG,
+        COND_ARG(ncarry_cond),
+        IMM_I8_ARG,
         jr_instr,
         2,
     },
@@ -484,8 +488,8 @@ const instr OPCODE_TABLE[0x100] = {
     },
     /* 0x38 */
     {
-        IMM_I8_ARG(carry_cond),
-        NULL_ARG,
+        COND_ARG(carry_cond),
+        IMM_I8_ARG,
         jr_instr,
         2,
     },
@@ -1121,7 +1125,7 @@ const instr OPCODE_TABLE[0x100] = {
     /* 0xC2 */
     {COND_ARG(nzero_cond), IMM_U16_ARG, jp_instr, 4},
     /* 0xC3 */
-    {IMM_U16_ARG, NULL_ARG, jp_instr, 4},
+    {COND_ARG(none_cond), IMM_U16_ARG, jp_instr, 4},
     /* 0xC4 */
     {COND_ARG(nzero_cond), IMM_U16_ARG, call_instr, 6},
     /* 0xC5 */
@@ -1195,8 +1199,7 @@ const instr OPCODE_TABLE[0x100] = {
     /* 0xE7 */
     {FIXED_PAYLOAD_ARG(0x0020), NULL_ARG, rst_instr, 4},
     /* 0xE8 */
-    /* TODO: Cond really should be part of instr */
-    {SP_ARG, IMM_I8_ARG(none_cond), add_instr, 4},
+    {SP_ARG, IMM_I8_ARG, add_instr, 4},
     /* 0xE9 */
     {HL_ARG, NULL_ARG, jp_instr, 1},
     /* 0xEA */
@@ -1222,7 +1225,7 @@ const instr OPCODE_TABLE[0x100] = {
     /* 0xF4 */
     {NULL_ARG, NULL_ARG, illegal_instr, 0},
     /* 0xF5 */
-    {AF_ARG, NULL_ARG, push_instr, 0},
+    {AF_ARG, NULL_ARG, push_instr, 4},
     /* 0xF6 */
     {A_ARG, IMM_U8_ARG, or_instr, 2},
     /* 0xF7 */
@@ -1244,6 +1247,283 @@ const instr OPCODE_TABLE[0x100] = {
     /* 0xFF */
     {FIXED_PAYLOAD_ARG(0x0038), NULL_ARG, rst_instr, 4},
 };
+
+void print_argument(char *buf, argument_t *arg) {
+    switch (arg->type) {
+    case a:
+        sprintf(buf, "a");
+        break;
+    case f:
+        sprintf(buf, "f");
+        break;
+    case b:
+        sprintf(buf, "b");
+        break;
+    case c:
+        sprintf(buf, "c");
+        break;
+    case d:
+        sprintf(buf, "d");
+        break;
+    case e:
+        sprintf(buf, "e");
+        break;
+    case h:
+        sprintf(buf, "h");
+        break;
+    case l:
+        sprintf(buf, "l");
+        break;
+    case af:
+        sprintf(buf, "af");
+        break;
+    case bc:
+        sprintf(buf, "bc");
+        break;
+    case de:
+        sprintf(buf, "de");
+        break;
+    case hl:
+        sprintf(buf, "hl");
+        break;
+    case sp:
+        sprintf(buf, "sp");
+        break;
+    case pc:
+        sprintf(buf, "pc");
+        break;
+    case p:
+        sprintf(buf, "%hu", arg->payload);
+        break;
+    case paf:
+        sprintf(buf, "(af)");
+        break;
+    case pbc:
+        sprintf(buf, "(bc)");
+        break;
+    case pde:
+        sprintf(buf, "(de)");
+        break;
+    case phl:
+        sprintf(buf, "(hl)");
+        break;
+    case phli:
+        sprintf(buf, "(hl+)");
+        break;
+    case phld:
+        sprintf(buf, "(hl-)");
+        break;
+    case pio_c:
+        sprintf(buf, "0xFF00 + C");
+        break;
+    case pio_u8:
+        sprintf(buf, "0xFF00 + %#04x", arg->payload);
+        break;
+    case imm_u8:
+    case imm_i8:
+        sprintf(buf, "%#04x", arg->payload);
+        break;
+    case imm_u16:
+        sprintf(buf, "%#06x", arg->payload);
+        break;
+    case sp_offset:
+        sprintf(buf, "SP + %#04x", arg->payload);
+        break;
+    case none:
+        switch (arg->cond) {
+        case carry_cond:
+            sprintf(buf, "c");
+            break;
+        case ncarry_cond:
+            sprintf(buf, "nc");
+            break;
+        case zero_cond:
+            sprintf(buf, "z");
+            break;
+        case nzero_cond:
+            sprintf(buf, "nz");
+            break;
+        case none_cond:
+            break;
+        }
+        break;
+    }
+}
+
+char *print_instr(instr *instr) {
+    char *ret = malloc(sizeof(char) * 50);
+    (void)instr;
+    switch (instr->instr) {
+    case adc_instr:
+        sprintf(ret, "adc ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case add_instr:
+        sprintf(ret, "add ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case and_instr:
+        sprintf(ret, "and ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case bit_instr:
+        sprintf(ret, "bit ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case call_instr:
+        sprintf(ret, "call ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case cb_instr:
+        sprintf(ret, "handle_cb ");
+        break;
+    case ccf_instr:
+        sprintf(ret, "ccf");
+        break;
+    case cp_instr:
+        sprintf(ret, "cp ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case cpl_instr:
+        sprintf(ret, "cpl");
+        break;
+    case daa_instr:
+        sprintf(ret, "daa");
+        break;
+    case dec_instr:
+        sprintf(ret, "dec ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        break;
+    case di_instr:
+        sprintf(ret, "di");
+        break;
+    case ei_instr:
+        sprintf(ret, "ei");
+        break;
+    case halt_instr:
+        sprintf(ret, "halt");
+        break;
+    case inc_instr:
+        sprintf(ret, "inc ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        break;
+    case jp_instr:
+        sprintf(ret, "jp ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case jr_instr:
+        sprintf(ret, "jr ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case ld_instr:
+        sprintf(ret, "ld ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case noop_instr:
+        sprintf(ret, "noop");
+        break;
+    case or_instr:
+        sprintf(ret, "or ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case pop_instr:
+        sprintf(ret, "pop ");
+        break;
+    case push_instr:
+        sprintf(ret, "push ");
+        break;
+    case res_instr:
+        sprintf(ret, "res ");
+        break;
+    case ret_instr:
+        sprintf(ret, "ret ");
+        break;
+    case reti_instr:
+        sprintf(ret, "reti ");
+        break;
+    case rl_instr:
+        sprintf(ret, "rl ");
+        break;
+    case rla_instr:
+        sprintf(ret, "rla ");
+        break;
+    case rlca_instr:
+        sprintf(ret, "rlca ");
+        break;
+    case rr_instr:
+        sprintf(ret, "rr ");
+        break;
+    case rra_instr:
+        sprintf(ret, "rra ");
+        break;
+    case rrca_instr:
+        sprintf(ret, "rrca ");
+        break;
+    case rst_instr:
+        sprintf(ret, "rst ");
+        break;
+    case sbc_instr:
+        sprintf(ret, "sbc ");
+        break;
+    case scf_instr:
+        sprintf(ret, "scf ");
+        break;
+    case set_instr:
+        sprintf(ret, "set ");
+        break;
+    case sla_instr:
+        sprintf(ret, "sla ");
+        break;
+    case sra_instr:
+        sprintf(ret, "sra ");
+        break;
+    case srl_instr:
+        sprintf(ret, "srl ");
+        break;
+    case stop_instr:
+        sprintf(ret, "stop ");
+        break;
+    case sub_instr:
+        sprintf(ret, "sub ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case swap_instr:
+        sprintf(ret, "swap ");
+        break;
+    case xor_instr:
+        sprintf(ret, "xor ");
+        print_argument(ret + strlen(ret), &instr->lhs);
+        sprintf(ret + strlen(ret), ", ");
+        print_argument(ret + strlen(ret), &instr->rhs);
+        break;
+    case illegal_instr:
+        sprintf(ret, "illegal ");
+        break;
+    }
+    return ret;
+}
 
 void resolve_cond(cpu *self, argument_t *arg) {
     switch (arg->cond) {
