@@ -4,69 +4,69 @@
 
 /* clang-format off */
 #define NONE_ARG                                                                                   \
-    { none_e, {0} }
+    { {0}, none_e }
 #define A_ARG                                                                                      \
-    { register_e, { a_register_p } }
+    { { a_register_p }, register_e }
 #define F_ARG                                                                                      \
-    { register_e, { f_register_p } }
+    { { f_register_p }, register_e }
 #define B_ARG                                                                                      \
-    { register_e, { b_register_p } }
+    { { b_register_p }, register_e }
 #define C_ARG                                                                                      \
-    { register_e, { c_register_p } }
+    { { c_register_p }, register_e }
 #define D_ARG                                                                                      \
-    { register_e, { d_register_p } }
+    { { d_register_p }, register_e }
 #define E_ARG                                                                                      \
-    { register_e, { e_register_p } }
+    { { e_register_p }, register_e }
 #define H_ARG                                                                                      \
-    { register_e, { h_register_p } }
+    { { h_register_p }, register_e }
 #define L_ARG                                                                                      \
-    { register_e, { l_register_p } }
+    { { l_register_p }, register_e }
 #define AF_ARG                                                                                     \
-    { register_e, { af_register_p } }
+    { { af_register_p }, register_e }
 #define BC_ARG                                                                                     \
-    { register_e, { bc_register_p } }
+    { { bc_register_p }, register_e }
 #define DE_ARG                                                                                     \
-    { register_e, { de_register_p } }
+    { { de_register_p }, register_e }
 #define HL_ARG                                                                                     \
-    { register_e, { hl_register_p } }
+    { { hl_register_p }, register_e }
 #define SP_ARG                                                                                     \
-    { register_e, { sp_register_p } }
+    { { sp_register_p }, register_e }
 #define NONE_COND_ARG                                                                              \
-    { condition_e, { none_condition_e } }
+    { { none_condition_e }, condition_e }
 #define NZERO_COND_ARG                                                                             \
-    { condition_e, { nzero_condition_e } }
+    { { nzero_condition_e }, condition_e }
 #define ZERO_COND_ARG                                                                              \
-    { condition_e, { zero_condition_e } }
+    { { zero_condition_e }, condition_e }
 #define NCARRY_COND_ARG                                                                            \
-    { condition_e, { ncarry_condition_e } }
+    { { ncarry_condition_e }, condition_e }
 #define CARRY_COND_ARG                                                                             \
-    { condition_e, { carry_condition_e } }
+    { { carry_condition_e }, condition_e }
 #define IMM_U8_ARG                                                                                 \
-    { imm_u8_e, { 0 } }
+    { { 0 }, imm_u8_e }
 #define IMM_I8_ARG                                                                                 \
-    { imm_i8_e, { 0 } }
+    { { 0 }, imm_i8_e }
 #define IMM_U16_ARG                                                                                \
-    { imm_u16_e, { 0 } }
+    { { 0 }, imm_u16_e }
 #define IMM_U16_PTR_ARG                                                                            \
-    { imm_u16_ptr_e, { 0 } }
+    { { 0 }, imm_u16_ptr_e }
 #define BC_PTR_ARG                                                                                 \
-    { register_ptr_e, { bc_register_ptr_e } }
+    { { bc_register_ptr_e }, register_ptr_e }
 #define DE_PTR_ARG                                                                                 \
-    { register_ptr_e, { de_register_ptr_e } }
+    { { de_register_ptr_e }, register_ptr_e }
 #define HL_PTR_ARG                                                                                 \
-    { register_ptr_e, { hl_register_ptr_e } }
+    { { hl_register_ptr_e }, register_ptr_e }
 #define HL_PTR_INC_ARG                                                                             \
-    { hl_ptr_e, { hl_ptr_inc_e } }
+    { { hl_ptr_inc_e }, hl_ptr_e }
 #define HL_PTR_DEC_ARG                                                                             \
-    { hl_ptr_e, { hl_ptr_dec_e } }
+    { { hl_ptr_dec_e }, hl_ptr_e }
 #define IO_OFFSET_U8                                                                               \
-    { io_offset_u8_e, { 0 } }
+    { { 0 }, io_offset_u8_e }
 #define IO_OFFSET_C                                                                                \
-    { io_offset_c_e, { c_register_p } }
+    { { c_register_p }, io_offset_c_e }
 #define FIXED_PAYLOAD_ARG(payload)                                                                 \
-    { fixed_payload_e, { payload } }
+    { { payload }, fixed_payload_e }
 #define SP_OFFSET_ARG                                                                              \
-    { sp_offset_e, { 0 } }
+    { { 0 }, sp_offset_e }
 /* clang-format on */
 
 const instruction_t OP_TABLE[0x100] = {
@@ -596,11 +596,24 @@ decoder_t decoder_new(const uint8_t *arr, uintptr_t size) {
 
 instruction_t decoder_next(decoder_t *d) {
     instruction_t instr;
+    uint8_t lhs_size;
+    uint8_t rhs_size;
     const uint8_t *op = d->arr + d->idx;
     if (*op == 0xCB) {
         instr = CB_TABLE[*(op + 1) % 0x100];
     } else {
         instr = OP_TABLE[*op % 0x100];
+        lhs_size = get_payload_size_argument_t(&instr.lhs);
+        rhs_size = get_payload_size_argument_t(&instr.rhs);
+        if (lhs_size == 1) {
+            instr.lhs.p.imm_u8_p = d->arr[d->idx + 1];
+        } else if (rhs_size == 1) {
+            instr.rhs.p.imm_u8_p = d->arr[d->idx + 1];
+        } else if (lhs_size == 2) {
+            instr.lhs.p.imm_u16_p = (d->arr[d->idx + 2]) << 8 | (d->arr[d->idx + 1]);
+        } else if (rhs_size == 2) {
+            instr.rhs.p.imm_u16_p = (d->arr[d->idx + 2]) << 8 | (d->arr[d->idx + 1]);
+        }
     }
     d->idx += instr.length;
     d->idx %= d->size;

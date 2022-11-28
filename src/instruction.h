@@ -1,24 +1,8 @@
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
-#include "math.h"
-#include <stdint.h>
+#include "utils.h"
 
 typedef struct {
-    enum {
-        none_e,
-        condition_e,
-        register_e,
-        io_offset_u8_e,
-        io_offset_c_e,
-        hl_ptr_e,
-        register_ptr_e,
-        imm_u8_e,
-        imm_i8_e,
-        imm_u16_e,
-        imm_u16_ptr_e,
-        fixed_payload_e,
-        sp_offset_e
-    } e;
     union {
         enum {
             none_condition_e,
@@ -53,7 +37,24 @@ typedef struct {
         uint8_t fixed_payload_p;
         int8_t sp_offset_p;
     } p;
+    enum {
+        none_e,
+        condition_e,
+        register_e,
+        io_offset_u8_e,
+        io_offset_c_e,
+        hl_ptr_e,
+        register_ptr_e,
+        imm_u8_e,
+        imm_i8_e,
+        imm_u16_e,
+        imm_u16_ptr_e,
+        fixed_payload_e,
+        sp_offset_e
+    } e;
 } argument_t;
+
+uint8_t get_payload_size_argument_t(argument_t *arg);
 
 typedef struct {
     enum {
