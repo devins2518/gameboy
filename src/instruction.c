@@ -6,6 +6,10 @@
 #define INSTR_MAX_LEN 50
 #define ARG_MAX_LEN 20
 
+void ignore_arg(argument_t *arg) {
+    (void)arg;
+}
+
 uint8_t get_payload_size_argument_t(argument_t *arg) {
     switch (arg->e) {
     case io_offset_u8_e:
@@ -18,6 +22,44 @@ uint8_t get_payload_size_argument_t(argument_t *arg) {
         return 2;
     default:
         return 0;
+    }
+}
+
+uint8_t get_raw_size_argument_t(argument_t *arg) {
+    switch (arg->e) {
+    case none_e:
+    case condition_e:
+        return 0;
+    case register_e:
+        switch (arg->p.register_p) {
+        case a_register_p:
+        case f_register_p:
+        case b_register_p:
+        case c_register_p:
+        case d_register_p:
+        case e_register_p:
+        case h_register_p:
+        case l_register_p:
+            return 1;
+        case af_register_p:
+        case bc_register_p:
+        case de_register_p:
+        case hl_register_p:
+        case sp_register_p:
+            return 2;
+        }
+    case imm_u8_e:
+    case imm_i8_e:
+        return 1;
+    case io_offset_u8_e:
+    case io_offset_c_e:
+    case hl_ptr_e:
+    case register_ptr_e:
+    case imm_u16_e:
+    case imm_u16_ptr_e:
+    case fixed_payload_e:
+    case sp_offset_e:
+        return 2;
     }
 }
 

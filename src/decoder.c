@@ -94,7 +94,7 @@ const instruction_t OP_TABLE[0x100] = {
     {dec_instruction, D_ARG, NONE_ARG, 1, 1},                   /* 0x15 */
     {ld_instruction, D_ARG, IMM_U8_ARG, 2, 2},                  /* 0x16 */
     {rla_instruction, NONE_ARG, NONE_ARG, 1, 1},                /* 0x17 */
-    {jr_instruction, NONE_COND_ARG, IMM_I8_ARG, 2, 3},          /* 0x18 */
+    {jr_instruction, NONE_COND_ARG, IMM_I8_ARG, 2, 2},          /* 0x18 */
     {add_instruction, HL_ARG, DE_ARG, 1, 2},                    /* 0x19 */
     {ld_instruction, A_ARG, DE_PTR_ARG, 1, 2},                  /* 0x1A */
     {dec_instruction, DE_ARG, NONE_ARG, 1, 2},                  /* 0x1B */

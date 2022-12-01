@@ -6,7 +6,6 @@ base_src = [
   'src/bus.c',
   'src/cartridge.c',
   'src/cpu.c',
-  'src/cpu_utils.c',
   'src/decoder.c',
   'src/gameboy.c',
   'src/instruction.c',

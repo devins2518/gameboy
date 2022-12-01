@@ -2,6 +2,7 @@
 #define CPU_H
 
 #include "bus.h"
+#include "decoder.h"
 #include "utils.h"
 #include <stdint.h>
 #ifdef __APPLE__
@@ -13,6 +14,7 @@
 typedef struct cpu {
     union __attribute((packed)) {
         struct __attribute((packed)) {
+#if BIG_ENDIAN == 1
             uint8_t a;
             union {
                 struct __attribute((packed)) {
@@ -32,6 +34,27 @@ typedef struct cpu {
                 } bits;
                 uint8_t u8;
             } f;
+#else
+            union {
+                struct __attribute((packed)) {
+#if BIG_ENDIAN == 1
+                    uint8_t z : 1;
+                    uint8_t n : 1;
+                    uint8_t h : 1;
+                    uint8_t c : 1;
+                    uint8_t _ : 4;
+#else
+                    uint8_t _ : 4;
+                    uint8_t c : 1;
+                    uint8_t h : 1;
+                    uint8_t n : 1;
+                    uint8_t z : 1;
+#endif
+                } bits;
+                uint8_t u8;
+            } f;
+            uint8_t a;
+#endif
         } u8;
         uint16_t u16;
     } af;
@@ -76,6 +99,7 @@ typedef struct cpu {
     enum { cpu_running_mode_e, cpu_halted_mode_e, cpu_stop_mode_e } mode;
     bus *bus;
     uintptr_t clocks;
+    decoder_t decoder;
 } cpu;
 
 cpu cpu_new(bus *bus);

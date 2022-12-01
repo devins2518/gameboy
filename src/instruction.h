@@ -55,6 +55,7 @@ typedef struct {
 } argument_t;
 
 uint8_t get_payload_size_argument_t(argument_t *arg);
+uint8_t get_raw_size_argument_t(argument_t *arg);
 
 typedef struct {
     enum {
