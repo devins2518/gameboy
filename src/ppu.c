@@ -29,7 +29,7 @@ ppu ppu_new(bus *bus) {
     ppu.window_y = (void *)bus_read_ptr(bus, 0xFF4A);
     ppu.window_x = (void *)bus_read_ptr(bus, 0xFF4B);
     ppu.objs = (void *)bus_read_ptr(bus, SAT_START);
-#ifndef DEBUG
+#ifndef TESTING
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
         sdl_panic();
     if (SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, 0, &ppu.window, &ppu.renderer))
