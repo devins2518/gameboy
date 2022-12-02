@@ -12,7 +12,7 @@ const uint8_t TEST_BOOTROM[256] = {
     0x05,             /* DEC B        |     1m |             10 */
     0x06, 0xAA,       /* LD B, u8     |     2m |             12 */
     0x07,             /* RLCA         |     1m |             13 */
-    0x08, 0xFE, 0xCA, /* LD {u16}, SP |     5m |             18 */
+    0x08, 0xFE, 0xCA, /* LD (u16), SP |     5m |             18 */
     0x09,             /* ADD HL, BC   |     2m |             20 */
     0x0A,             /* LD A, (BC)   |     2m |             22 */
     0x0B,             /* DEC BC       |     2m |             24 */
@@ -270,6 +270,7 @@ int main() {
     assert(gg->cpu.clocks == 28);
     assert(gg->cpu.bc.u8.c == 0xAA);
 
+    /* TODO */
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 29);
 
@@ -283,30 +284,49 @@ int main() {
 
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 35);
+    assert(bus_read(&gg->bus, 0xCAFE) == gg->cpu.af.u8.a);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 37);
+    assert(gg->cpu.de.u16 == 0xCAFF);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 38);
+    assert(gg->cpu.de.u8.d == 0xCB);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 39);
+    assert(gg->cpu.de.u8.d == 0xCA);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 41);
+    assert(gg->cpu.de.u8.d == 0xAA);
+
+    /* TODO */
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 42);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 45);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 47);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 49);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 51);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 52);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 53);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 55);
+
     cpu_clock(&gg->cpu);
     assert(gg->cpu.clocks == 56);
 

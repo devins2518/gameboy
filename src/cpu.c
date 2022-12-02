@@ -57,19 +57,19 @@ uint16_t get_sp_u16(cpu *self) {
     return hi << 8 | lo;
 }
 uint16_t get_pc(cpu *self) {
-    return self->pc;
+    return self->decoder.idx;
 }
 uint8_t get_flag_z(cpu *self) {
-    return ((get_reg_f(self) >> 7) & 0x01);
+    return self->af.u8.f.bits.z;
 }
 uint8_t get_flag_n(cpu *self) {
-    return ((get_reg_f(self) >> 6) & 0x01);
+    return self->af.u8.f.bits.n;
 }
 uint8_t get_flag_h(cpu *self) {
-    return ((get_reg_f(self) >> 5) & 0x01);
+    return self->af.u8.f.bits.h;
 }
 uint8_t get_flag_c(cpu *self) {
-    return ((get_reg_f(self) >> 4) & 0x01);
+    return self->af.u8.f.bits.c;
 }
 void set_reg_a(cpu *self, uint8_t n) {
     self->af.u8.a = n;
@@ -139,7 +139,7 @@ void set_sp_u16(cpu *self, uint16_t n) {
     cpu_write_bus(self, --self->sp, (n >> 8) & 0x00FF);
 }
 void set_pc(cpu *self, uint16_t n) {
-    self->pc = n;
+    self->decoder.idx = n;
 }
 
 cpu cpu_new(bus *bus) {
@@ -148,29 +148,12 @@ cpu cpu_new(bus *bus) {
     c.bc.u16 = 0x0000;
     c.de.u16 = 0x0000;
     c.hl.u16 = 0x0000;
-    c.pc = 0x0000;
     c.sp = 0xFFFE;
     c.mode = cpu_running_mode_e;
     c.bus = bus;
     c.clocks = 0x0000;
     c.decoder = decoder_new(bus->bootrom, BOOTROM_SIZE);
     return c;
-}
-
-uint8_t next_instruction(cpu *self) {
-    uint8_t v;
-    v = bus_read(self->bus, self->pc++);
-    return v;
-}
-
-uint8_t cpu_get_imm_u8(cpu *self) {
-    return next_instruction(self);
-}
-
-uint16_t cpu_get_imm_u16(cpu *self) {
-    uint8_t b1 = next_instruction(self);
-    uint8_t b2 = next_instruction(self);
-    return (uint16_t)((b2 << 8) | b1);
 }
 
 void cpu_write_bus(cpu *self, uint16_t addr, uint8_t n) {
@@ -247,8 +230,9 @@ uint16_t get_rhs(cpu *self, argument_t *rhs) {
             return bus_read(self->bus, get_reg_hl(self));
         }
     case imm_u8_e:
-    case imm_i8_e:
         return rhs->p.imm_u8_p;
+    case imm_i8_e:
+        return (int8_t)rhs->p.imm_u8_p;
     case imm_u16_e:
         return rhs->p.imm_u16_p;
     case imm_u16_ptr_e:
@@ -673,17 +657,20 @@ void sra(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void bit(cpu *self, argument_t lhs, argument_t rhs) {
-    set_flag_z(self, ~((get_rhs(self, &lhs) >> get_rhs(self, &rhs)) & 0x01));
+    if ((get_rhs(self, &rhs) >> get_rhs(self, &lhs)) == 0)
+        set_flag_z(self, true);
+    else
+        set_flag_z(self, false);
     set_flag_n(self, false);
-    set_flag_h(self, false);
+    set_flag_h(self, true);
 }
 
 void res(cpu *self, argument_t lhs, argument_t rhs) {
-    set_lhs(self, &lhs, get_rhs(self, &lhs) | ~(1 << get_rhs(self, &rhs)));
+    set_lhs(self, &lhs, get_rhs(self, &rhs) | ~(1 << get_rhs(self, &lhs)));
 }
 
 void set(cpu *self, argument_t lhs, argument_t rhs) {
-    set_lhs(self, &lhs, get_rhs(self, &lhs) | (1 << get_rhs(self, &rhs)));
+    set_lhs(self, &lhs, get_rhs(self, &rhs) | (1 << get_rhs(self, &lhs)));
 }
 
 void swap(cpu *self, argument_t lhs, argument_t rhs) {
@@ -712,7 +699,7 @@ void srl(cpu *self, argument_t lhs, argument_t rhs) {
 void jr(cpu *self, argument_t lhs, argument_t rhs) {
     if (resolve_cond(self, &lhs)) {
         self->clocks++;
-        set_pc(self, get_pc(self) + (int8_t)get_rhs(self, &rhs));
+        set_pc(self, get_pc(self) + get_rhs(self, &rhs));
     }
 }
 

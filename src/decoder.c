@@ -603,8 +603,8 @@ instruction_t decoder_next(decoder_t *d) {
         instr = CB_TABLE[*(op + 1) % 0x100];
     } else {
         instr = OP_TABLE[*op % 0x100];
-        lhs_size = get_payload_size_argument_t(&instr.lhs);
-        rhs_size = get_payload_size_argument_t(&instr.rhs);
+        lhs_size = get_imm_size_argument_t(&instr.lhs);
+        rhs_size = get_imm_size_argument_t(&instr.rhs);
         if (lhs_size == 1) {
             instr.lhs.p.imm_u8_p = d->arr[d->idx + 1];
         } else if (rhs_size == 1) {

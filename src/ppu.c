@@ -224,8 +224,6 @@ void ppu_render_bg(ppu *ppu) {
                                GB_PALETTE[color].b, GB_PALETTE[color].a);
         SDL_RenderDrawPoint(ppu->renderer, pixel, pixel);
     }
-
-    UNIMPLEMENTED("ppu_render_bg")
 }
 
 void ppu_draw_scanline(ppu *ppu) {

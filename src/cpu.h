@@ -45,10 +45,10 @@ typedef struct cpu {
                     uint8_t _ : 4;
 #else
                     uint8_t _ : 4;
-                    uint8_t c : 1;
-                    uint8_t h : 1;
-                    uint8_t n : 1;
                     uint8_t z : 1;
+                    uint8_t n : 1;
+                    uint8_t h : 1;
+                    uint8_t c : 1;
 #endif
                 } bits;
                 uint8_t u8;
@@ -94,7 +94,6 @@ typedef struct cpu {
         } u8;
         uint16_t u16;
     } hl;
-    uint16_t pc;
     uint16_t sp;
     enum { cpu_running_mode_e, cpu_halted_mode_e, cpu_stop_mode_e } mode;
     bus *bus;

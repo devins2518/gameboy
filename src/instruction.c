@@ -10,7 +10,7 @@ void ignore_arg(argument_t *arg) {
     (void)arg;
 }
 
-uint8_t get_payload_size_argument_t(argument_t *arg) {
+uint8_t get_imm_size_argument_t(argument_t *arg) {
     switch (arg->e) {
     case io_offset_u8_e:
     case imm_u8_e:
@@ -50,13 +50,13 @@ uint8_t get_raw_size_argument_t(argument_t *arg) {
         }
     case imm_u8_e:
     case imm_i8_e:
-        return 1;
+    case register_ptr_e:
+    case imm_u16_ptr_e:
     case io_offset_u8_e:
     case io_offset_c_e:
     case hl_ptr_e:
-    case register_ptr_e:
+        return 1;
     case imm_u16_e:
-    case imm_u16_ptr_e:
     case fixed_payload_e:
     case sp_offset_e:
         return 2;
