@@ -244,7 +244,7 @@ uint16_t get_rhs(cpu *self, argument_t *rhs) {
     }
 }
 
-void set_lhs(cpu *self, argument_t *lhs, uint16_t n) {
+void set_lhs(cpu *self, argument_t *lhs, argument_t *rhs, uint16_t n) {
     switch (lhs->e) {
     case none_e:
         PANIC("Attempted to write to none_e lhs!");
@@ -296,7 +296,7 @@ void set_lhs(cpu *self, argument_t *lhs, uint16_t n) {
         }
         break;
     case io_offset_u8_e:
-        switch (get_raw_size_argument_t(lhs)) {
+        switch (get_raw_size_argument_t(rhs)) {
         case 0:
             PANIC("Attempted to write ZST!");
             break;
@@ -311,7 +311,7 @@ void set_lhs(cpu *self, argument_t *lhs, uint16_t n) {
         break;
     case io_offset_c_e: {
         uint8_t c = get_reg_c(self);
-        switch (get_raw_size_argument_t(lhs)) {
+        switch (get_raw_size_argument_t(rhs)) {
         case 0:
             PANIC("Attempted to write ZST!");
             break;
@@ -327,7 +327,7 @@ void set_lhs(cpu *self, argument_t *lhs, uint16_t n) {
     }
     case hl_ptr_e: {
         uint16_t hl = get_reg_hl(self);
-        switch (get_raw_size_argument_t(lhs)) {
+        switch (get_raw_size_argument_t(rhs)) {
         case 0:
             PANIC("Attempted to write ZST!");
             break;
@@ -362,7 +362,7 @@ void set_lhs(cpu *self, argument_t *lhs, uint16_t n) {
             addr = get_reg_hl(self);
             break;
         }
-        switch (get_raw_size_argument_t(lhs)) {
+        switch (get_raw_size_argument_t(rhs)) {
         case 0:
             PANIC("Attempted to write ZST!");
             break;
@@ -386,7 +386,7 @@ void set_lhs(cpu *self, argument_t *lhs, uint16_t n) {
         PANIC("Attempted to write to imm_u16_e lhs!");
         break;
     case imm_u16_ptr_e:
-        switch (get_raw_size_argument_t(lhs)) {
+        switch (get_raw_size_argument_t(rhs)) {
         case 0:
             PANIC("Attempted to write ZST!");
             break;
@@ -434,13 +434,13 @@ void noop(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void ld(cpu *self, argument_t lhs, argument_t rhs) {
-    set_lhs(self, &lhs, get_rhs(self, &rhs));
+    set_lhs(self, &lhs, &rhs, get_rhs(self, &rhs));
 }
 
 void inc(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res = get_rhs(self, &lhs) + 1;
     (void)rhs;
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &lhs, res);
     switch (lhs.p.register_p) {
     case bc_register_p:
     case de_register_p:
@@ -458,7 +458,7 @@ void inc(cpu *self, argument_t lhs, argument_t rhs) {
 void dec(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res = get_rhs(self, &lhs) - 1;
     (void)rhs;
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &lhs, res);
     switch (lhs.p.register_p) {
     case bc_register_p:
     case de_register_p:
@@ -476,7 +476,7 @@ void dec(cpu *self, argument_t lhs, argument_t rhs) {
 void add(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
     res = get_rhs(self, &lhs) + get_rhs(self, &rhs);
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     switch (lhs.p.register_p) {
     case a_register_p:
         set_flag_z(self, res == 0);
@@ -495,7 +495,7 @@ void add(cpu *self, argument_t lhs, argument_t rhs) {
 void adc(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
     res = get_rhs(self, &lhs) + get_rhs(self, &rhs) + get_flag_c(self);
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, 0);
     set_flag_h_add(self, get_rhs(self, &lhs), get_rhs(self, &rhs) + get_flag_c(self));
@@ -507,7 +507,7 @@ void sub(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t old_lhs = get_rhs(self, &lhs);
     uint16_t old_rhs = get_rhs(self, &rhs);
     res = old_lhs - old_rhs;
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, 1);
     /*
@@ -523,7 +523,7 @@ void sbc(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t old_lhs = get_rhs(self, &lhs);
     uint16_t old_rhs = get_rhs(self, &rhs);
     res = old_lhs - old_rhs - get_flag_c(self);
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, 1);
     set_flag_h_add(self, old_lhs, old_rhs - get_flag_c(self));
@@ -533,7 +533,7 @@ void sbc(cpu *self, argument_t lhs, argument_t rhs) {
 void andReg(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
     res = get_rhs(self, &lhs) & get_rhs(self, &rhs);
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, 0);
     set_flag_h(self, 1);
@@ -543,7 +543,7 @@ void andReg(cpu *self, argument_t lhs, argument_t rhs) {
 void xorReg(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
     res = get_rhs(self, &lhs) ^ get_rhs(self, &rhs);
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, 0);
     set_flag_h(self, 0);
@@ -553,7 +553,7 @@ void xorReg(cpu *self, argument_t lhs, argument_t rhs) {
 void orReg(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
     res = get_rhs(self, &lhs) | get_rhs(self, &rhs);
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, 0);
     set_flag_h(self, 0);
@@ -589,7 +589,7 @@ void rlc(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t old_lhs = get_rhs(self, &lhs);
     (void)rhs;
     res = (old_lhs << 1) | (old_lhs >> ((get_raw_size_argument_t(&lhs) << 3) - 1));
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, false);
     set_flag_h(self, false);
@@ -601,7 +601,7 @@ void rrc(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t old_lhs = get_rhs(self, &lhs);
     (void)rhs;
     res = (old_lhs >> 1) | (old_lhs << ((get_raw_size_argument_t(&lhs) << 3) - 1));
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, false);
     set_flag_h(self, false);
@@ -613,7 +613,7 @@ void rl(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t old_lhs = get_rhs(self, &lhs);
     (void)rhs;
     res = (old_lhs << 1) | (get_flag_c(self));
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, false);
     set_flag_h(self, false);
@@ -625,7 +625,7 @@ void rr(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t old_lhs = get_rhs(self, &lhs);
     (void)rhs;
     res = (get_flag_c(self)) | (old_lhs >> 1);
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, false);
     set_flag_h(self, false);
@@ -637,7 +637,7 @@ void sla(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t old_lhs = get_rhs(self, &lhs);
     (void)rhs;
     res = (old_lhs << 1);
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, false);
     set_flag_h(self, false);
@@ -649,7 +649,7 @@ void sra(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t old_lhs = get_rhs(self, &lhs);
     (void)rhs;
     res = (old_lhs & 0x80) | (old_lhs >> 1);
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, false);
     set_flag_h(self, false);
@@ -666,18 +666,18 @@ void bit(cpu *self, argument_t lhs, argument_t rhs) {
 }
 
 void res(cpu *self, argument_t lhs, argument_t rhs) {
-    set_lhs(self, &lhs, get_rhs(self, &rhs) | ~(1 << get_rhs(self, &lhs)));
+    set_lhs(self, &lhs, &rhs, get_rhs(self, &rhs) | ~(1 << get_rhs(self, &lhs)));
 }
 
 void set(cpu *self, argument_t lhs, argument_t rhs) {
-    set_lhs(self, &lhs, get_rhs(self, &rhs) | (1 << get_rhs(self, &lhs)));
+    set_lhs(self, &lhs, &rhs, get_rhs(self, &rhs) | (1 << get_rhs(self, &lhs)));
 }
 
 void swap(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t res;
     (void)rhs;
     res = (get_rhs(self, &lhs) & 0x0F) | (get_rhs(self, &lhs) >> 4);
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, false);
     set_flag_h(self, false);
@@ -689,7 +689,7 @@ void srl(cpu *self, argument_t lhs, argument_t rhs) {
     uint16_t old_lhs = get_rhs(self, &lhs);
     (void)rhs;
     res = (old_lhs >> 1);
-    set_lhs(self, &lhs, res);
+    set_lhs(self, &lhs, &rhs, res);
     set_flag_z(self, res == 0);
     set_flag_n(self, false);
     set_flag_h(self, false);
@@ -710,7 +710,7 @@ void push(cpu *self, argument_t lhs, argument_t rhs) {
 
 void pop(cpu *self, argument_t lhs, argument_t rhs) {
     (void)rhs;
-    set_lhs(self, &lhs, get_sp_u16(self));
+    set_lhs(self, &lhs, &rhs, get_sp_u16(self));
 }
 
 void rla(cpu *self, argument_t lhs, argument_t rhs) {
