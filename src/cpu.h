@@ -18,38 +18,22 @@ typedef struct cpu {
             uint8_t a;
             union {
                 struct __attribute((packed)) {
-#if BIG_ENDIAN == 1
-                    uint8_t z : 1;
-                    uint8_t n : 1;
-                    uint8_t h : 1;
-                    uint8_t c : 1;
-                    uint8_t _ : 4;
-#else
                     uint8_t _ : 4;
                     uint8_t c : 1;
                     uint8_t h : 1;
                     uint8_t n : 1;
                     uint8_t z : 1;
-#endif
                 } bits;
                 uint8_t u8;
             } f;
 #else
             union {
                 struct __attribute((packed)) {
-#if BIG_ENDIAN == 1
-                    uint8_t z : 1;
-                    uint8_t n : 1;
-                    uint8_t h : 1;
-                    uint8_t c : 1;
                     uint8_t _ : 4;
-#else
-                    uint8_t _ : 4;
-                    uint8_t z : 1;
-                    uint8_t n : 1;
-                    uint8_t h : 1;
                     uint8_t c : 1;
-#endif
+                    uint8_t h : 1;
+                    uint8_t n : 1;
+                    uint8_t z : 1;
                 } bits;
                 uint8_t u8;
             } f;

@@ -1,5 +1,5 @@
-#include "SDL_render.h"
 #include "ppu.h"
+#include "SDL_render.h"
 
 #define HEIGHT 144
 #define WIDTH 160
